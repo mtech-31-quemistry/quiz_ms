@@ -10,10 +10,14 @@ on:
 permissions: write-all
 
 env:
-  AWS_REGION: ap-southeast-1
+  AWS_REGION: ${{ secrets.AWS_REGION }}
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  ECR_REPOSITORY_URL: ${{ secrets.ECR_REPOSITORY_URL }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
   IMAGE_NAME: ${{ secrets.ECR_REPOSITORY_URL }}:${{ github.sha }}
+  LATEST_IMAGE_NAME: ${{ secrets.ECR_REPOSITORY_URL }}:latest
 
 jobs:
   tests:
@@ -71,8 +75,7 @@ jobs:
     needs: generate_jar
     name: Push Docker Image to ECR
     runs-on: ubuntu-latest
-    env:
-      LATEST_IMAGE_NAME: ${{ secrets.ECR_REPOSITORY_URL }}:latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -133,14 +136,11 @@ jobs:
           restore-keys: ${{ runner.os }}-sonar
 
       - name: Build and analyze
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: ./gradlew build sonar --info
 
       - name: Get SonarCloud quality gate status
         run: |
-          STATUS=$(curl -s -u "${{ secrets.SONAR_TOKEN }}": "https://sonarcloud.io/api/qualitygates/project_status?projectKey=${{ secrets.PROJECT_KEY }}" | jq -r .projectStatus.status)
+          STATUS=$(curl -s -u "${{ env.SONAR_TOKEN }}": "https://sonarcloud.io/api/qualitygates/project_status?projectKey=${{ env.PROJECT_KEY }}" | jq -r .projectStatus.status)
           echo "Quality gate status is $STATUS"   
           if [[ "$STATUS" != "OK" ]]; then
           echo "Quality gate failed"
