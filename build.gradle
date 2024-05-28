@@ -32,6 +32,16 @@ bootJar {
 	archiveClassifier.set(null)
 }
 
+tasks.register('installLocalGitHook', Copy) {
+	from new File(rootProject.rootDir, 'scripts/pre-commit')
+	into { new File(rootProject.rootDir, '.git/hooks') }
+	fileMode 0775
+}
+
+tasks.named("build") {
+	finalizedBy("installLocalGitHook")
+}
+
 sonar {
 	properties {
 		property "sonar.projectKey", "mtech-31-quemistry_quiz_ms"

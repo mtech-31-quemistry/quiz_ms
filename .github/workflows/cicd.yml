@@ -64,12 +64,18 @@ jobs:
           cache: 'gradle'
       - run: ./gradlew bootJar
 
+      - name: Upload Standalone Executable Jar
+        uses: actions/upload-artifact@v2
+        with:
+          name: spring-boot-jar
+          path: |
+            build/libs/question_ms.jar
+
       - name: Upload Project Artifact
         uses: actions/upload-artifact@v4
         with:
           name: spring-boot-artifact
           path: |
-            build/libs/quiz_ms.jar
             build/reports
 
   build_and_push_image:
@@ -91,12 +97,6 @@ jobs:
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Download Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: spring-boot-artifact
-          path: build
 
       - name: Build and Push Image
         uses: docker/build-push-action@v5
