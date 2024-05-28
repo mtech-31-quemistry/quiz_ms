@@ -71,13 +71,6 @@ jobs:
           path: |
             build/libs/quiz_ms.jar
 
-      - name: Upload Project Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: spring-boot-artifact
-          path: |
-            build/reports
-
   build_and_push_image:
     needs: generate_jar
     name: Push Docker Image to ECR
@@ -103,9 +96,6 @@ jobs:
         with:
           name: spring-boot-jar
           path: build/libs/
-
-      - name: Display structure of downloaded files
-        run: ls -R build/libs
 
       - name: Build and Push Image
         uses: docker/build-push-action@v5
@@ -157,23 +147,9 @@ jobs:
             exit 1
           fi
 
-      - name: Upload Code Coverage Artifacts
+      - name: Upload Code Analysis Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: code-coverage-artifact
+          name: project-artifact
           path: |
-            build/reports/jacoco/test/html/
-
-      - name: Upload Lint (Checkstyle) Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: lint-artifact
-          path: |
-            build/reports/checkstyle/
-
-      - name: Upload SonarCloud Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: sast-artifact
-          path: |
-            build/sonar/report-task.txt
+            build/reports/
