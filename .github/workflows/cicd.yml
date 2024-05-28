@@ -69,7 +69,7 @@ jobs:
         with:
           name: spring-boot-jar
           path: |
-            build/libs/question_ms.jar
+            build/libs/quiz_ms.jar
 
       - name: Upload Project Artifact
         uses: actions/upload-artifact@v4
