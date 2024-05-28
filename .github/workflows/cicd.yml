@@ -19,6 +19,7 @@ env:
   SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
   IMAGE_NAME: ${{ secrets.ECR_REPOSITORY_URL }}:${{ github.sha }}
   LATEST_IMAGE_NAME: ${{ secrets.ECR_REPOSITORY_URL }}:latest
+  DOMAIN: quiz_ms
 
 jobs:
   tests:
@@ -69,7 +70,7 @@ jobs:
         with:
           name: spring-boot-jar
           path: |
-            build/libs/quiz_ms.jar
+            build/libs/${{ env.DOMAIN }}.jar
 
   build_and_push_image:
     needs: generate_jar
