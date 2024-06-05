@@ -1,0 +1,37 @@
+
+services:
+  db:
+    image: postgres
+    container_name: quiz-ms-db
+    environment:
+      POSTGRES_DB: ${DATABASE_NAME}
+      POSTGRES_USER: ${DATABASE_LOGIN}
+      POSTGRES_PASSWORD: ${DATABASE_SECRET}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    develop:
+      watch:
+        - action: rebuild
+          path: .
+          target: .
+    container_name: quiz-ms
+    depends_on:
+      - db
+    environment:
+      - DATABASE_NAME=${DATABASE_NAME}
+      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_LOGIN=${DATABASE_LOGIN}
+      - DATABASE_SECRET=${DATABASE_SECRET}
+
+    ports:
+      - "8080:8080"
+
+volumes:
+  postgres_data:
