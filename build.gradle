@@ -92,7 +92,7 @@ tasks.register('installLocalGitHook', Copy) {
 	fileMode 0775
 }
 
-tasks.named("build") {
+build {
 	finalizedBy("installLocalGitHook")
 }
 

@@ -19,6 +19,8 @@ env:
   SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
   IMAGE_NAME: ${{ secrets.ECR_REPOSITORY_URL }}:${{ github.sha }}
   LATEST_IMAGE_NAME: ${{ secrets.ECR_REPOSITORY_URL }}:latest
+  API_GATEWAY_URL: ${{ secrets.API_GATEWAY_URL }}
+
 
 jobs:
   tests:
@@ -70,7 +72,7 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build and Push Image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
@@ -85,10 +87,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
@@ -159,3 +161,19 @@ jobs:
           name: project-artifact
           path: |
             build/reports/
+            
+  zap_scan:
+    permissions: write-all
+    needs: deploy_to_ecs
+    runs-on: ubuntu-latest
+    name: Zap Scan
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: ZAP Scan
+        uses: zaproxy/action-full-scan@v0.10.0
+        with:
+          target: ${{ env.API_GATEWAY_URL }}

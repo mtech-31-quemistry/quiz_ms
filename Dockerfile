@@ -12,7 +12,7 @@ RUN mv src/main/resources/application.yml /usr/share/application.yml
 FROM eclipse-temurin:21 as jre-build
 # Create a custom Java runtime
 RUN $JAVA_HOME/bin/jlink \
-         --add-modules jdk.unsupported,java.base,java.sql,java.naming,java.desktop,java.management,java.security.jgss,java.instrument \
+         --add-modules jdk.unsupported,java.base,java.sql,java.naming,java.desktop,java.management,java.security.jgss,java.instrument,jdk.crypto.ec \
          --strip-debug \
          --no-man-pages \
          --no-header-files \
