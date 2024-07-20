@@ -1,4 +1,4 @@
-package com.quemistry.quiz_ms.model;
+package com.quemistry.quiz_ms.client.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,7 +14,7 @@ import java.util.List;
 @Builder
 public class MCQDto {
 
-    private Integer id;
+    private Long id;
     private String stem;
     private List<OptionDto> options;
     private List<TopicDto> topics;

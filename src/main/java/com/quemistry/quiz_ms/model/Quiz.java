@@ -1,6 +1,6 @@
 package com.quemistry.quiz_ms.model;
 
-import com.quemistry.quiz_ms.client.model.MCQDto;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -8,17 +8,21 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+@Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class QuizResponse {
+public class Quiz {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private List<MCQDto> mcqs;
+    private QuizStatus status;
 
-    private Integer pageNumber;
+    private String studentId;
 
-    private Integer pageSize;
-
+    @Transient
+    private List<Long> mcqIds;
 }
+

@@ -1,6 +1,5 @@
-package com.quemistry.quiz_ms.model;
+package com.quemistry.quiz_ms.client.model;
 
-import com.quemistry.quiz_ms.client.model.MCQDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,8 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class QuizResponse {
-    private Long id;
+public class RetrieveMCQResponse {
 
     private List<MCQDto> mcqs;
 

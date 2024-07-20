@@ -13,8 +13,9 @@ import java.util.Optional;
 @AllArgsConstructor
 @Builder
 public class QuizRequest {
-    private Optional<List<Long>> topics;
-    private Optional<List<Long>> skills;
+    private List<Long> topics;
+    private List<Long> skills;
+    private String studentId;
 
     private Integer pageNumber;
 

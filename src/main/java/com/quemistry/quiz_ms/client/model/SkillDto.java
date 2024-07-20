@@ -1,4 +1,4 @@
-package com.quemistry.quiz_ms.model;
+package com.quemistry.quiz_ms.client.model;
 
 
 import lombok.AllArgsConstructor;

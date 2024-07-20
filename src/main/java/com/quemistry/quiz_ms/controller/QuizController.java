@@ -1,13 +1,12 @@
 package com.quemistry.quiz_ms.controller;
 
+import com.quemistry.quiz_ms.model.QuizRequest;
 import com.quemistry.quiz_ms.model.QuizResponse;
+import com.quemistry.quiz_ms.service.QuizService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,6 +15,12 @@ import java.util.Map;
 @RestController
 @RequestMapping("/v1/quizzes")
 public class QuizController {
+    private final QuizService quizService;
+
+    public QuizController(QuizService quizService) {
+        this.quizService = quizService;
+    }
+
     @GetMapping("health")
     public ResponseEntity<Object> health(){
         Map<String, String> responseBody = new HashMap<>();
@@ -25,8 +30,8 @@ public class QuizController {
     }
 
     @PostMapping
-    public QuizResponse createQuiz() {
+    public QuizResponse createQuiz(@RequestBody QuizRequest quizRequest) {
         log.info("POST /v1/quizzes");
-        return QuizResponse.builder().build();
+        return quizService.createQuiz(quizRequest);
     }
 }
