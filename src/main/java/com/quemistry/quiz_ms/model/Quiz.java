@@ -25,4 +25,3 @@ public class Quiz {
     @Transient
     private List<Long> mcqIds;
 }
-

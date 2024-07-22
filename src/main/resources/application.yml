@@ -1,3 +1,35 @@
 spring:
   application:
     name: quiz_ms
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+
+  flyway:
+    enabled: true
+    baselineOnMigrate: true
+    locations: classpath:db/migration
+    url: ${DB_URL}
+    schemas: qms_question
+    user: ${DB_USER}
+    password: ${DB_PASSWORD}
+
+  jpa.:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+server:
+  port: 80
+
+service:
+  question:
+    url: ${QUESTION_SERVICE_URL}
+
+logging:
+  level:
+    javax.net.ssl: DEBUG

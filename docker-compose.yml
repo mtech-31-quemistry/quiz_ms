@@ -4,34 +4,45 @@ services:
     image: postgres
     container_name: quiz-ms-db
     environment:
-      POSTGRES_DB: ${DATABASE_NAME}
-      POSTGRES_USER: ${DATABASE_LOGIN}
-      POSTGRES_PASSWORD: ${DATABASE_SECRET}
+      POSTGRES_DB: quemistry
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: 123456
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  app:
+  question:
     build:
-      context: .
+      context: ..\question_ms
       dockerfile: Dockerfile
-    develop:
-      watch:
-        - action: rebuild
-          path: .
-          target: .
-    container_name: quiz-ms
+    container_name: question-ms
     depends_on:
       - db
     environment:
-      - DATABASE_NAME=${DATABASE_NAME}
-      - DATABASE_URL=${DATABASE_URL}
-      - DATABASE_LOGIN=${DATABASE_LOGIN}
-      - DATABASE_SECRET=${DATABASE_SECRET}
+      - DATABASE_NAME=quemistry
+      - DATABASE_URL=jdbc:postgresql://db:5432/quemistry
+      - DATABASE_LOGIN=root
+      - DATABASE_SECRET=123456
+
+  quiz:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: quiz-ms
+    depends_on:
+      - db
+      - question
+    environment:
+      - DATABASE_NAME=quemistry
+      - DATABASE_URL=jdbc:postgresql://db:5432/quemistry
+      - DATABASE_LOGIN=root
+      - DATABASE_SECRET=123456
+      - QUESTION_SERVICE_URL=http://question:80
 
     ports:
-      - "8080:8080"
+      - "80:80"
 
 volumes:
   postgres_data:
+
