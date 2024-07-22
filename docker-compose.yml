@@ -1,8 +1,7 @@
-
 services:
   db:
     image: postgres
-    container_name: quiz-ms-db
+    container_name: quemistry-ms-db
     environment:
       POSTGRES_DB: quemistry
       POSTGRES_USER: root
@@ -39,7 +38,6 @@ services:
       - DATABASE_LOGIN=root
       - DATABASE_SECRET=123456
       - QUESTION_SERVICE_URL=http://question:80
-
     ports:
       - "80:80"
 
