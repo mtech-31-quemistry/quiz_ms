@@ -14,7 +14,7 @@ spring:
     baselineOnMigrate: true
     locations: classpath:db/migration
     url: ${DB_URL}
-    schemas: qms_question
+    schemas: quiz_quiz
     user: ${DB_USER}
     password: ${DB_PASSWORD}
 

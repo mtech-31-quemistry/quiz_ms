@@ -7,8 +7,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-@FeignClient(name = "question-client", url = "${service.question.url}")
-@RequestMapping(value = "/v1/questions")
+@FeignClient(name = "question-client", url = "${service.question.url}/v1/questions")
 public interface  QuestionClient {
     @RequestMapping(value = "/retrieve",method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     RetrieveMCQResponse retrieveMCQs(RetrieveMCQRequest retrieveMCQRequest);
