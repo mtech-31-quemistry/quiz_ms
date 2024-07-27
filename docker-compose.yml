@@ -8,10 +8,8 @@ services:
       POSTGRES_DB: quemistry
       POSTGRES_USER: root
       POSTGRES_PASSWORD: 123456
-    # ports:
-    #   - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+#    volumes:
+#      - postgres_data:/var/lib/postgresql/data
 
   question:
     build:
@@ -51,5 +49,5 @@ services:
     ports:
       - "8080:8080"
 
-volumes:
-  postgres_data:
+#volumes:
+#  postgres_data:

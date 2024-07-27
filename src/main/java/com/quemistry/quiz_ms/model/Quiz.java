@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -20,9 +21,14 @@ public class Quiz {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Enumerated(EnumType.STRING)
     private QuizStatus status;
 
     private String studentId;
+
+    private Date createdOn;
+
+    private Date updatedOn;
 
     @ElementCollection
     @CollectionTable(name = "quiz_mcq", schema = "qms_quiz", joinColumns = @JoinColumn(name = "quiz_id"))
@@ -30,23 +36,27 @@ public class Quiz {
     private List<Long> mcqIds;
 
     static public Quiz create(String studentId) {
+        Date now = new Date();
         return Quiz.builder()
                 .status(QuizStatus.IN_PROGRESS)
                 .studentId(studentId)
                 .mcqIds(new ArrayList<>())
+                .createdOn(now)
+                .updatedOn(now)
                 .build();
     }
 
     public void addMcq(List<Long> mcqIds) {
         this.mcqIds.addAll(mcqIds);
-
     }
 
     public void complete() {
         this.status = QuizStatus.COMPLETED;
+        this.updatedOn = new Date();
     }
 
     public void abandon() {
         this.status = QuizStatus.ABANDONED;
+        this.updatedOn = new Date();
     }
 }
