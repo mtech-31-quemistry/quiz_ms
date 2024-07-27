@@ -9,7 +9,6 @@ import static org.mockito.Mockito.when;
 
 import com.quemistry.quiz_ms.client.QuestionClient;
 import com.quemistry.quiz_ms.client.model.*;
-import com.quemistry.quiz_ms.controller.model.GetQuizRequest;
 import com.quemistry.quiz_ms.controller.model.QuizRequest;
 import com.quemistry.quiz_ms.controller.model.QuizResponse;
 import com.quemistry.quiz_ms.exception.NotFoundException;
@@ -74,10 +73,8 @@ class QuizServiceTest {
   @Test
   void getQuizByIdAndStudentIdWithQuizNotOwnedByStudent() {
     when(quizRepository.findByIdAndStudentId(1L, "student1")).thenReturn(Optional.empty());
-    GetQuizRequest getQuizRequest = GetQuizRequest.builder().pageNumber(0).pageSize(10).build();
 
-    assertThrows(
-        NotFoundException.class, () -> quizService.getQuiz(1L, "student1", getQuizRequest));
+    assertThrows(NotFoundException.class, () -> quizService.getQuiz(1L, "student1", 0, 10));
   }
 
   @Test
@@ -94,8 +91,7 @@ class QuizServiceTest {
     when(questionClient.retrieveMCQsByIds(any(RetrieveMCQByIdsRequest.class)))
         .thenReturn(retrieveMCQResponse);
 
-    GetQuizRequest getQuizRequest = GetQuizRequest.builder().pageNumber(0).pageSize(1).build();
-    QuizResponse response = quizService.getQuiz(1L, "student1", getQuizRequest);
+    QuizResponse response = quizService.getQuiz(1L, "student1", 0, 1);
 
     assertEquals(1L, response.getId());
     assertEquals(1, response.getMcqs().size());

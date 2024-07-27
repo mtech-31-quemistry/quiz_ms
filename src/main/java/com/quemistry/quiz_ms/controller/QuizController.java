@@ -1,6 +1,5 @@
 package com.quemistry.quiz_ms.controller;
 
-import com.quemistry.quiz_ms.controller.model.GetQuizRequest;
 import com.quemistry.quiz_ms.controller.model.QuizRequest;
 import com.quemistry.quiz_ms.controller.model.QuizResponse;
 import com.quemistry.quiz_ms.service.QuizService;
@@ -36,12 +35,23 @@ public class QuizController {
     return quizService.createQuiz(studentId, quizRequest);
   }
 
-  @GetMapping
+  @GetMapping("{id}")
   public QuizResponse getQuiz(
-      @RequestParam("id") Long id,
+      @PathVariable Long id,
       @RequestHeader("x-user-id") String studentId,
-      @RequestBody GetQuizRequest quizRequest) {
-    log.info("GET /v1/quizzes");
-    return quizService.getQuiz(id, studentId, quizRequest);
+      @RequestParam Integer pageNumber,
+      @RequestParam Integer pageSize) {
+    log.info("GET /v1/quizzes/{}", id);
+    return quizService.getQuiz(id, studentId, pageNumber, pageSize);
+  }
+
+  @GetMapping("me/in-progress")
+  public QuizResponse getInProgressQuiz(
+      @RequestHeader("x-user-id") String studentId,
+      @RequestParam Integer pageNumber,
+      @RequestParam Integer pageSize) {
+    log.info("GET /v1/me/in-progress");
+
+    return quizService.getInProgressQuiz(studentId, pageNumber, pageSize);
   }
 }

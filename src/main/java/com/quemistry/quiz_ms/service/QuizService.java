@@ -5,11 +5,11 @@ import com.quemistry.quiz_ms.client.model.MCQDto;
 import com.quemistry.quiz_ms.client.model.RetrieveMCQByIdsRequest;
 import com.quemistry.quiz_ms.client.model.RetrieveMCQRequest;
 import com.quemistry.quiz_ms.client.model.RetrieveMCQResponse;
-import com.quemistry.quiz_ms.controller.model.GetQuizRequest;
 import com.quemistry.quiz_ms.controller.model.QuizRequest;
 import com.quemistry.quiz_ms.controller.model.QuizResponse;
 import com.quemistry.quiz_ms.exception.NotFoundException;
 import com.quemistry.quiz_ms.model.Quiz;
+import com.quemistry.quiz_ms.model.QuizStatus;
 import com.quemistry.quiz_ms.repository.QuizRepository;
 import java.util.List;
 import java.util.Optional;
@@ -54,8 +54,20 @@ public class QuizService {
         .build();
   }
 
-  public QuizResponse getQuiz(Long id, String studentId, GetQuizRequest quizRequest) {
+  public QuizResponse getQuiz(Long id, String studentId, Integer pageNumber, Integer pageSize) {
     Optional<Quiz> quiz = quizRepository.findByIdAndStudentId(id, studentId);
+
+    return convertQuiz(pageNumber, pageSize, quiz);
+  }
+
+  public QuizResponse getInProgressQuiz(String studentId, Integer pageNumber, Integer pageSize) {
+    Optional<Quiz> quiz =
+        quizRepository.findByStudentIdAndStatus(studentId, QuizStatus.IN_PROGRESS);
+
+    return convertQuiz(pageNumber, pageSize, quiz);
+  }
+
+  private QuizResponse convertQuiz(Integer pageNumber, Integer pageSize, Optional<Quiz> quiz) {
     if (quiz.isEmpty()) {
       throw new NotFoundException("Quiz not found");
     }
@@ -65,10 +77,10 @@ public class QuizService {
             RetrieveMCQByIdsRequest.builder().ids(quiz.get().getMcqIds()).build());
 
     return QuizResponse.builder()
-        .id(id)
+        .id(quiz.get().getId())
         .mcqs(mcqs.getMcqs())
-        .pageNumber(quizRequest.getPageNumber())
-        .pageSize(quizRequest.getPageSize())
+        .pageNumber(pageNumber)
+        .pageSize(pageSize)
         .totalPages(mcqs.getTotalPages())
         .totalRecords(mcqs.getTotalRecords())
         .build();

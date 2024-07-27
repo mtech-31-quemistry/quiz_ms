@@ -8,7 +8,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.quemistry.quiz_ms.controller.model.GetQuizRequest;
 import com.quemistry.quiz_ms.controller.model.QuizRequest;
 import com.quemistry.quiz_ms.controller.model.QuizResponse;
 import com.quemistry.quiz_ms.exception.ExceptionAdvisor;
@@ -101,51 +100,82 @@ class QuizControllerTest {
             .build();
 
     // Create a GetQuizRequest object
-    GetQuizRequest getQuizRequest = GetQuizRequest.builder().pageNumber(0).pageSize(1).build();
 
     // Convert GetQuizRequest to JSON
     ObjectMapper objectMapper = new ObjectMapper();
-    String getQuizRequestJson = objectMapper.writeValueAsString(getQuizRequest);
-    when(quizService.getQuiz(1L, "test-user-id", getQuizRequest)).thenReturn(quizResponse);
+
+    when(quizService.getQuiz(1L, "test-user-id", 0, 1)).thenReturn(quizResponse);
 
     // Perform a GET request to /v1/quizzes with the x-user-id header and the GetQuizRequest JSON
     mockMvc
         .perform(
-            get("/v1/quizzes")
+            get("/v1/quizzes/1")
                 .header("x-user-id", "test-user-id")
-                .param("id", "1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(getQuizRequestJson))
+                .param("pageNumber", "0")
+                .param("pageSize", "1")
+                .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().json(objectMapper.writeValueAsString(quizResponse)));
 
     // Verify that the getQuiz method in QuizService was called with the correct parameters
-    verify(quizService).getQuiz(1L, "test-user-id", getQuizRequest);
+    verify(quizService).getQuiz(1L, "test-user-id", 0, 1);
   }
 
   @Test
   void getQuizNotFound() throws Exception {
-    // Create a GetQuizRequest object
-    GetQuizRequest getQuizRequest = GetQuizRequest.builder().pageNumber(0).pageSize(1).build();
 
     // Convert GetQuizRequest to JSON
     ObjectMapper objectMapper = new ObjectMapper();
-    String getQuizRequestJson = objectMapper.writeValueAsString(getQuizRequest);
-    when(quizService.getQuiz(1L, "test-user-id", getQuizRequest))
+    when(quizService.getQuiz(1L, "test-user-id", 0, 1))
         .thenThrow(new NotFoundException("Quiz not found"));
 
     // Perform a GET request to /v1/quizzes with the x-user-id header and the GetQuizRequest JSON
     mockMvc
         .perform(
-            get("/v1/quizzes")
+            get("/v1/quizzes/1")
                 .header("x-user-id", "test-user-id")
-                .param("id", "1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(getQuizRequestJson))
+                .param("pageNumber", "0")
+                .param("pageSize", "1")
+                .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isNotFound())
         .andExpect(content().json("{\"message\":\"Quiz not found\"}"));
 
     // Verify that the getQuiz method in QuizService was called with the correct parameters
-    verify(quizService).getQuiz(1L, "test-user-id", getQuizRequest);
+    verify(quizService).getQuiz(1L, "test-user-id", 0, 1);
+  }
+
+  @Test
+  void getInProgressQuiz() throws Exception {
+    // Mock the QuizService to return a predefined QuizResponse
+    QuizResponse quizResponse =
+        QuizResponse.builder()
+            .id(1L)
+            .mcqs(new ArrayList<>())
+            .pageNumber(0)
+            .pageSize(1)
+            .totalPages(1)
+            .totalRecords(2L)
+            .build();
+
+    // Create a GetQuizRequest object
+
+    // Convert GetQuizRequest to JSON
+    ObjectMapper objectMapper = new ObjectMapper();
+
+    when(quizService.getInProgressQuiz("test-user-id", 0, 1)).thenReturn(quizResponse);
+
+    // Perform a GET request to /v1/quizzes with the x-user-id header and the GetQuizRequest JSON
+    mockMvc
+        .perform(
+            get("/v1/quizzes/me/in-progress")
+                .header("x-user-id", "test-user-id")
+                .param("pageNumber", "0")
+                .param("pageSize", "1")
+                .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().json(objectMapper.writeValueAsString(quizResponse)));
+
+    // Verify that the getQuiz method in QuizService was called with the correct parameters
+    verify(quizService).getInProgressQuiz("test-user-id", 0, 1);
   }
 }
