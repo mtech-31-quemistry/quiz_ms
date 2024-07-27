@@ -1,5 +1,6 @@
 package com.quemistry.quiz_ms.client;
 
+import com.quemistry.quiz_ms.client.model.RetrieveMCQByIdsRequest;
 import com.quemistry.quiz_ms.client.model.RetrieveMCQRequest;
 import com.quemistry.quiz_ms.client.model.RetrieveMCQResponse;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -8,7 +9,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 @FeignClient(name = "question-client", url = "${service.question.url}/v1/questions")
-public interface  QuestionClient {
-    @RequestMapping(value = "/retrieve",method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    RetrieveMCQResponse retrieveMCQs(RetrieveMCQRequest retrieveMCQRequest);
+public interface QuestionClient {
+  @RequestMapping(
+      value = "/retrieve",
+      method = RequestMethod.POST,
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  RetrieveMCQResponse retrieveMCQs(RetrieveMCQRequest retrieveMCQRequest);
+
+  @RequestMapping(
+      value = "/retrieve-by-ids",
+      method = RequestMethod.POST,
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  RetrieveMCQResponse retrieveMCQsByIds(RetrieveMCQByIdsRequest retrieveMCQRequest);
 }

@@ -2,55 +2,75 @@ package com.quemistry.quiz_ms.service;
 
 import com.quemistry.quiz_ms.client.QuestionClient;
 import com.quemistry.quiz_ms.client.model.MCQDto;
+import com.quemistry.quiz_ms.client.model.RetrieveMCQByIdsRequest;
 import com.quemistry.quiz_ms.client.model.RetrieveMCQRequest;
 import com.quemistry.quiz_ms.client.model.RetrieveMCQResponse;
-import com.quemistry.quiz_ms.model.Quiz;
+import com.quemistry.quiz_ms.controller.model.GetQuizRequest;
 import com.quemistry.quiz_ms.controller.model.QuizRequest;
 import com.quemistry.quiz_ms.controller.model.QuizResponse;
+import com.quemistry.quiz_ms.exception.NotFoundException;
+import com.quemistry.quiz_ms.model.Quiz;
 import com.quemistry.quiz_ms.repository.QuizRepository;
+import java.util.List;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Slf4j
 @Service
 public class QuizService {
-    private final QuizRepository quizRepository;
-    private final QuestionClient questionClient;
+  private final QuizRepository quizRepository;
+  private final QuestionClient questionClient;
 
-    @Autowired
-    public QuizService(QuizRepository quizRepository, QuestionClient questionClient) {
-        this.quizRepository = quizRepository;
-        this.questionClient = questionClient;
+  @Autowired
+  public QuizService(QuizRepository quizRepository, QuestionClient questionClient) {
+    this.quizRepository = quizRepository;
+    this.questionClient = questionClient;
+  }
+
+  public QuizResponse createQuiz(String studentId, QuizRequest quizRequest) {
+    Quiz quiz = Quiz.create(studentId);
+
+    RetrieveMCQResponse retrieveMCQRequests =
+        questionClient.retrieveMCQs(
+            RetrieveMCQRequest.builder()
+                .topics(quizRequest.getTopics())
+                .skills(quizRequest.getSkills())
+                .build());
+
+    List<Long> mcqIds = retrieveMCQRequests.getMcqs().stream().map(MCQDto::getId).toList();
+
+    quiz.addMcq(mcqIds);
+    Long quizId = quizRepository.save(quiz).getId();
+
+    return QuizResponse.builder()
+        .id(quizId)
+        .mcqs(retrieveMCQRequests.getMcqs().stream().limit(quizRequest.getPageSize()).toList())
+        .pageNumber(0)
+        .pageSize(quizRequest.getPageSize())
+        .totalPages(retrieveMCQRequests.getTotalPages())
+        .totalRecords(retrieveMCQRequests.getTotalRecords())
+        .build();
+  }
+
+  public QuizResponse getQuiz(Long id, String studentId, GetQuizRequest quizRequest) {
+    Optional<Quiz> quiz = quizRepository.findByIdAndStudentId(id, studentId);
+    if (quiz.isEmpty()) {
+      throw new NotFoundException("Quiz not found");
     }
 
-    public QuizResponse createQuiz(String userId, QuizRequest quizRequest) {
-        log.info("POST /v1/quizzes");
+    RetrieveMCQResponse mcqs =
+        questionClient.retrieveMCQsByIds(
+            RetrieveMCQByIdsRequest.builder().ids(quiz.get().getMcqIds()).build());
 
-        Quiz quiz = Quiz.create(userId);
-
-        RetrieveMCQResponse retrieveMCQRequests = questionClient.retrieveMCQs(
-                RetrieveMCQRequest
-                        .builder()
-                        .topics(quizRequest.getTopics())
-                        .skills(quizRequest.getSkills())
-                        .build());
-
-        List<Long> mcqIds = retrieveMCQRequests.getMcqs()
-                .stream()
-                .map(MCQDto::getId)
-                .toList();
-
-        quiz.addMcq(mcqIds);
-        Long quizId = quizRepository.save(quiz).getId();
-
-        return QuizResponse.builder()
-                .id(quizId)
-                .mcqs(retrieveMCQRequests.getMcqs())
-                .pageNumber(0)
-                .pageSize(retrieveMCQRequests.getMcqs().size())
-                .build();
-    }
+    return QuizResponse.builder()
+        .id(id)
+        .mcqs(mcqs.getMcqs())
+        .pageNumber(quizRequest.getPageNumber())
+        .pageSize(quizRequest.getPageSize())
+        .totalPages(mcqs.getTotalPages())
+        .totalRecords(mcqs.getTotalRecords())
+        .build();
+  }
 }

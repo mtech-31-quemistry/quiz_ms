@@ -9,12 +9,15 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @EnableWebMvc
 public class CorsConfig implements WebMvcConfigurer {
 
-    @Override
-    public void addCorsMappings(CorsRegistry registry){
-        registry.addMapping("/**")
-                .allowedOrigins("http://localhost:3000")
-                .allowedMethods("GET", "POST")
-                .allowCredentials(true)// You can set this to true if you need credentials (cookies, etc.) to be included in the request.
-                .maxAge(3600);// Cache preflight request for 1 hour
-    }
+  @Override
+  public void addCorsMappings(CorsRegistry registry) {
+    registry
+        .addMapping("/**")
+        .allowedOrigins("http://localhost:3000")
+        .allowedMethods("GET", "POST")
+        .allowCredentials(
+            true) // You can set this to true if you need credentials (cookies, etc.) to be included
+        // in the request.
+        .maxAge(3600); // Cache preflight request for 1 hour
+  }
 }

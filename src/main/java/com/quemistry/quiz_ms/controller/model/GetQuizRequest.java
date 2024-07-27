@@ -1,4 +1,4 @@
-package com.quemistry.quiz_ms.client.model;
+package com.quemistry.quiz_ms.controller.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,8 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class TopicDto {
-
-  private Integer id;
-  private String name;
+public class GetQuizRequest {
+  private Integer pageNumber;
+  private Integer pageSize;
 }

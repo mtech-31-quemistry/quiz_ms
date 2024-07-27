@@ -5,13 +5,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest
-@TestPropertySource(properties = {
-		"service.question.url=http://mock-service-url"}
-)
+@TestPropertySource(properties = {"service.question.url=http://mock-service-url"})
 class ApplicationTests {
 
-	@Test
-	void contextLoads() {
-	}
-
+  @Test
+  void contextLoads() {}
 }

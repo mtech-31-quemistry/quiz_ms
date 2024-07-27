@@ -1,6 +1,5 @@
 package com.quemistry.quiz_ms.client.model;
 
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class SkillDto {
 
-    private Integer id;
-    private String name;
-    private Integer topicId;
+  private Integer id;
+  private String name;
+  private Integer topicId;
 }
