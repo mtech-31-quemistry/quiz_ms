@@ -1,9 +1,10 @@
 package com.quemistry.quiz_ms.controller;
 
-import com.quemistry.quiz_ms.model.QuizRequest;
-import com.quemistry.quiz_ms.model.QuizResponse;
+import com.quemistry.quiz_ms.controller.model.QuizRequest;
+import com.quemistry.quiz_ms.controller.model.QuizResponse;
 import com.quemistry.quiz_ms.service.QuizService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,8 +31,8 @@ public class QuizController {
     }
 
     @PostMapping
-    public QuizResponse createQuiz(@RequestBody QuizRequest quizRequest) {
+    public QuizResponse createQuiz(@RequestHeader("x-user-id") String userId ,@RequestBody QuizRequest quizRequest) {
         log.info("POST /v1/quizzes");
-        return quizService.createQuiz(quizRequest);
+        return quizService.createQuiz(userId,quizRequest);
     }
 }

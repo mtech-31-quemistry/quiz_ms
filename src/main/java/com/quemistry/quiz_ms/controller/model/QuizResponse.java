@@ -1,23 +1,24 @@
-package com.quemistry.quiz_ms.model;
+package com.quemistry.quiz_ms.controller.model;
 
+import com.quemistry.quiz_ms.client.model.MCQDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
-import java.util.Optional;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class QuizRequest {
-    private List<Long> topics;
-    private List<Long> skills;
-    private String studentId;
+public class QuizResponse {
+    private Long id;
+
+    private List<MCQDto> mcqs;
 
     private Integer pageNumber;
 
     private Integer pageSize;
+
 }

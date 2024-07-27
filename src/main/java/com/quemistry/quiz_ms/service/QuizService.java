@@ -5,9 +5,8 @@ import com.quemistry.quiz_ms.client.model.MCQDto;
 import com.quemistry.quiz_ms.client.model.RetrieveMCQRequest;
 import com.quemistry.quiz_ms.client.model.RetrieveMCQResponse;
 import com.quemistry.quiz_ms.model.Quiz;
-import com.quemistry.quiz_ms.model.QuizRequest;
-import com.quemistry.quiz_ms.model.QuizResponse;
-import com.quemistry.quiz_ms.model.QuizStatus;
+import com.quemistry.quiz_ms.controller.model.QuizRequest;
+import com.quemistry.quiz_ms.controller.model.QuizResponse;
 import com.quemistry.quiz_ms.repository.QuizRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,17 +21,15 @@ public class QuizService {
     private final QuestionClient questionClient;
 
     @Autowired
-    public QuizService(QuizRepository quizRepository,QuestionClient questionClient) {
+    public QuizService(QuizRepository quizRepository, QuestionClient questionClient) {
         this.quizRepository = quizRepository;
         this.questionClient = questionClient;
     }
 
-    public QuizResponse createQuiz(QuizRequest quizRequest) {
+    public QuizResponse createQuiz(String userId, QuizRequest quizRequest) {
         log.info("POST /v1/quizzes");
-        Quiz quiz =  Quiz.builder()
-                .status(QuizStatus.IN_PROGRESS)
-                .studentId(quizRequest.getStudentId())
-                .build();
+
+        Quiz quiz = Quiz.create(userId);
 
         RetrieveMCQResponse retrieveMCQRequests = questionClient.retrieveMCQs(
                 RetrieveMCQRequest
@@ -46,11 +43,11 @@ public class QuizService {
                 .map(MCQDto::getId)
                 .toList();
 
-        quiz.setMcqIds(mcqIds);
-        Quiz savedQuiz = quizRepository.save(quiz);
+        quiz.addMcq(mcqIds);
+        Long quizId = quizRepository.save(quiz).getId();
 
         return QuizResponse.builder()
-                .id(savedQuiz.getId())
+                .id(quizId)
                 .mcqs(retrieveMCQRequests.getMcqs())
                 .pageNumber(0)
                 .pageSize(retrieveMCQRequests.getMcqs().size())

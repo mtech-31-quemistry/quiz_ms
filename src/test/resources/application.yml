@@ -3,7 +3,7 @@ spring:
     name: question_ms
 
   datasource:
-    url: jdbc:h2:mem:testdb
+    url: jdbc:h2:mem:testdb;INIT=RUNSCRIPT FROM 'classpath:schema.sql'
     driverClassName: org.h2.Driver
     username: sa
     password: password
@@ -18,7 +18,7 @@ spring:
     baselineOnMigrate: true
     locations: classpath:test/resources/db/migration
     url: ${spring.datasource.url}
-    schemas: quiz
+    schemas: qms_quiz
     user: ${spring.datasource.username}
     password: ${spring.datasource.password}
 

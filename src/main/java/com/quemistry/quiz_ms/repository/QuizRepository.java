@@ -7,8 +7,5 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 
 public interface QuizRepository extends JpaRepository<Quiz, Long> {
-    @Query(value = "SELECT mcq_id FROM quiz_mcqs WHERE quiz_id = :quizId", nativeQuery = true)
-    List<Long> findMCQIdsByQuizId(Long quizId);
-
-
+//    List<Long> findMCQIdsByQuizId(Long quizId);
 }

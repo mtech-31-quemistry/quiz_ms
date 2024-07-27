@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   db:
     image: postgres
@@ -6,14 +8,14 @@ services:
       POSTGRES_DB: quemistry
       POSTGRES_USER: root
       POSTGRES_PASSWORD: 123456
-    ports:
-      - "5432:5432"
+    # ports:
+    #   - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
   question:
     build:
-      context: ..\question_ms
+      context: ../question_ms
       dockerfile: Dockerfile
     container_name: question-ms
     depends_on:
@@ -41,6 +43,13 @@ services:
     ports:
       - "80:80"
 
+  adminer:
+    image: adminer
+    container_name: adminer
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+
 volumes:
   postgres_data:
-

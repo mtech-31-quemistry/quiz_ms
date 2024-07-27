@@ -13,10 +13,10 @@ spring:
     enabled: true
     baselineOnMigrate: true
     locations: classpath:db/migration
-    url: ${DB_URL}
-    schemas: quiz_quiz
-    user: ${DB_USER}
-    password: ${DB_PASSWORD}
+    url: ${spring.datasource.url}
+    schemas: qms_quiz
+    user: ${spring.datasource.username}
+    password: ${spring.datasource.password}
 
   jpa.:
     properties:

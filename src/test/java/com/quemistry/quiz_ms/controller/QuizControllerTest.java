@@ -1,8 +1,8 @@
 package com.quemistry.quiz_ms.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.quemistry.quiz_ms.model.QuizRequest;
-import com.quemistry.quiz_ms.model.QuizResponse;
+import com.quemistry.quiz_ms.controller.model.QuizRequest;
+import com.quemistry.quiz_ms.controller.model.QuizResponse;
 import com.quemistry.quiz_ms.service.QuizService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,10 +13,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -58,28 +58,33 @@ class QuizControllerTest {
 
     @Test
     void createQuiz() throws Exception {
-        // 1. Create a QuizRequest object
+        // Mock the QuizService to return a predefined QuizResponse
+        QuizResponse quizResponse = QuizResponse.builder()
+                .id(1L)
+                .mcqs(new ArrayList<>())
+                .pageNumber(0)
+                .pageSize(0)
+                .build();
+
+        // Create a QuizRequest object
         QuizRequest quizRequest = new QuizRequest();
-        // Set properties on quizRequest as needed, e.g., quizRequest.setTitle("Sample Quiz");
 
-        // 2. Convert QuizRequest object to JSON
+        // Convert QuizRequest to JSON
         ObjectMapper objectMapper = new ObjectMapper();
-        String jsonQuizRequest = objectMapper.writeValueAsString(quizRequest);
+        String quizRequestJson = objectMapper.writeValueAsString(quizRequest);
+        when(quizService.createQuiz("test-user-id", quizRequest)).thenReturn(quizResponse);
 
-        // 3. Mock the quizService.createQuiz method
-        QuizResponse mockResponse = new QuizResponse();
-        // Set properties on mockResponse as needed, e.g., mockResponse.setId(1L);
-        when(quizService.createQuiz(any(QuizRequest.class))).thenReturn(mockResponse);
-
-        // 4. Perform a POST request to /v1/quizzes with the JSON payload
+        // Perform a POST request to /v1/quizzes with the x-user-id header and the
+        // QuizRequest JSON
         mockMvc.perform(post("/v1/quizzes")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(jsonQuizRequest))
+                .header("x-user-id", "test-user-id")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(quizRequestJson))
                 .andExpect(status().isOk())
-                // 6. Optionally, verify the response content
-                .andExpect(content().json(objectMapper.writeValueAsString(mockResponse)));
+                .andExpect(content().json(objectMapper.writeValueAsString(quizResponse)));
 
-        // Optionally, verify that the service method was called
-        verify(quizService).createQuiz(any(QuizRequest.class));
+        // Verify that the createQuiz method in QuizService was called with the correct
+        // parameters
+        verify(quizService).createQuiz("test-user-id", quizRequest);
     }
 }
