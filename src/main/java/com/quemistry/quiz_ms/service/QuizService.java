@@ -7,6 +7,7 @@ import com.quemistry.quiz_ms.client.model.RetrieveMCQRequest;
 import com.quemistry.quiz_ms.client.model.RetrieveMCQResponse;
 import com.quemistry.quiz_ms.controller.model.QuizRequest;
 import com.quemistry.quiz_ms.controller.model.QuizResponse;
+import com.quemistry.quiz_ms.exception.CreatingBlockedByExistingDataException;
 import com.quemistry.quiz_ms.exception.NotFoundException;
 import com.quemistry.quiz_ms.model.Quiz;
 import com.quemistry.quiz_ms.model.QuizStatus;
@@ -30,6 +31,12 @@ public class QuizService {
   }
 
   public QuizResponse createQuiz(String studentId, QuizRequest quizRequest) {
+    Optional<Quiz> existingQuiz =
+        quizRepository.findByStudentIdAndStatus(studentId, QuizStatus.IN_PROGRESS);
+    if (existingQuiz.isPresent()) {
+      throw new CreatingBlockedByExistingDataException("Quiz already in progress");
+    }
+
     Quiz quiz = Quiz.create(studentId);
 
     RetrieveMCQResponse retrieveMCQRequests =

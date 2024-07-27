@@ -11,6 +11,7 @@ import com.quemistry.quiz_ms.client.QuestionClient;
 import com.quemistry.quiz_ms.client.model.*;
 import com.quemistry.quiz_ms.controller.model.QuizRequest;
 import com.quemistry.quiz_ms.controller.model.QuizResponse;
+import com.quemistry.quiz_ms.exception.CreatingBlockedByExistingDataException;
 import com.quemistry.quiz_ms.exception.NotFoundException;
 import com.quemistry.quiz_ms.model.Quiz;
 import com.quemistry.quiz_ms.model.QuizStatus;
@@ -71,6 +72,19 @@ class QuizServiceTest {
   }
 
   @Test
+  void createQuizFailedWithExistingInProgressQuiz() {
+    QuizRequest quizRequest =
+        QuizRequest.builder().topics(List.of(1L, 2L)).skills(List.of(1L, 2L)).pageSize(1).build();
+
+    when(quizRepository.findByStudentIdAndStatus("student1", QuizStatus.IN_PROGRESS))
+        .thenReturn(Optional.of(Quiz.builder().id(1L).build()));
+
+    assertThrows(
+        CreatingBlockedByExistingDataException.class,
+        () -> quizService.createQuiz("student1", quizRequest));
+  }
+
+  @Test
   void getQuizByIdAndStudentIdWithQuizNotOwnedByStudent() {
     when(quizRepository.findByIdAndStudentId(1L, "student1")).thenReturn(Optional.empty());
 
@@ -92,6 +106,39 @@ class QuizServiceTest {
         .thenReturn(retrieveMCQResponse);
 
     QuizResponse response = quizService.getQuiz(1L, "student1", 0, 1);
+
+    assertEquals(1L, response.getId());
+    assertEquals(1, response.getMcqs().size());
+    assertEquals(0, response.getPageNumber());
+    assertEquals(1, response.getPageSize());
+    assertEquals(1, response.getTotalPages());
+    assertEquals(2L, response.getTotalRecords());
+  }
+
+  @Test
+  void getInProgressQuizWithQuizNotOwnedByStudent() {
+    when(quizRepository.findByStudentIdAndStatus("student1", QuizStatus.IN_PROGRESS))
+        .thenReturn(Optional.empty());
+
+    assertThrows(NotFoundException.class, () -> quizService.getInProgressQuiz("student1", 0, 10));
+  }
+
+  @Test
+  void getInProgressQuizWithFirstPage() {
+    Quiz quiz = Quiz.builder().id(1L).studentId("student1").mcqIds(List.of(1L, 2L)).build();
+    RetrieveMCQResponse retrieveMCQResponse =
+        RetrieveMCQResponse.builder()
+            .mcqs(List.of(generateMCQDto(1L, "Question 1")))
+            .totalPages(1)
+            .totalRecords(2L)
+            .build();
+
+    when(quizRepository.findByStudentIdAndStatus("student1", QuizStatus.IN_PROGRESS))
+        .thenReturn(Optional.of(quiz));
+    when(questionClient.retrieveMCQsByIds(any(RetrieveMCQByIdsRequest.class)))
+        .thenReturn(retrieveMCQResponse);
+
+    QuizResponse response = quizService.getInProgressQuiz("student1", 0, 1);
 
     assertEquals(1L, response.getId());
     assertEquals(1, response.getMcqs().size());
