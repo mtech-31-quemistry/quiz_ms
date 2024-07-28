@@ -44,6 +44,8 @@ public class QuizService {
             RetrieveMCQRequest.builder()
                 .topics(quizRequest.getTopics())
                 .skills(quizRequest.getSkills())
+                .pageNumber(0)
+                .pageNumber(60)
                 .build());
 
     List<Long> mcqIds = retrieveMCQRequests.getMcqs().stream().map(MCQDto::getId).toList();
@@ -81,7 +83,11 @@ public class QuizService {
 
     RetrieveMCQResponse mcqs =
         questionClient.retrieveMCQsByIds(
-            RetrieveMCQByIdsRequest.builder().ids(quiz.get().getMcqIds()).build());
+            RetrieveMCQByIdsRequest.builder()
+                .ids(quiz.get().getMcqIds())
+                .pageNumber(pageNumber)
+                .pageSize(pageSize)
+                .build());
 
     return QuizResponse.builder()
         .id(quiz.get().getId())
