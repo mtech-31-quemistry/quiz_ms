@@ -29,6 +29,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 class QuizControllerTest {
+  private final ObjectMapper objectMapper = new ObjectMapper();
   private MockMvc mockMvc;
 
   @Mock private QuizService quizService;
@@ -50,7 +51,6 @@ class QuizControllerTest {
     expectedResponse.put("service", "auth");
     expectedResponse.put("status", "UP");
 
-    ObjectMapper objectMapper = new ObjectMapper();
     String expectedResponseBody = objectMapper.writeValueAsString(expectedResponse);
 
     mockMvc
@@ -74,9 +74,8 @@ class QuizControllerTest {
             .totalRecords(1L)
             .build();
 
-    QuizRequest quizRequest = new QuizRequest();
+    QuizRequest quizRequest = QuizRequest.builder().pageSize(1).totalSize(1L).build();
 
-    ObjectMapper objectMapper = new ObjectMapper();
     String quizRequestJson = objectMapper.writeValueAsString(quizRequest);
     when(quizService.createQuiz("test-user-id", quizRequest)).thenReturn(quizResponse);
 
@@ -107,8 +106,6 @@ class QuizControllerTest {
             .totalRecords(1L)
             .build();
 
-    ObjectMapper objectMapper = new ObjectMapper();
-
     when(quizService.getQuiz(1L, "test-user-id", 0, 1)).thenReturn(quizResponse);
 
     mockMvc
@@ -126,7 +123,6 @@ class QuizControllerTest {
 
   @Test
   void getQuizNotFound() throws Exception {
-    ObjectMapper objectMapper = new ObjectMapper();
     when(quizService.getQuiz(1L, "test-user-id", 0, 1))
         .thenThrow(new NotFoundException("Quiz not found"));
 
@@ -157,8 +153,6 @@ class QuizControllerTest {
             .totalPages(1)
             .totalRecords(1L)
             .build();
-
-    ObjectMapper objectMapper = new ObjectMapper();
 
     when(quizService.getInProgressQuiz("test-user-id", 0, 1)).thenReturn(quizResponse);
 

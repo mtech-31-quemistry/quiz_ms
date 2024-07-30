@@ -64,13 +64,17 @@ public class QuizService {
             .limit(quizRequest.getPageSize())
             .collect(Collectors.toList());
 
+    Long totalRecords =
+        Math.min(retrieveMCQRequests.getTotalRecords(), quizRequest.getTotalSize().intValue());
+    Integer totalPages = (int) Math.ceil((double) totalRecords / quizRequest.getPageSize());
+
     return QuizResponse.builder()
         .id(quizId)
         .mcqs(mcqResponses)
         .pageNumber(0)
         .pageSize(quizRequest.getPageSize())
-        .totalPages(retrieveMCQRequests.getTotalPages())
-        .totalRecords(retrieveMCQRequests.getTotalRecords())
+        .totalPages(totalPages)
+        .totalRecords(totalRecords)
         .build();
   }
 

@@ -14,4 +14,5 @@ public class QuizRequest {
   private List<Long> topics;
   private List<Long> skills;
   private Integer pageSize;
+  private Long totalSize;
 }
