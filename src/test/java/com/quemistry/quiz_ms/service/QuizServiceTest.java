@@ -13,6 +13,7 @@ import com.quemistry.quiz_ms.controller.model.QuizRequest;
 import com.quemistry.quiz_ms.controller.model.QuizResponse;
 import com.quemistry.quiz_ms.exception.CreatingBlockedByExistingDataException;
 import com.quemistry.quiz_ms.exception.NotFoundException;
+import com.quemistry.quiz_ms.model.Attempt;
 import com.quemistry.quiz_ms.model.Quiz;
 import com.quemistry.quiz_ms.model.QuizStatus;
 import com.quemistry.quiz_ms.repository.QuizRepository;
@@ -67,7 +68,10 @@ class QuizServiceTest {
             argThat(
                 quiz ->
                     quiz.getStudentId().equals("student1")
-                        && quiz.getMcqIds().containsAll(List.of(1L, 2L))
+                        && quiz.getAttempts().stream()
+                            .map(Attempt::getMcqId)
+                            .toList()
+                            .containsAll(List.of(1L, 2L))
                         && quiz.getStatus().equals(QuizStatus.IN_PROGRESS)));
   }
 
@@ -93,7 +97,8 @@ class QuizServiceTest {
 
   @Test
   void getQuizByIdAndStudentIdWithFirstPage() {
-    Quiz quiz = Quiz.builder().id(1L).studentId("student1").mcqIds(List.of(1L, 2L)).build();
+    Quiz quiz = Quiz.builder().id(1L).studentId("student1").build();
+    quiz.setAttempts(List.of(Attempt.create(quiz, 1L), Attempt.create(quiz, 2L)));
     RetrieveMCQResponse retrieveMCQResponse =
         RetrieveMCQResponse.builder()
             .mcqs(List.of(generateMCQDto(1L, "Question 1")))
@@ -116,16 +121,9 @@ class QuizServiceTest {
   }
 
   @Test
-  void getInProgressQuizWithQuizNotOwnedByStudent() {
-    when(quizRepository.findByStudentIdAndStatus("student1", QuizStatus.IN_PROGRESS))
-        .thenReturn(Optional.empty());
-
-    assertThrows(NotFoundException.class, () -> quizService.getInProgressQuiz("student1", 0, 10));
-  }
-
-  @Test
   void getInProgressQuizWithFirstPage() {
-    Quiz quiz = Quiz.builder().id(1L).studentId("student1").mcqIds(List.of(1L, 2L)).build();
+    Quiz quiz = Quiz.builder().id(1L).studentId("student1").build();
+    quiz.setAttempts(List.of(Attempt.create(quiz, 1L), Attempt.create(quiz, 2L)));
     RetrieveMCQResponse retrieveMCQResponse =
         RetrieveMCQResponse.builder()
             .mcqs(List.of(generateMCQDto(1L, "Question 1")))

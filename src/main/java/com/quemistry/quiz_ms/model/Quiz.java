@@ -29,27 +29,22 @@ public class Quiz {
 
   private Date updatedOn;
 
-  @ElementCollection
-  @CollectionTable(
-      name = "quiz_mcq",
-      schema = "qms_quiz",
-      joinColumns = @JoinColumn(name = "quiz_id"))
-  @Column(name = "mcq_id")
-  private List<Long> mcqIds;
+  @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<Attempt> attempts;
 
   public static Quiz create(String studentId) {
     Date now = new Date();
     return Quiz.builder()
         .status(QuizStatus.IN_PROGRESS)
         .studentId(studentId)
-        .mcqIds(new ArrayList<>())
+        .attempts(new ArrayList<>())
         .createdOn(now)
         .updatedOn(now)
         .build();
   }
 
-  public void addMcq(List<Long> mcqIds) {
-    this.mcqIds.addAll(mcqIds);
+  public void addAttempts(List<Long> mcqIds) {
+    mcqIds.forEach(mcqId -> this.attempts.add(Attempt.create(this, mcqId)));
   }
 
   public void complete() {

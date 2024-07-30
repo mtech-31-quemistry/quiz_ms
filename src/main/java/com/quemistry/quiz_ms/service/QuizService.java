@@ -9,6 +9,7 @@ import com.quemistry.quiz_ms.controller.model.QuizRequest;
 import com.quemistry.quiz_ms.controller.model.QuizResponse;
 import com.quemistry.quiz_ms.exception.CreatingBlockedByExistingDataException;
 import com.quemistry.quiz_ms.exception.NotFoundException;
+import com.quemistry.quiz_ms.model.Attempt;
 import com.quemistry.quiz_ms.model.Quiz;
 import com.quemistry.quiz_ms.model.QuizStatus;
 import com.quemistry.quiz_ms.repository.QuizRepository;
@@ -50,7 +51,7 @@ public class QuizService {
 
     List<Long> mcqIds = retrieveMCQRequests.getMcqs().stream().map(MCQDto::getId).toList();
 
-    quiz.addMcq(mcqIds);
+    quiz.addAttempts(mcqIds);
     Long quizId = quizRepository.save(quiz).getId();
 
     return QuizResponse.builder()
@@ -84,7 +85,7 @@ public class QuizService {
     RetrieveMCQResponse mcqs =
         questionClient.retrieveMCQsByIds(
             RetrieveMCQByIdsRequest.builder()
-                .ids(quiz.get().getMcqIds())
+                .ids(quiz.get().getAttempts().stream().map(Attempt::getMcqId).toList())
                 .pageNumber(pageNumber)
                 .pageSize(pageSize)
                 .build());
