@@ -78,6 +78,7 @@ jacocoTestReport {
 
 	afterEvaluate {
 		excludedClassFilesForReport(classDirectories)
+
 	}
 }
 
@@ -90,7 +91,8 @@ private excludedClassFilesForReport(classDirectories) {
 				'**/entity/**/*.class',
 				'**/Application.class',
 				'**/constant/**/*.class',
-				'**/constant/*.class'
+				'**/constant/*.class',
+				'com/quemistry/quiz_ms/exception/ExceptionResponse.class'
 		])
 	}))
 }
