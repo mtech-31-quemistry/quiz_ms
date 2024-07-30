@@ -8,13 +8,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.quemistry.quiz_ms.controller.model.MCQResponse;
 import com.quemistry.quiz_ms.controller.model.QuizRequest;
 import com.quemistry.quiz_ms.controller.model.QuizResponse;
 import com.quemistry.quiz_ms.exception.ExceptionAdvisor;
 import com.quemistry.quiz_ms.exception.NotFoundException;
 import com.quemistry.quiz_ms.service.QuizService;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -58,20 +61,25 @@ class QuizControllerTest {
 
   @Test
   void createQuiz() throws Exception {
-    // Mock the QuizService to return a predefined QuizResponse
-    QuizResponse quizResponse =
-        QuizResponse.builder().id(1L).mcqs(new ArrayList<>()).pageNumber(0).pageSize(0).build();
+    List<MCQResponse> mcqResponses = new ArrayList<>();
+    mcqResponses.add(MCQResponse.builder().id(1L).attemptOption(1).attemptOn(new Date()).build());
 
-    // Create a QuizRequest object
+    QuizResponse quizResponse =
+        QuizResponse.builder()
+            .id(1L)
+            .mcqs(mcqResponses)
+            .pageNumber(0)
+            .pageSize(1)
+            .totalPages(1)
+            .totalRecords(1L)
+            .build();
+
     QuizRequest quizRequest = new QuizRequest();
 
-    // Convert QuizRequest to JSON
     ObjectMapper objectMapper = new ObjectMapper();
     String quizRequestJson = objectMapper.writeValueAsString(quizRequest);
     when(quizService.createQuiz("test-user-id", quizRequest)).thenReturn(quizResponse);
 
-    // Perform a POST request to /v1/quizzes with the x-user-id header and the
-    // QuizRequest JSON
     mockMvc
         .perform(
             post("/v1/quizzes")
@@ -81,32 +89,28 @@ class QuizControllerTest {
         .andExpect(status().isOk())
         .andExpect(content().json(objectMapper.writeValueAsString(quizResponse)));
 
-    // Verify that the createQuiz method in QuizService was called with the correct
-    // parameters
     verify(quizService).createQuiz("test-user-id", quizRequest);
   }
 
   @Test
   void getQuiz() throws Exception {
-    // Mock the QuizService to return a predefined QuizResponse
+    List<MCQResponse> mcqResponses = new ArrayList<>();
+    mcqResponses.add(MCQResponse.builder().id(1L).attemptOption(1).attemptOn(new Date()).build());
+
     QuizResponse quizResponse =
         QuizResponse.builder()
             .id(1L)
-            .mcqs(new ArrayList<>())
+            .mcqs(mcqResponses)
             .pageNumber(0)
             .pageSize(1)
             .totalPages(1)
-            .totalRecords(2L)
+            .totalRecords(1L)
             .build();
 
-    // Create a GetQuizRequest object
-
-    // Convert GetQuizRequest to JSON
     ObjectMapper objectMapper = new ObjectMapper();
 
     when(quizService.getQuiz(1L, "test-user-id", 0, 1)).thenReturn(quizResponse);
 
-    // Perform a GET request to /v1/quizzes with the x-user-id header and the GetQuizRequest JSON
     mockMvc
         .perform(
             get("/v1/quizzes/1")
@@ -117,19 +121,15 @@ class QuizControllerTest {
         .andExpect(status().isOk())
         .andExpect(content().json(objectMapper.writeValueAsString(quizResponse)));
 
-    // Verify that the getQuiz method in QuizService was called with the correct parameters
     verify(quizService).getQuiz(1L, "test-user-id", 0, 1);
   }
 
   @Test
   void getQuizNotFound() throws Exception {
-
-    // Convert GetQuizRequest to JSON
     ObjectMapper objectMapper = new ObjectMapper();
     when(quizService.getQuiz(1L, "test-user-id", 0, 1))
         .thenThrow(new NotFoundException("Quiz not found"));
 
-    // Perform a GET request to /v1/quizzes with the x-user-id header and the GetQuizRequest JSON
     mockMvc
         .perform(
             get("/v1/quizzes/1")
@@ -140,31 +140,28 @@ class QuizControllerTest {
         .andExpect(status().isNotFound())
         .andExpect(content().json("{\"message\":\"Quiz not found\"}"));
 
-    // Verify that the getQuiz method in QuizService was called with the correct parameters
     verify(quizService).getQuiz(1L, "test-user-id", 0, 1);
   }
 
   @Test
   void getInProgressQuiz() throws Exception {
-    // Mock the QuizService to return a predefined QuizResponse
+    List<MCQResponse> mcqResponses = new ArrayList<>();
+    mcqResponses.add(MCQResponse.builder().id(1L).attemptOption(1).attemptOn(new Date()).build());
+
     QuizResponse quizResponse =
         QuizResponse.builder()
             .id(1L)
-            .mcqs(new ArrayList<>())
+            .mcqs(mcqResponses)
             .pageNumber(0)
             .pageSize(1)
             .totalPages(1)
-            .totalRecords(2L)
+            .totalRecords(1L)
             .build();
 
-    // Create a GetQuizRequest object
-
-    // Convert GetQuizRequest to JSON
     ObjectMapper objectMapper = new ObjectMapper();
 
     when(quizService.getInProgressQuiz("test-user-id", 0, 1)).thenReturn(quizResponse);
 
-    // Perform a GET request to /v1/quizzes with the x-user-id header and the GetQuizRequest JSON
     mockMvc
         .perform(
             get("/v1/quizzes/me/in-progress")
@@ -175,7 +172,6 @@ class QuizControllerTest {
         .andExpect(status().isOk())
         .andExpect(content().json(objectMapper.writeValueAsString(quizResponse)));
 
-    // Verify that the getQuiz method in QuizService was called with the correct parameters
     verify(quizService).getInProgressQuiz("test-user-id", 0, 1);
   }
 }

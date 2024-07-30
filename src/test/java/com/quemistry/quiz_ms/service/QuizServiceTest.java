@@ -1,7 +1,6 @@
 package com.quemistry.quiz_ms.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.verify;
@@ -17,6 +16,7 @@ import com.quemistry.quiz_ms.model.Attempt;
 import com.quemistry.quiz_ms.model.Quiz;
 import com.quemistry.quiz_ms.model.QuizStatus;
 import com.quemistry.quiz_ms.repository.QuizRepository;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -118,8 +118,8 @@ class QuizServiceTest {
     assertEquals(1, response.getPageSize());
     assertEquals(1, response.getTotalPages());
     assertEquals(2L, response.getTotalRecords());
-    assertEquals(null, response.getMcqs().get(0).getAttemptOption());
-    assertEquals(null, response.getMcqs().get(0).getAttemptOn());
+    assertNull(response.getMcqs().getFirst().getAttemptOption());
+    assertNull(response.getMcqs().getFirst().getAttemptOn());
   }
 
   @Test
@@ -146,8 +146,66 @@ class QuizServiceTest {
     assertEquals(1, response.getPageSize());
     assertEquals(1, response.getTotalPages());
     assertEquals(2L, response.getTotalRecords());
-    assertEquals(null, response.getMcqs().get(0).getAttemptOption());
-    assertEquals(null, response.getMcqs().get(0).getAttemptOn());
+    assertNull(response.getMcqs().getFirst().getAttemptOption());
+    assertNull(response.getMcqs().getFirst().getAttemptOn());
+  }
+
+  @Test
+  void getInProgressQuizWithFirstPageWithAttempt() {
+    Date now = new Date();
+    Quiz quiz = Quiz.builder().id(1L).studentId("student1").build();
+    quiz.setAttempts(
+        List.of(Attempt.builder().quiz(quiz).mcqId(1L).optionNo(1).attemptTime(now).build()));
+    RetrieveMCQResponse retrieveMCQResponse =
+        RetrieveMCQResponse.builder()
+            .mcqs(List.of(generateMCQDto(1L, "Question 1")))
+            .totalPages(1)
+            .totalRecords(1L)
+            .build();
+
+    when(quizRepository.findByStudentIdAndStatus("student1", QuizStatus.IN_PROGRESS))
+        .thenReturn(Optional.of(quiz));
+    when(questionClient.retrieveMCQsByIds(any(RetrieveMCQByIdsRequest.class)))
+        .thenReturn(retrieveMCQResponse);
+
+    QuizResponse response = quizService.getInProgressQuiz("student1", 0, 1);
+
+    assertEquals(1L, response.getId());
+    assertEquals(1, response.getMcqs().size());
+    assertEquals(0, response.getPageNumber());
+    assertEquals(1, response.getPageSize());
+    assertEquals(1, response.getTotalPages());
+    assertEquals(1L, response.getTotalRecords());
+    assertEquals(1, response.getMcqs().getFirst().getAttemptOption());
+    assertEquals(now, response.getMcqs().getFirst().getAttemptOn());
+  }
+
+  @Test
+  void getInProgressQuizWithFirstPageWithoutAttempt() {
+    Quiz quiz = Quiz.builder().id(1L).studentId("student1").build();
+    quiz.setAttempts(List.of(Attempt.create(quiz, 1L)));
+    RetrieveMCQResponse retrieveMCQResponse =
+        RetrieveMCQResponse.builder()
+            .mcqs(List.of(generateMCQDto(1L, "Question 1")))
+            .totalPages(1)
+            .totalRecords(1L)
+            .build();
+
+    when(quizRepository.findByStudentIdAndStatus("student1", QuizStatus.IN_PROGRESS))
+        .thenReturn(Optional.of(quiz));
+    when(questionClient.retrieveMCQsByIds(any(RetrieveMCQByIdsRequest.class)))
+        .thenReturn(retrieveMCQResponse);
+
+    QuizResponse response = quizService.getInProgressQuiz("student1", 0, 1);
+
+    assertEquals(1L, response.getId());
+    assertEquals(1, response.getMcqs().size());
+    assertEquals(0, response.getPageNumber());
+    assertEquals(1, response.getPageSize());
+    assertEquals(1, response.getTotalPages());
+    assertEquals(1L, response.getTotalRecords());
+    assertNull(response.getMcqs().getFirst().getAttemptOption());
+    assertNull(response.getMcqs().getFirst().getAttemptOn());
   }
 
   private MCQDto generateMCQDto(Long id, String stem) {
