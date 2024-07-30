@@ -1,6 +1,5 @@
 package com.quemistry.quiz_ms.controller.model;
 
-import com.quemistry.quiz_ms.client.model.MCQDto;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,7 +13,7 @@ import lombok.NoArgsConstructor;
 public class QuizResponse {
   private Long id;
 
-  private List<MCQDto> mcqs;
+  private List<MCQResponse> mcqs;
 
   private Integer pageNumber;
   private Integer pageSize;

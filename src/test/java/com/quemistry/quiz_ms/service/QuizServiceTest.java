@@ -118,6 +118,8 @@ class QuizServiceTest {
     assertEquals(1, response.getPageSize());
     assertEquals(1, response.getTotalPages());
     assertEquals(2L, response.getTotalRecords());
+    assertEquals(null, response.getMcqs().get(0).getAttemptOption());
+    assertEquals(null, response.getMcqs().get(0).getAttemptOn());
   }
 
   @Test
@@ -144,6 +146,8 @@ class QuizServiceTest {
     assertEquals(1, response.getPageSize());
     assertEquals(1, response.getTotalPages());
     assertEquals(2L, response.getTotalRecords());
+    assertEquals(null, response.getMcqs().get(0).getAttemptOption());
+    assertEquals(null, response.getMcqs().get(0).getAttemptOn());
   }
 
   private MCQDto generateMCQDto(Long id, String stem) {
