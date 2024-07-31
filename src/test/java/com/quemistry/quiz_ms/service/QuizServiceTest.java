@@ -10,11 +10,13 @@ import com.quemistry.quiz_ms.client.QuestionClient;
 import com.quemistry.quiz_ms.client.model.*;
 import com.quemistry.quiz_ms.controller.model.QuizRequest;
 import com.quemistry.quiz_ms.controller.model.QuizResponse;
-import com.quemistry.quiz_ms.exception.CreatingBlockedByExistingDataException;
+import com.quemistry.quiz_ms.exception.AttemptAlreadyExistsException;
+import com.quemistry.quiz_ms.exception.InProgressQuizAlreadyExistsException;
 import com.quemistry.quiz_ms.exception.NotFoundException;
 import com.quemistry.quiz_ms.model.Attempt;
 import com.quemistry.quiz_ms.model.Quiz;
 import com.quemistry.quiz_ms.model.QuizStatus;
+import com.quemistry.quiz_ms.repository.AttemptRepository;
 import com.quemistry.quiz_ms.repository.QuizRepository;
 import java.util.Date;
 import java.util.List;
@@ -28,6 +30,7 @@ import org.mockito.MockitoAnnotations;
 class QuizServiceTest {
 
   @Mock private QuizRepository quizRepository;
+  @Mock private AttemptRepository attemptRepository;
 
   @Mock private QuestionClient questionClient;
 
@@ -91,7 +94,7 @@ class QuizServiceTest {
         .thenReturn(Optional.of(Quiz.builder().id(1L).build()));
 
     assertThrows(
-        CreatingBlockedByExistingDataException.class,
+        InProgressQuizAlreadyExistsException.class,
         () -> quizService.createQuiz("student1", quizRequest));
   }
 
@@ -301,6 +304,69 @@ class QuizServiceTest {
     assertEquals(1L, response.getTotalRecords());
     assertNull(response.getMcqs().getFirst().getAttemptOption());
     assertNull(response.getMcqs().getFirst().getAttemptOn());
+  }
+
+  @Test
+  void updateAttemptSuccess() {
+    Long quizId = 1L;
+    Long mcqId = 1L;
+    String studentId = "student1";
+    Integer attemptOption = 1;
+
+    when(quizRepository.existsByIdAndStudentId(quizId, studentId)).thenReturn(true);
+    Attempt attempt = new Attempt();
+    when(attemptRepository.findByQuizIdAndMcqId(quizId, mcqId)).thenReturn(Optional.of(attempt));
+
+    quizService.updateAttempt(quizId, mcqId, studentId, attemptOption);
+
+    assertEquals(attemptOption, attempt.getOptionNo());
+    verify(attemptRepository).save(attempt);
+  }
+
+  @Test
+  void updateAttemptQuizNotFound() {
+    Long quizId = 1L;
+    Long mcqId = 1L;
+    String studentId = "student1";
+    Integer attemptOption = 1;
+
+    when(quizRepository.existsByIdAndStudentId(quizId, studentId)).thenReturn(false);
+
+    assertThrows(
+        NotFoundException.class,
+        () -> quizService.updateAttempt(quizId, mcqId, studentId, attemptOption));
+  }
+
+  @Test
+  void updateAttemptAttemptNotFound() {
+    Long quizId = 1L;
+    Long mcqId = 1L;
+    String studentId = "student1";
+    Integer attemptOption = 1;
+
+    when(quizRepository.existsByIdAndStudentId(quizId, studentId)).thenReturn(true);
+    when(attemptRepository.findByQuizIdAndMcqId(quizId, mcqId)).thenReturn(Optional.empty());
+
+    assertThrows(
+        NotFoundException.class,
+        () -> quizService.updateAttempt(quizId, mcqId, studentId, attemptOption));
+  }
+
+  @Test
+  void updateAttemptAttemptAlreadyExists() {
+    Long quizId = 1L;
+    Long mcqId = 1L;
+    String studentId = "student1";
+    Integer attemptOption = 1;
+
+    when(quizRepository.existsByIdAndStudentId(quizId, studentId)).thenReturn(true);
+    Attempt attempt = new Attempt();
+    attempt.setOptionNo(1);
+    when(attemptRepository.findByQuizIdAndMcqId(quizId, mcqId)).thenReturn(Optional.of(attempt));
+
+    assertThrows(
+        AttemptAlreadyExistsException.class,
+        () -> quizService.updateAttempt(quizId, mcqId, studentId, attemptOption));
   }
 
   private MCQDto generateMCQDto(Long id, String stem) {

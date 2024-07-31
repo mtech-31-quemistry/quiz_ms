@@ -8,12 +8,14 @@ import com.quemistry.quiz_ms.client.model.RetrieveMCQResponse;
 import com.quemistry.quiz_ms.controller.model.MCQResponse;
 import com.quemistry.quiz_ms.controller.model.QuizRequest;
 import com.quemistry.quiz_ms.controller.model.QuizResponse;
-import com.quemistry.quiz_ms.exception.CreatingBlockedByExistingDataException;
+import com.quemistry.quiz_ms.exception.AttemptAlreadyExistsException;
+import com.quemistry.quiz_ms.exception.InProgressQuizAlreadyExistsException;
 import com.quemistry.quiz_ms.exception.NotFoundException;
 import com.quemistry.quiz_ms.mapper.MCQMapper;
 import com.quemistry.quiz_ms.model.Attempt;
 import com.quemistry.quiz_ms.model.Quiz;
 import com.quemistry.quiz_ms.model.QuizStatus;
+import com.quemistry.quiz_ms.repository.AttemptRepository;
 import com.quemistry.quiz_ms.repository.QuizRepository;
 import java.util.List;
 import java.util.Optional;
@@ -26,12 +28,17 @@ import org.springframework.stereotype.Service;
 @Service
 public class QuizService {
   private final QuizRepository quizRepository;
+  private final AttemptRepository attemptRepository;
   private final QuestionClient questionClient;
   private final MCQMapper mcqMapper = MCQMapper.INSTANCE;
 
   @Autowired
-  public QuizService(QuizRepository quizRepository, QuestionClient questionClient) {
+  public QuizService(
+      QuizRepository quizRepository,
+      AttemptRepository attemptRepository,
+      QuestionClient questionClient) {
     this.quizRepository = quizRepository;
+    this.attemptRepository = attemptRepository;
     this.questionClient = questionClient;
   }
 
@@ -39,7 +46,7 @@ public class QuizService {
     Optional<Quiz> existingQuiz =
         quizRepository.findByStudentIdAndStatus(studentId, QuizStatus.IN_PROGRESS);
     if (existingQuiz.isPresent()) {
-      throw new CreatingBlockedByExistingDataException("Quiz already in progress");
+      throw new InProgressQuizAlreadyExistsException();
     }
 
     Quiz quiz = Quiz.create(studentId);
@@ -89,6 +96,24 @@ public class QuizService {
         quizRepository.findByStudentIdAndStatus(studentId, QuizStatus.IN_PROGRESS);
 
     return convertQuiz(pageNumber, pageSize, quiz);
+  }
+
+  public void updateAttempt(Long id, Long mcqId, String studentId, Integer attemptOption) {
+    if (!quizRepository.existsByIdAndStudentId(id, studentId)) {
+      throw new NotFoundException("Quiz not found");
+    }
+
+    Attempt attempt =
+        attemptRepository
+            .findByQuizIdAndMcqId(id, mcqId)
+            .orElseThrow(() -> new NotFoundException("Attempt not found"));
+
+    if (attempt.getOptionNo() != null) {
+      throw new AttemptAlreadyExistsException();
+    }
+
+    attempt.updateAttempt(attemptOption);
+    attemptRepository.save(attempt);
   }
 
   private QuizResponse convertQuiz(

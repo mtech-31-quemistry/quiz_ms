@@ -40,6 +40,11 @@ public class Attempt {
         .build();
   }
 
+  public void updateAttempt(Integer optionNo) {
+    this.optionNo = optionNo;
+    this.attemptTime = new Date();
+  }
+
   @Data
   @NoArgsConstructor
   public static class AttemptId implements Serializable {

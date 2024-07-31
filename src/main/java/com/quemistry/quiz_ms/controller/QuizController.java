@@ -1,5 +1,6 @@
 package com.quemistry.quiz_ms.controller;
 
+import com.quemistry.quiz_ms.controller.model.AttemptRequest;
 import com.quemistry.quiz_ms.controller.model.QuizRequest;
 import com.quemistry.quiz_ms.controller.model.QuizResponse;
 import com.quemistry.quiz_ms.service.QuizService;
@@ -53,5 +54,17 @@ public class QuizController {
     log.info("GET /v1/me/in-progress");
 
     return quizService.getInProgressQuiz(studentId, pageNumber, pageSize);
+  }
+
+  @PutMapping("{id}/mcqs/{mcqId}/attempt")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void updateAttempt(
+      @PathVariable Long id,
+      @PathVariable Long mcqId,
+      @RequestHeader("x-user-id") String studentId,
+      @RequestBody AttemptRequest attemptRequest) {
+    log.info("PUT /v1/quizzes/{}/mcqs/{}/attempt", id, mcqId);
+
+    quizService.updateAttempt(id, mcqId, studentId, attemptRequest.getAttemptOption());
   }
 }

@@ -9,4 +9,6 @@ public interface QuizRepository extends JpaRepository<Quiz, Long> {
   Optional<Quiz> findByIdAndStudentId(Long id, String studentId);
 
   Optional<Quiz> findByStudentIdAndStatus(String studentId, QuizStatus status);
+
+  boolean existsByIdAndStudentId(Long id, String studentId);
 }
