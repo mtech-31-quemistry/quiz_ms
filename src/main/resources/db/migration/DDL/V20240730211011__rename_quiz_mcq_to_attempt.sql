@@ -1,5 +1,5 @@
 -- Rename the table quiz_mcq to attempt
-ALTER TABLE qms_quiz.quiz_mcq RENAME TO qms_quiz.attempt;
+ALTER TABLE qms_quiz.quiz_mcq RENAME TO attempt;
 
 -- Add new columns option_no and attempt_time
 ALTER TABLE qms_quiz.attempt

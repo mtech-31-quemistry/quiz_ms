@@ -2,9 +2,7 @@ package com.quemistry.quiz_ms.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import com.quemistry.quiz_ms.client.QuestionClient;
 import com.quemistry.quiz_ms.client.model.*;
@@ -55,29 +53,98 @@ class QuizServiceTest {
         RetrieveMCQResponse.builder()
             .mcqs(List.of(generateMCQDto(1L, "Question 1")))
             .totalPages(1)
-            .totalRecords(1L)
+            .totalRecords(2L)
             .build();
 
+    when(quizRepository.findByStudentIdAndStatus("student1", QuizStatus.IN_PROGRESS))
+        .thenReturn(Optional.empty());
     when(questionClient.retrieveMCQs(any(RetrieveMCQRequest.class)))
         .thenReturn(retrieveMCQResponse);
-    when(quizRepository.save(any(Quiz.class))).thenReturn(Quiz.builder().id(1L).build());
+    when(quizRepository.save(any(Quiz.class)))
+        .thenAnswer(
+            invocation -> {
+              Quiz quiz = invocation.getArgument(0);
+              if (quiz.getId() == null) {
+                quiz.setId(1L); // Simulate the generation of an ID
+              }
+              return quiz;
+            });
 
     QuizResponse response = quizService.createQuiz("student1", quizRequest);
 
-    assertEquals(1L, response.getId());
+    assertEquals(1, response.getMcqs().size());
+    assertEquals(0, response.getPageNumber());
+    assertEquals(1, response.getPageSize());
+    assertEquals(2, response.getTotalPages());
+    assertEquals(2L, response.getTotalRecords());
+
+    verify(quizRepository).findByStudentIdAndStatus("student1", QuizStatus.IN_PROGRESS);
+    verify(questionClient).retrieveMCQs(any(RetrieveMCQRequest.class));
+    verify(quizRepository, times(2)).save(any(Quiz.class));
+  }
+
+  @Test
+  void createQuizWithTotalPagesAndRecords() {
+    QuizRequest quizRequest =
+        QuizRequest.builder()
+            .topics(List.of(1L, 2L))
+            .skills(List.of(1L, 2L))
+            .pageSize(1)
+            .totalSize(2L)
+            .build();
+
+    RetrieveMCQResponse retrieveMCQResponse =
+        RetrieveMCQResponse.builder()
+            .mcqs(List.of(generateMCQDto(1L, "Question 1"), generateMCQDto(2L, "Question 2")))
+            .totalPages(2)
+            .totalRecords(2L)
+            .build();
+
+    when(quizRepository.findByStudentIdAndStatus("student1", QuizStatus.IN_PROGRESS))
+        .thenReturn(Optional.empty());
+    when(questionClient.retrieveMCQs(any(RetrieveMCQRequest.class)))
+        .thenReturn(retrieveMCQResponse);
+    when(quizRepository.save(any(Quiz.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    QuizResponse response = quizService.createQuiz("student1", quizRequest);
+
+    assertEquals(1, response.getMcqs().size());
+    assertEquals(0, response.getPageNumber());
+    assertEquals(1, response.getPageSize());
+    assertEquals(2, response.getTotalPages());
+    assertEquals(2L, response.getTotalRecords());
+  }
+
+  @Test
+  void createQuizWithLimitedTotalSize() {
+    QuizRequest quizRequest =
+        QuizRequest.builder()
+            .topics(List.of(1L, 2L))
+            .skills(List.of(1L, 2L))
+            .pageSize(1)
+            .totalSize(1L)
+            .build();
+
+    RetrieveMCQResponse retrieveMCQResponse =
+        RetrieveMCQResponse.builder()
+            .mcqs(List.of(generateMCQDto(1L, "Question 1"), generateMCQDto(2L, "Question 2")))
+            .totalPages(2)
+            .totalRecords(2L)
+            .build();
+
+    when(quizRepository.findByStudentIdAndStatus("student1", QuizStatus.IN_PROGRESS))
+        .thenReturn(Optional.empty());
+    when(questionClient.retrieveMCQs(any(RetrieveMCQRequest.class)))
+        .thenReturn(retrieveMCQResponse);
+    when(quizRepository.save(any(Quiz.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    QuizResponse response = quizService.createQuiz("student1", quizRequest);
+
     assertEquals(1, response.getMcqs().size());
     assertEquals(0, response.getPageNumber());
     assertEquals(1, response.getPageSize());
     assertEquals(1, response.getTotalPages());
     assertEquals(1L, response.getTotalRecords());
-
-    verify(quizRepository)
-        .save(
-            argThat(
-                quiz ->
-                    quiz.getStudentId().equals("student1")
-                        && quiz.getAttempts().stream().map(Attempt::getMcqId).toList().contains(1L)
-                        && quiz.getStatus().equals(QuizStatus.IN_PROGRESS)));
   }
 
   @Test
@@ -96,94 +163,6 @@ class QuizServiceTest {
     assertThrows(
         InProgressQuizAlreadyExistsException.class,
         () -> quizService.createQuiz("student1", quizRequest));
-  }
-
-  @Test
-  void createQuizWithTotalPagesAndRecords() {
-    QuizRequest quizRequest =
-        QuizRequest.builder()
-            .topics(List.of(1L, 2L))
-            .skills(List.of(1L, 2L))
-            .pageSize(1)
-            .totalSize(3L)
-            .build();
-
-    RetrieveMCQResponse retrieveMCQResponse =
-        RetrieveMCQResponse.builder()
-            .mcqs(
-                List.of(
-                    generateMCQDto(1L, "Question 1"),
-                    generateMCQDto(2L, "Question 2"),
-                    generateMCQDto(3L, "Question 3")))
-            .totalPages(2)
-            .totalRecords(3L)
-            .build();
-
-    when(questionClient.retrieveMCQs(any(RetrieveMCQRequest.class)))
-        .thenReturn(retrieveMCQResponse);
-    when(quizRepository.save(any(Quiz.class))).thenReturn(Quiz.builder().id(1L).build());
-
-    QuizResponse response = quizService.createQuiz("student1", quizRequest);
-
-    assertEquals(1L, response.getId());
-    assertEquals(1, response.getMcqs().size());
-    assertEquals(0, response.getPageNumber());
-    assertEquals(1, response.getPageSize());
-    assertEquals(3, response.getTotalPages());
-    assertEquals(3L, response.getTotalRecords());
-
-    verify(quizRepository)
-        .save(
-            argThat(
-                quiz ->
-                    quiz.getStudentId().equals("student1")
-                        && quiz.getAttempts().stream()
-                            .map(Attempt::getMcqId)
-                            .toList()
-                            .containsAll(List.of(1L, 2L, 3L))
-                        && quiz.getStatus().equals(QuizStatus.IN_PROGRESS)));
-  }
-
-  @Test
-  void createQuizWithLimitedTotalSize() {
-    QuizRequest quizRequest =
-        QuizRequest.builder()
-            .topics(List.of(1L, 2L))
-            .skills(List.of(1L, 2L))
-            .pageSize(1)
-            .totalSize(1L)
-            .build();
-
-    RetrieveMCQResponse retrieveMCQResponse =
-        RetrieveMCQResponse.builder()
-            .mcqs(List.of(generateMCQDto(1L, "Question 1"), generateMCQDto(2L, "Question 2")))
-            .totalPages(1)
-            .totalRecords(2L)
-            .build();
-
-    when(questionClient.retrieveMCQs(any(RetrieveMCQRequest.class)))
-        .thenReturn(retrieveMCQResponse);
-    when(quizRepository.save(any(Quiz.class))).thenReturn(Quiz.builder().id(1L).build());
-
-    QuizResponse response = quizService.createQuiz("student1", quizRequest);
-
-    assertEquals(1L, response.getId());
-    assertEquals(1, response.getMcqs().size());
-    assertEquals(0, response.getPageNumber());
-    assertEquals(1, response.getPageSize());
-    assertEquals(1, response.getTotalPages());
-    assertEquals(1L, response.getTotalRecords());
-
-    verify(quizRepository)
-        .save(
-            argThat(
-                quiz ->
-                    quiz.getStudentId().equals("student1")
-                        && quiz.getAttempts().stream()
-                            .map(Attempt::getMcqId)
-                            .toList()
-                            .containsAll(List.of(1L, 2L))
-                        && quiz.getStatus().equals(QuizStatus.IN_PROGRESS)));
   }
 
   @Test

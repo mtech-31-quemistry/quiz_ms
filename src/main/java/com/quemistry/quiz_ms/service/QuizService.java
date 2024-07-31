@@ -50,6 +50,7 @@ public class QuizService {
     }
 
     Quiz quiz = Quiz.create(studentId);
+    quiz = quizRepository.save(quiz);
 
     RetrieveMCQResponse retrieveMCQRequests =
         questionClient.retrieveMCQs(
@@ -57,13 +58,13 @@ public class QuizService {
                 .topics(quizRequest.getTopics())
                 .skills(quizRequest.getSkills())
                 .pageNumber(0)
-                .pageNumber(60)
+                .pageSize(60)
                 .build());
 
     List<Long> mcqIds = retrieveMCQRequests.getMcqs().stream().map(MCQDto::getId).toList();
 
     quiz.addAttempts(mcqIds);
-    Long quizId = quizRepository.save(quiz).getId();
+    quiz = quizRepository.save(quiz);
 
     List<MCQResponse> mcqResponses =
         retrieveMCQRequests.getMcqs().stream()
@@ -76,7 +77,7 @@ public class QuizService {
     Integer totalPages = (int) Math.ceil((double) totalRecords / quizRequest.getPageSize());
 
     return QuizResponse.builder()
-        .id(quizId)
+        .id(quiz.getId())
         .mcqs(mcqResponses)
         .pageNumber(0)
         .pageSize(quizRequest.getPageSize())
