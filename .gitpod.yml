@@ -14,4 +14,5 @@ vscode:
         - Postman.postman-for-vscode
 
 tasks:
+  - before: sdk install java 21-0.4-tem < /dev/null
   - init: ./gradlew build
