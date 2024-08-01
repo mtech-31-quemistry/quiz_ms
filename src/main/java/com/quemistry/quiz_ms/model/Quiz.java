@@ -1,5 +1,9 @@
 package com.quemistry.quiz_ms.model;
 
+import static com.quemistry.quiz_ms.model.QuizStatus.*;
+import static jakarta.persistence.CascadeType.ALL;
+import static jakarta.persistence.GenerationType.IDENTITY;
+
 import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.Date;
@@ -17,7 +21,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class Quiz {
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @GeneratedValue(strategy = IDENTITY)
   private Long id;
 
   @Enumerated(EnumType.STRING)
@@ -29,13 +33,13 @@ public class Quiz {
 
   private Date updatedOn;
 
-  @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToMany(mappedBy = "quiz", cascade = ALL, orphanRemoval = true)
   private List<Attempt> attempts;
 
   public static Quiz create(String studentId) {
     Date now = new Date();
     return Quiz.builder()
-        .status(QuizStatus.IN_PROGRESS)
+        .status(IN_PROGRESS)
         .studentId(studentId)
         .attempts(new ArrayList<>())
         .createdOn(now)
@@ -48,12 +52,12 @@ public class Quiz {
   }
 
   public void complete() {
-    this.status = QuizStatus.COMPLETED;
+    this.status = COMPLETED;
     this.updatedOn = new Date();
   }
 
   public void abandon() {
-    this.status = QuizStatus.ABANDONED;
+    this.status = ABANDONED;
     this.updatedOn = new Date();
   }
 }

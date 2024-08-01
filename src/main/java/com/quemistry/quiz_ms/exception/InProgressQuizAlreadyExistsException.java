@@ -1,9 +1,9 @@
 package com.quemistry.quiz_ms.exception;
 
-import org.springframework.http.HttpStatus;
+import static org.springframework.http.HttpStatus.CONFLICT;
 
 public class InProgressQuizAlreadyExistsException extends ApplicationException {
   public InProgressQuizAlreadyExistsException() {
-    super("In progress quiz already exists", HttpStatus.CONFLICT);
+    super("In progress quiz already exists", CONFLICT);
   }
 }

@@ -2,6 +2,7 @@ package com.quemistry.quiz_ms.controller;
 
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.doThrow;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -26,7 +27,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -85,7 +85,7 @@ class QuizControllerTest {
         .perform(
             post("/v1/quizzes")
                 .header("x-user-id", "test-user-id")
-                .contentType(MediaType.APPLICATION_JSON)
+                .contentType(APPLICATION_JSON)
                 .content(quizRequestJson))
         .andExpect(status().isOk())
         .andExpect(content().json(objectMapper.writeValueAsString(quizResponse)));
@@ -116,7 +116,7 @@ class QuizControllerTest {
                 .header("x-user-id", "test-user-id")
                 .param("pageNumber", "0")
                 .param("pageSize", "1")
-                .contentType(MediaType.APPLICATION_JSON))
+                .contentType(APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().json(objectMapper.writeValueAsString(quizResponse)));
 
@@ -134,7 +134,7 @@ class QuizControllerTest {
                 .header("x-user-id", "test-user-id")
                 .param("pageNumber", "0")
                 .param("pageSize", "1")
-                .contentType(MediaType.APPLICATION_JSON))
+                .contentType(APPLICATION_JSON))
         .andExpect(status().isNotFound())
         .andExpect(content().json("{\"message\":\"Quiz not found\"}"));
 
@@ -164,7 +164,7 @@ class QuizControllerTest {
                 .header("x-user-id", "test-user-id")
                 .param("pageNumber", "0")
                 .param("pageSize", "1")
-                .contentType(MediaType.APPLICATION_JSON))
+                .contentType(APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().json(objectMapper.writeValueAsString(quizResponse)));
 
@@ -182,7 +182,7 @@ class QuizControllerTest {
         .perform(
             put("/v1/quizzes/{quizId}/mcqs/{mcqId}/attempt", quizId, mcqId)
                 .header("x-user-id", studentId)
-                .contentType(MediaType.APPLICATION_JSON)
+                .contentType(APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(attemptRequest)))
         .andExpect(status().isNoContent());
 
@@ -204,7 +204,7 @@ class QuizControllerTest {
         .perform(
             put("/v1/quizzes/{quizId}/mcqs/{mcqId}/attempt", quizId, mcqId)
                 .header("x-user-id", studentId)
-                .contentType(MediaType.APPLICATION_JSON)
+                .contentType(APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(attemptRequest)))
         .andExpect(status().isNotFound());
   }
@@ -224,7 +224,7 @@ class QuizControllerTest {
         .perform(
             put("/v1/quizzes/{quizId}/mcqs/{mcqId}/attempt", quizId, mcqId)
                 .header("x-user-id", studentId)
-                .contentType(MediaType.APPLICATION_JSON)
+                .contentType(APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(attemptRequest)))
         .andExpect(status().isNotFound());
   }
@@ -244,7 +244,7 @@ class QuizControllerTest {
         .perform(
             put("/v1/quizzes/{quizId}/mcqs/{mcqId}/attempt", quizId, mcqId)
                 .header("x-user-id", studentId)
-                .contentType(MediaType.APPLICATION_JSON)
+                .contentType(APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(attemptRequest)))
         .andExpect(status().isConflict());
   }

@@ -1,5 +1,7 @@
 package com.quemistry.quiz_ms.controller;
 
+import static org.springframework.http.HttpStatus.NO_CONTENT;
+
 import com.quemistry.quiz_ms.controller.model.AttemptRequest;
 import com.quemistry.quiz_ms.controller.model.QuizRequest;
 import com.quemistry.quiz_ms.controller.model.QuizResponse;
@@ -7,8 +9,6 @@ import com.quemistry.quiz_ms.service.QuizService;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -22,11 +22,11 @@ public class QuizController {
   }
 
   @GetMapping("health")
-  public ResponseEntity<Object> health() {
+  public Map<String, String> health() {
     Map<String, String> responseBody = new HashMap<>();
-    responseBody.put("service", "auth");
+    responseBody.put("service", "quiz");
     responseBody.put("status", "UP");
-    return ResponseEntity.status(HttpStatus.OK).body(responseBody);
+    return responseBody;
   }
 
   @PostMapping
@@ -57,7 +57,7 @@ public class QuizController {
   }
 
   @PutMapping("{id}/mcqs/{mcqId}/attempt")
-  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @ResponseStatus(NO_CONTENT)
   public void updateAttempt(
       @PathVariable Long id,
       @PathVariable Long mcqId,

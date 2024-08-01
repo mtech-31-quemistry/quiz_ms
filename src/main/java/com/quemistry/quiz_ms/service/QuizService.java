@@ -1,5 +1,9 @@
 package com.quemistry.quiz_ms.service;
 
+import static com.quemistry.quiz_ms.mapper.MCQMapper.INSTANCE;
+import static com.quemistry.quiz_ms.model.QuizStatus.COMPLETED;
+import static com.quemistry.quiz_ms.model.QuizStatus.IN_PROGRESS;
+
 import com.quemistry.quiz_ms.client.QuestionClient;
 import com.quemistry.quiz_ms.client.model.MCQDto;
 import com.quemistry.quiz_ms.client.model.RetrieveMCQByIdsRequest;
@@ -14,7 +18,6 @@ import com.quemistry.quiz_ms.exception.NotFoundException;
 import com.quemistry.quiz_ms.mapper.MCQMapper;
 import com.quemistry.quiz_ms.model.Attempt;
 import com.quemistry.quiz_ms.model.Quiz;
-import com.quemistry.quiz_ms.model.QuizStatus;
 import com.quemistry.quiz_ms.repository.AttemptRepository;
 import com.quemistry.quiz_ms.repository.QuizRepository;
 import java.util.List;
@@ -30,7 +33,7 @@ public class QuizService {
   private final QuizRepository quizRepository;
   private final AttemptRepository attemptRepository;
   private final QuestionClient questionClient;
-  private final MCQMapper mcqMapper = MCQMapper.INSTANCE;
+  private final MCQMapper mcqMapper = INSTANCE;
 
   @Autowired
   public QuizService(
@@ -43,8 +46,7 @@ public class QuizService {
   }
 
   public QuizResponse createQuiz(String studentId, QuizRequest quizRequest) {
-    Optional<Quiz> existingQuiz =
-        quizRepository.findByStudentIdAndStatus(studentId, QuizStatus.IN_PROGRESS);
+    Optional<Quiz> existingQuiz = quizRepository.findByStudentIdAndStatus(studentId, IN_PROGRESS);
     if (existingQuiz.isPresent()) {
       throw new InProgressQuizAlreadyExistsException();
     }
@@ -79,6 +81,7 @@ public class QuizService {
     return QuizResponse.builder()
         .id(quiz.getId())
         .mcqs(mcqResponses)
+        .status(quiz.getStatus())
         .pageNumber(0)
         .pageSize(quizRequest.getPageSize())
         .totalPages(totalPages)
@@ -88,13 +91,11 @@ public class QuizService {
 
   public QuizResponse getQuiz(Long id, String studentId, Integer pageNumber, Integer pageSize) {
     Optional<Quiz> quiz = quizRepository.findByIdAndStudentId(id, studentId);
-
     return convertQuiz(pageNumber, pageSize, quiz);
   }
 
   public QuizResponse getInProgressQuiz(String studentId, Integer pageNumber, Integer pageSize) {
-    Optional<Quiz> quiz =
-        quizRepository.findByStudentIdAndStatus(studentId, QuizStatus.IN_PROGRESS);
+    Optional<Quiz> quiz = quizRepository.findByStudentIdAndStatus(studentId, IN_PROGRESS);
 
     return convertQuiz(pageNumber, pageSize, quiz);
   }
@@ -115,6 +116,12 @@ public class QuizService {
 
     attempt.updateAttempt(attemptOption);
     attemptRepository.save(attempt);
+
+    if (!attemptRepository.existsByQuizIdAndOptionNoIsNull(id)) {
+      Quiz quiz = attempt.getQuiz();
+      quiz.complete();
+      quizRepository.save(quiz);
+    }
   }
 
   private QuizResponse convertQuiz(
@@ -150,13 +157,31 @@ public class QuizService {
                 })
             .collect(Collectors.toList());
 
+    Integer points = (quiz.getStatus() == COMPLETED) ? calculatePoints(mcqResponses) : null;
+
     return QuizResponse.builder()
         .id(quiz.getId())
         .mcqs(mcqResponses)
+        .status(quiz.getStatus())
         .pageNumber(pageNumber)
         .pageSize(pageSize)
         .totalPages(mcqs.getTotalPages())
         .totalRecords(mcqs.getTotalRecords())
+        .points(points)
         .build();
+  }
+
+  private int calculatePoints(List<MCQResponse> mcqs) {
+    return (int)
+        mcqs.stream()
+            .filter(mcq -> mcq.getAttemptOption() != null)
+            .filter(
+                mcq ->
+                    mcq.getOptions().stream()
+                        .anyMatch(
+                            option ->
+                                option.getNo().equals(mcq.getAttemptOption())
+                                    && option.getIsAnswer()))
+            .count();
   }
 }

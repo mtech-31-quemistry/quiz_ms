@@ -15,7 +15,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class MCQResponse {
-
   private Long id;
   private String stem;
   private List<MCQDto.OptionDto> options;

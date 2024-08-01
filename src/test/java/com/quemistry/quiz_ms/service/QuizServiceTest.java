@@ -77,6 +77,7 @@ class QuizServiceTest {
     assertEquals(1, response.getPageSize());
     assertEquals(2, response.getTotalPages());
     assertEquals(2L, response.getTotalRecords());
+    assertEquals(QuizStatus.IN_PROGRESS, response.getStatus());
 
     verify(quizRepository).findByStudentIdAndStatus("student1", QuizStatus.IN_PROGRESS);
     verify(questionClient).retrieveMCQs(any(RetrieveMCQRequest.class));
@@ -113,6 +114,7 @@ class QuizServiceTest {
     assertEquals(1, response.getPageSize());
     assertEquals(2, response.getTotalPages());
     assertEquals(2L, response.getTotalRecords());
+    assertEquals(QuizStatus.IN_PROGRESS, response.getStatus());
   }
 
   @Test
@@ -145,6 +147,7 @@ class QuizServiceTest {
     assertEquals(1, response.getPageSize());
     assertEquals(1, response.getTotalPages());
     assertEquals(1L, response.getTotalRecords());
+    assertEquals(QuizStatus.IN_PROGRESS, response.getStatus());
   }
 
   @Test
@@ -195,6 +198,7 @@ class QuizServiceTest {
     assertEquals(1, response.getPageSize());
     assertEquals(1, response.getTotalPages());
     assertEquals(2L, response.getTotalRecords());
+    assertEquals(QuizStatus.IN_PROGRESS, response.getStatus());
     assertNull(response.getMcqs().getFirst().getAttemptOption());
     assertNull(response.getMcqs().getFirst().getAttemptOn());
   }
@@ -223,6 +227,7 @@ class QuizServiceTest {
     assertEquals(1, response.getPageSize());
     assertEquals(1, response.getTotalPages());
     assertEquals(2L, response.getTotalRecords());
+    assertEquals(QuizStatus.IN_PROGRESS, response.getStatus());
     assertNull(response.getMcqs().getFirst().getAttemptOption());
     assertNull(response.getMcqs().getFirst().getAttemptOn());
   }
@@ -253,6 +258,7 @@ class QuizServiceTest {
     assertEquals(1, response.getPageSize());
     assertEquals(1, response.getTotalPages());
     assertEquals(1L, response.getTotalRecords());
+    assertEquals(QuizStatus.IN_PROGRESS, response.getStatus());
     assertEquals(1, response.getMcqs().getFirst().getAttemptOption());
     assertEquals(now, response.getMcqs().getFirst().getAttemptOn());
   }
@@ -281,6 +287,7 @@ class QuizServiceTest {
     assertEquals(1, response.getPageSize());
     assertEquals(1, response.getTotalPages());
     assertEquals(1L, response.getTotalRecords());
+    assertEquals(QuizStatus.IN_PROGRESS, response.getStatus());
     assertNull(response.getMcqs().getFirst().getAttemptOption());
     assertNull(response.getMcqs().getFirst().getAttemptOn());
   }
