@@ -9,5 +9,9 @@ additionalRepositories:
       # checkoutLocation is relative to /workspaces
       checkoutLocation: question_ms
 
+vscode:
+    extensions:
+        - Postman.postman-for-vscode
+
 tasks:
   - init: ./gradlew build
