@@ -13,11 +13,7 @@ vscode:
     extensions:
         - Postman.postman-for-vscode
 image:
-    file: Dockerfile
+    file: .gitpod.Dockerfile
 
 tasks:
-  - name: Install Git
-    command: |
-      sudo apt-get update  # Update package lists (adjust for your package manager)
-      sudo apt-get install -y git  # Install Git
   - init: ./gradlew build
