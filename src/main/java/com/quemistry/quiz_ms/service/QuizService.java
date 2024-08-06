@@ -100,14 +100,14 @@ public class QuizService {
     return convertQuiz(pageNumber, pageSize, quiz);
   }
 
-  public void updateAttempt(Long id, Long mcqId, String studentId, Integer attemptOption) {
-    if (!quizRepository.existsByIdAndStudentId(id, studentId)) {
+  public void updateAttempt(Long quizId, Long mcqId, String studentId, Integer attemptOption) {
+    if (!quizRepository.existsByIdAndStudentId(quizId, studentId)) {
       throw new NotFoundException("Quiz not found");
     }
 
     Attempt attempt =
         attemptRepository
-            .findByQuizIdAndMcqId(id, mcqId)
+            .findByQuizIdAndMcqId(quizId, mcqId)
             .orElseThrow(() -> new NotFoundException("Attempt not found"));
 
     if (attempt.getOptionNo() != null) {
@@ -117,7 +117,7 @@ public class QuizService {
     attempt.updateAttempt(attemptOption);
     attemptRepository.save(attempt);
 
-    if (!attemptRepository.existsByQuizIdAndOptionNoIsNull(id)) {
+    if (!attemptRepository.existsByQuizIdAndOptionNoIsNull(quizId)) {
       Quiz quiz = attempt.getQuiz();
       quiz.complete();
       quizRepository.save(quiz);

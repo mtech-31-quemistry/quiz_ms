@@ -50,7 +50,7 @@ class QuizControllerTest {
   @Test
   void testHealth() throws Exception {
     Map<String, String> expectedResponse = new HashMap<>();
-    expectedResponse.put("service", "auth");
+    expectedResponse.put("service", "quiz");
     expectedResponse.put("status", "UP");
 
     String expectedResponseBody = objectMapper.writeValueAsString(expectedResponse);
