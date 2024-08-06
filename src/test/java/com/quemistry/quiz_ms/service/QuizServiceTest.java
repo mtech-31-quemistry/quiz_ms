@@ -1,5 +1,6 @@
 package com.quemistry.quiz_ms.service;
 
+import static com.quemistry.quiz_ms.model.QuizStatus.COMPLETED;
 import static com.quemistry.quiz_ms.model.QuizStatus.IN_PROGRESS;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -204,6 +205,54 @@ class QuizServiceTest {
   }
 
   @Test
+  void getQuizByIdAndStudentIdReturnCompletedQuizWithCorrectAnswer() {
+    Quiz quiz = Quiz.builder().id(1L).status(COMPLETED).studentId("student1").build();
+    quiz.setAttempts(List.of(Attempt.builder().quiz(quiz).mcqId(1L).optionNo(1).build()));
+    RetrieveMCQResponse retrieveMCQResponse =
+        RetrieveMCQResponse.builder()
+            .mcqs(List.of(generateMCQDto(1L, "Question 1")))
+            .totalPages(1)
+            .totalRecords(1L)
+            .build();
+
+    when(quizRepository.findByIdAndStudentId(1L, "student1")).thenReturn(Optional.of(quiz));
+    when(questionClient.retrieveMCQsByIds(any(RetrieveMCQByIdsRequest.class)))
+        .thenReturn(retrieveMCQResponse);
+
+    QuizResponse response = quizService.getQuiz(1L, "student1", 0, 1);
+
+    assertEquals(1L, response.getId());
+    assertEquals(1, response.getMcqs().size());
+    assertEquals(0, response.getPageNumber());
+    assertEquals(1, response.getPageSize());
+    assertEquals(1, response.getTotalPages());
+    assertEquals(1L, response.getTotalRecords());
+    assertEquals(COMPLETED, response.getStatus());
+    assertEquals(1, response.getMcqs().getFirst().getAttemptOption());
+    assertEquals(1, response.getPoints());
+  }
+
+  @Test
+  void getQuizByIdAndStudentIdReturnCompletedQuizWithIncorrectAnswer() {
+    Quiz quiz = Quiz.builder().id(1L).status(COMPLETED).studentId("student1").build();
+    quiz.setAttempts(List.of(Attempt.builder().quiz(quiz).mcqId(1L).optionNo(2).build()));
+    RetrieveMCQResponse retrieveMCQResponse =
+        RetrieveMCQResponse.builder()
+            .mcqs(List.of(generateMCQDto(1L, "Question 1")))
+            .totalPages(1)
+            .totalRecords(1L)
+            .build();
+
+    when(quizRepository.findByIdAndStudentId(1L, "student1")).thenReturn(Optional.of(quiz));
+    when(questionClient.retrieveMCQsByIds(any(RetrieveMCQByIdsRequest.class)))
+        .thenReturn(retrieveMCQResponse);
+
+    QuizResponse response = quizService.getQuiz(1L, "student1", 0, 1);
+
+    assertEquals(0, response.getPoints());
+  }
+
+  @Test
   void getInProgressQuizWithFirstPage() {
     Quiz quiz = Quiz.builder().id(1L).status(IN_PROGRESS).studentId("student1").build();
     quiz.setAttempts(List.of(Attempt.create(quiz, 1L), Attempt.create(quiz, 2L)));
@@ -312,6 +361,27 @@ class QuizServiceTest {
   }
 
   @Test
+  void updateAttemptSuccessWithNotAnsweredQuestion() {
+    Long quizId = 1L;
+    Long mcqId = 1L;
+    String studentId = "student1";
+    Integer attemptOption = 1;
+    Quiz quiz = Quiz.builder().id(quizId).status(IN_PROGRESS).studentId("student1").build();
+    Attempt attempt =
+        Attempt.builder().optionNo(null).quizId(quizId).quiz(quiz).mcqId(mcqId).build();
+
+    when(quizRepository.existsByIdAndStudentId(quizId, studentId)).thenReturn(true);
+    when(attemptRepository.findByQuizIdAndMcqId(quizId, mcqId)).thenReturn(Optional.of(attempt));
+    when(attemptRepository.existsByQuizIdAndOptionNoIsNull(quizId)).thenReturn(true);
+
+    quizService.updateAttempt(quizId, mcqId, studentId, attemptOption);
+
+    assertEquals(attemptOption, attempt.getOptionNo());
+    verify(attemptRepository).save(attempt);
+    verify(quizRepository, never()).save(quiz);
+  }
+
+  @Test
   void updateAttemptQuizNotFound() {
     Long quizId = 1L;
     Long mcqId = 1L;
@@ -355,6 +425,27 @@ class QuizServiceTest {
     assertThrows(
         AttemptAlreadyExistsException.class,
         () -> quizService.updateAttempt(quizId, mcqId, studentId, attemptOption));
+  }
+
+  @Test
+  void updateAttemptCompleteQuiz() {
+    Long quizId = 1L;
+    Long mcqId = 1L;
+    String studentId = "student1";
+    Integer attemptOption = 1;
+    Quiz quiz = Quiz.builder().id(quizId).status(IN_PROGRESS).studentId("student1").build();
+    Attempt attempt =
+        Attempt.builder().optionNo(null).quizId(quizId).quiz(quiz).mcqId(mcqId).build();
+
+    when(quizRepository.existsByIdAndStudentId(quizId, studentId)).thenReturn(true);
+    when(attemptRepository.findByQuizIdAndMcqId(quizId, mcqId)).thenReturn(Optional.of(attempt));
+    when(attemptRepository.existsByQuizIdAndOptionNoIsNull(quizId)).thenReturn(false);
+
+    quizService.updateAttempt(quizId, mcqId, studentId, attemptOption);
+
+    assertEquals(attemptOption, attempt.getOptionNo());
+    verify(attemptRepository).save(attempt);
+    verify(quizRepository).save(quiz);
   }
 
   private MCQDto generateMCQDto(Long id, String stem) {
