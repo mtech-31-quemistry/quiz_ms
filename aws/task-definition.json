@@ -33,6 +33,10 @@
                 {
                     "name": "DB_PASSWORD",
                     "valueFrom": "arn:aws:ssm:ap-southeast-1:730335183958:parameter/cicd/prod/postgre/database/question-ms/password"
+                },
+                {
+                    "name": "QUESTION_SERVICE_URL",
+                    "valueFrom": "arn:aws:ssm:ap-southeast-1:730335183958:parameter/cicd/prod/api/question-ms/url"
                 }
             ],
             "ulimits": [],
