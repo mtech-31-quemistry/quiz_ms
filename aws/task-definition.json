@@ -28,11 +28,11 @@
                 },
                 {
                     "name": "DB_USER",
-                    "valueFrom": "arn:aws:ssm:ap-southeast-1:730335183958:parameter/cicd/prod/postgre/database/question-ms/username"
+                    "valueFrom": "arn:aws:ssm:ap-southeast-1:730335183958:parameter/cicd/prod/postgre/database/quiz-ms/username"
                 },
                 {
                     "name": "DB_PASSWORD",
-                    "valueFrom": "arn:aws:ssm:ap-southeast-1:730335183958:parameter/cicd/prod/postgre/database/question-ms/password"
+                    "valueFrom": "arn:aws:ssm:ap-southeast-1:730335183958:parameter/cicd/prod/postgre/database/quiz-ms/password"
                 },
                 {
                     "name": "QUESTION_SERVICE_URL",
