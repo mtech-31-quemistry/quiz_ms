@@ -1,4 +1,4 @@
-CREATE SCHEMA IF NOT EXISTS qms_quiz;
+--CREATE SCHEMA IF NOT EXISTS qms_quiz;
 
 -- src/main/resources/db/migration/ddl/V1__create_quiz_table.sql
 CREATE TABLE qms_quiz.quiz (
