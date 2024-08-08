@@ -13,8 +13,8 @@ public class CorsConfig implements WebMvcConfigurer {
   public void addCorsMappings(CorsRegistry registry) {
     registry
         .addMapping("/**")
-        .allowedOrigins("http://localhost:3000")
-        .allowedMethods("GET", "POST")
+        .allowedOrigins("https://dkraju438qs82.cloudfront.net", "http://localhost:3000")
+        .allowedMethods("GET", "POST", "PUT", "DELETE")
         .allowCredentials(
             true) // You can set this to true if you need credentials (cookies, etc.) to be included
         // in the request.
