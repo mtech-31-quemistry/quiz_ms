@@ -248,4 +248,19 @@ class QuizControllerTest {
                 .content(objectMapper.writeValueAsString(attemptRequest)))
         .andExpect(status().isConflict());
   }
+
+  @Test
+  void abandonQuiz() throws Exception {
+    Long quizId = 1L;
+    String studentId = "test-user-id";
+
+    mockMvc
+        .perform(
+            patch("/v1/quizzes/{quizId}/abandon", quizId)
+                .header("x-user-id", studentId)
+                .contentType(APPLICATION_JSON))
+        .andExpect(status().isNoContent());
+
+    verify(quizService).abandonQuiz(quizId, studentId);
+  }
 }

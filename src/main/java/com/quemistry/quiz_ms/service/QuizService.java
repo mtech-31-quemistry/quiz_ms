@@ -124,6 +124,21 @@ public class QuizService {
     }
   }
 
+  public void abandonQuiz(Long id, String studentId) {
+    Optional<Quiz> quiz = quizRepository.findByIdAndStudentId(id, studentId);
+    if (quiz.isEmpty()) {
+      throw new NotFoundException("Quiz not found");
+    }
+
+    Quiz quizEntity = quiz.get();
+    if (quizEntity.getStatus() != IN_PROGRESS) {
+      throw new NotFoundException("Quiz not in progress");
+    }
+
+    quizEntity.abandon();
+    quizRepository.save(quizEntity);
+  }
+
   private QuizResponse convertQuiz(
       Integer pageNumber, Integer pageSize, Optional<Quiz> quizResponse) {
     if (quizResponse.isEmpty()) {

@@ -1,7 +1,6 @@
 package com.quemistry.quiz_ms.service;
 
-import static com.quemistry.quiz_ms.model.QuizStatus.COMPLETED;
-import static com.quemistry.quiz_ms.model.QuizStatus.IN_PROGRESS;
+import static com.quemistry.quiz_ms.model.QuizStatus.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -446,6 +445,41 @@ class QuizServiceTest {
     assertEquals(attemptOption, attempt.getOptionNo());
     verify(attemptRepository).save(attempt);
     verify(quizRepository).save(quiz);
+  }
+
+  @Test
+  void abandonQuizSuccess() {
+    Long quizId = 1L;
+    String studentId = "student1";
+    Quiz quiz = Quiz.builder().id(quizId).status(IN_PROGRESS).studentId("student1").build();
+
+    when(quizRepository.findByIdAndStudentId(quizId, studentId)).thenReturn(Optional.of(quiz));
+
+    quizService.abandonQuiz(quizId, studentId);
+
+    assertEquals(quiz.getStatus(), ABANDONED);
+    verify(quizRepository).save(quiz);
+  }
+
+  @Test
+  void abandonQuizQuizNotFound() {
+    Long quizId = 1L;
+    String studentId = "student1";
+
+    when(quizRepository.findByIdAndStudentId(quizId, studentId)).thenReturn(Optional.empty());
+
+    assertThrows(NotFoundException.class, () -> quizService.abandonQuiz(quizId, studentId));
+  }
+
+  @Test
+  void abandonQuizQuizNotInProgress() {
+    Long quizId = 1L;
+    String studentId = "student1";
+    Quiz quiz = Quiz.builder().id(quizId).status(COMPLETED).studentId("student1").build();
+
+    when(quizRepository.findByIdAndStudentId(quizId, studentId)).thenReturn(Optional.of(quiz));
+
+    assertThrows(NotFoundException.class, () -> quizService.abandonQuiz(quizId, studentId));
   }
 
   private MCQDto generateMCQDto(Long id, String stem) {

@@ -67,4 +67,11 @@ public class QuizController {
 
     quizService.updateAttempt(id, mcqId, studentId, attemptRequest.getAttemptOption());
   }
+
+  @PatchMapping("{id}/abandon")
+  @ResponseStatus(NO_CONTENT)
+  public void abandonQuiz(@PathVariable Long id, @RequestHeader("x-user-id") String studentId) {
+    log.info("PATCH /v1/quizzes/{}/abandon", id);
+    quizService.abandonQuiz(id, studentId);
+  }
 }
