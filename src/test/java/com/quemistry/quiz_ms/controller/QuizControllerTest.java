@@ -9,13 +9,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.quemistry.quiz_ms.controller.model.AttemptRequest;
-import com.quemistry.quiz_ms.controller.model.MCQResponse;
-import com.quemistry.quiz_ms.controller.model.QuizRequest;
-import com.quemistry.quiz_ms.controller.model.QuizResponse;
+import com.quemistry.quiz_ms.controller.model.*;
 import com.quemistry.quiz_ms.exception.AttemptAlreadyExistsException;
 import com.quemistry.quiz_ms.exception.ExceptionAdvisor;
 import com.quemistry.quiz_ms.exception.NotFoundException;
+import com.quemistry.quiz_ms.model.QuizStatus;
 import com.quemistry.quiz_ms.service.QuizService;
 import java.util.ArrayList;
 import java.util.Date;
@@ -169,6 +167,35 @@ class QuizControllerTest {
         .andExpect(content().json(objectMapper.writeValueAsString(quizResponse)));
 
     verify(quizService).getInProgressQuiz("test-user-id", 0, 1);
+  }
+
+  @Test
+  void getCompletedQuiz() throws Exception {
+    SimpleQuizResponse simpleQuizResponse =
+        SimpleQuizResponse.builder().id(1L).status(QuizStatus.COMPLETED).points(1).build();
+
+    QuizListResponse quizResponse =
+        QuizListResponse.builder()
+            .pageNumber(0)
+            .pageSize(1)
+            .totalPages(1)
+            .totalRecords(1L)
+            .quizzes(List.of(simpleQuizResponse))
+            .build();
+
+    when(quizService.getCompletedQuiz("test-user-id", 0, 1)).thenReturn(quizResponse);
+
+    mockMvc
+        .perform(
+            get("/v1/quizzes/me/completed")
+                .header("x-user-id", "test-user-id")
+                .param("pageNumber", "0")
+                .param("pageSize", "1")
+                .contentType(APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().json(objectMapper.writeValueAsString(quizResponse)));
+
+    verify(quizService).getCompletedQuiz("test-user-id", 0, 1);
   }
 
   @Test

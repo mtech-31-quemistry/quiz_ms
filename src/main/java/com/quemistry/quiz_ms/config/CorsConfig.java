@@ -15,9 +15,7 @@ public class CorsConfig implements WebMvcConfigurer {
         .addMapping("/**")
         .allowedOrigins("https://dkraju438qs82.cloudfront.net", "http://localhost:3000")
         .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
-        .allowCredentials(
-            true) // You can set this to true if you need credentials (cookies, etc.) to be included
-        // in the request.
-        .maxAge(3600); // Cache preflight request for 1 hour
+        .allowCredentials(true)
+        .maxAge(3600);
   }
 }

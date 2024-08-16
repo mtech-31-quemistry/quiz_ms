@@ -9,9 +9,7 @@ import com.quemistry.quiz_ms.client.model.MCQDto;
 import com.quemistry.quiz_ms.client.model.RetrieveMCQByIdsRequest;
 import com.quemistry.quiz_ms.client.model.RetrieveMCQRequest;
 import com.quemistry.quiz_ms.client.model.RetrieveMCQResponse;
-import com.quemistry.quiz_ms.controller.model.MCQResponse;
-import com.quemistry.quiz_ms.controller.model.QuizRequest;
-import com.quemistry.quiz_ms.controller.model.QuizResponse;
+import com.quemistry.quiz_ms.controller.model.*;
 import com.quemistry.quiz_ms.exception.AttemptAlreadyExistsException;
 import com.quemistry.quiz_ms.exception.InProgressQuizAlreadyExistsException;
 import com.quemistry.quiz_ms.exception.NotFoundException;
@@ -25,6 +23,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -34,6 +34,7 @@ public class QuizService {
   private final AttemptRepository attemptRepository;
   private final QuestionClient questionClient;
   private final MCQMapper mcqMapper = INSTANCE;
+  private RetrieveMCQResponse mcq;
 
   @Autowired
   public QuizService(
@@ -46,7 +47,8 @@ public class QuizService {
   }
 
   public QuizResponse createQuiz(String studentId, QuizRequest quizRequest) {
-    Optional<Quiz> existingQuiz = quizRepository.findByStudentIdAndStatus(studentId, IN_PROGRESS);
+    Optional<Quiz> existingQuiz =
+        quizRepository.findOneByStudentIdAndStatus(studentId, IN_PROGRESS);
     if (existingQuiz.isPresent()) {
       throw new InProgressQuizAlreadyExistsException();
     }
@@ -90,14 +92,54 @@ public class QuizService {
   }
 
   public QuizResponse getQuiz(Long id, String studentId, Integer pageNumber, Integer pageSize) {
-    Optional<Quiz> quiz = quizRepository.findByIdAndStudentId(id, studentId);
+    Optional<Quiz> quiz = quizRepository.findOneByIdAndStudentId(id, studentId);
     return convertQuiz(pageNumber, pageSize, quiz);
   }
 
   public QuizResponse getInProgressQuiz(String studentId, Integer pageNumber, Integer pageSize) {
-    Optional<Quiz> quiz = quizRepository.findByStudentIdAndStatus(studentId, IN_PROGRESS);
+    Optional<Quiz> quiz = quizRepository.findOneByStudentIdAndStatus(studentId, IN_PROGRESS);
 
     return convertQuiz(pageNumber, pageSize, quiz);
+  }
+
+  public QuizListResponse getCompletedQuiz(String studentId, Integer pageNumber, Integer pageSize) {
+    Page<Quiz> quizzes =
+        quizRepository.findPageByStudentIdAndStatus(
+            studentId, COMPLETED, PageRequest.of(pageNumber, pageSize));
+
+    List<MCQDto> mcqs =
+        questionClient
+            .retrieveMCQsByIds(
+                RetrieveMCQByIdsRequest.builder()
+                    .ids(
+                        quizzes.stream()
+                            .flatMap(quiz -> quiz.getAttempts().stream().map(Attempt::getMcqId))
+                            .toList())
+                    .pageNumber(0)
+                    .pageSize(quizzes.getNumberOfElements() * 60)
+                    .build())
+            .getMcqs();
+    List<SimpleQuizResponse> quizResponses =
+        quizzes.stream()
+            .map(
+                quiz -> {
+                  List<MCQResponse> quizMcqs = getMcqResponses(mcqs, quiz.getAttempts());
+                  return SimpleQuizResponse.builder()
+                      .id(quiz.getId())
+                      .status(quiz.getStatus())
+                      .mcqs(quizMcqs)
+                      .points(calculatePoints(quizMcqs))
+                      .build();
+                })
+            .collect(Collectors.toList());
+
+    return QuizListResponse.builder()
+        .pageNumber(pageNumber)
+        .pageSize(pageSize)
+        .totalPages(quizzes.getTotalPages())
+        .totalRecords(quizzes.getTotalElements())
+        .quizzes(quizResponses)
+        .build();
   }
 
   public void updateAttempt(Long quizId, Long mcqId, String studentId, Integer attemptOption) {
@@ -125,7 +167,7 @@ public class QuizService {
   }
 
   public void abandonQuiz(Long id, String studentId) {
-    Optional<Quiz> quiz = quizRepository.findByIdAndStudentId(id, studentId);
+    Optional<Quiz> quiz = quizRepository.findOneByIdAndStudentId(id, studentId);
     if (quiz.isEmpty()) {
       throw new NotFoundException("Quiz not found");
     }
@@ -154,24 +196,7 @@ public class QuizService {
                 .pageSize(pageSize)
                 .build());
 
-    List<MCQResponse> mcqResponses =
-        mcqs.getMcqs().stream()
-            .map(
-                mcq -> {
-                  MCQResponse response = mcqMapper.toMCQResponse(mcq);
-                  Attempt attempt =
-                      quiz.getAttempts().stream()
-                          .filter(it -> it.getMcqId().equals(mcq.getId()))
-                          .findFirst()
-                          .orElse(null);
-                  if (attempt != null) {
-                    response.setAttemptOption(attempt.getOptionNo());
-                    response.setAttemptOn(attempt.getAttemptTime());
-                  }
-                  return response;
-                })
-            .collect(Collectors.toList());
-
+    List<MCQResponse> mcqResponses = getMcqResponses(mcqs.getMcqs(), quiz.getAttempts());
     Integer points = (quiz.getStatus() == COMPLETED) ? calculatePoints(mcqResponses) : null;
 
     return QuizResponse.builder()
@@ -184,6 +209,25 @@ public class QuizService {
         .totalRecords(mcqs.getTotalRecords())
         .points(points)
         .build();
+  }
+
+  private List<MCQResponse> getMcqResponses(List<MCQDto> mcqs, List<Attempt> attempts) {
+    return mcqs.stream()
+        .map(
+            mcq -> {
+              Attempt attempt =
+                  attempts.stream()
+                      .filter(it -> it.getMcqId().equals(mcq.getId()))
+                      .findFirst()
+                      .orElse(null);
+              MCQResponse response = mcqMapper.toMCQResponse(mcq);
+              if (attempt != null) {
+                response.setAttemptOption(attempt.getOptionNo());
+                response.setAttemptOn(attempt.getAttemptTime());
+              }
+              return response;
+            })
+        .collect(Collectors.toList());
   }
 
   private int calculatePoints(List<MCQResponse> mcqs) {

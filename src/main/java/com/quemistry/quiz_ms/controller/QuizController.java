@@ -3,6 +3,7 @@ package com.quemistry.quiz_ms.controller;
 import static org.springframework.http.HttpStatus.NO_CONTENT;
 
 import com.quemistry.quiz_ms.controller.model.AttemptRequest;
+import com.quemistry.quiz_ms.controller.model.QuizListResponse;
 import com.quemistry.quiz_ms.controller.model.QuizRequest;
 import com.quemistry.quiz_ms.controller.model.QuizResponse;
 import com.quemistry.quiz_ms.service.QuizService;
@@ -54,6 +55,16 @@ public class QuizController {
     log.info("GET /v1/me/in-progress");
 
     return quizService.getInProgressQuiz(studentId, pageNumber, pageSize);
+  }
+
+  @GetMapping("me/completed")
+  public QuizListResponse getCompletedQuiz(
+      @RequestHeader("x-user-id") String studentId,
+      @RequestParam Integer pageNumber,
+      @RequestParam Integer pageSize) {
+    log.info("GET /v1/me/completed");
+
+    return quizService.getCompletedQuiz(studentId, pageNumber, pageSize);
   }
 
   @PutMapping("{id}/mcqs/{mcqId}/attempt")
