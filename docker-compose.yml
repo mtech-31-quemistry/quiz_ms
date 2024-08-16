@@ -10,8 +10,8 @@ services:
       POSTGRES_PASSWORD: 123456
     # volumes:
     #   - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+    # ports:
+    #   - "5432:5432"
 
   question:
     build:
@@ -25,8 +25,8 @@ services:
       - DB_URL=jdbc:postgresql://db:5432/quemistry
       - DB_USER=root
       - DB_PASSWORD=123456
-    ports:
-      - "81:80"
+    # ports:
+    #   - "81:80"
 
   quiz:
     build:
@@ -42,8 +42,8 @@ services:
       - DB_USER=root
       - DB_PASSWORD=123456
       - QUESTION_SERVICE_URL=http://question:80
-    # ports:
-    #   - "80:80"
+    ports:
+      - "80:80"
 
   adminer:
     image: adminer
