@@ -39,7 +39,7 @@ class QuizServiceTest {
 
   @InjectMocks private QuizService quizService;
 
-  private final UserContext testUserContext = new UserContext("student1", "email1", "role1");
+  private final UserContext testUserContext = new UserContext("student1", "email1", "roles1");
 
   @BeforeEach
   void setUp() {

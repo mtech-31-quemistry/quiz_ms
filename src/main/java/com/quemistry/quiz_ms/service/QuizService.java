@@ -67,7 +67,7 @@ public class QuizService {
                 .build(),
             userContext.getUserId(),
             userContext.getUserEmail(),
-            userContext.getUserRole());
+            userContext.getUserRoles());
 
     List<Long> mcqIds = retrieveMCQRequests.getMcqs().stream().map(MCQDto::getId).toList();
 
@@ -128,7 +128,7 @@ public class QuizService {
                     .build(),
                 userContext.getUserId(),
                 userContext.getUserEmail(),
-                userContext.getUserRole())
+                userContext.getUserRoles())
             .getMcqs();
     List<SimpleQuizResponse> quizResponses =
         quizzes.stream()
@@ -208,7 +208,7 @@ public class QuizService {
                 .build(),
             userContext.getUserId(),
             userContext.getUserEmail(),
-            userContext.getUserRole());
+            userContext.getUserRoles());
 
     List<MCQResponse> mcqResponses = getMcqResponses(mcqs.getMcqs(), quiz.getAttempts());
     Integer points = (quiz.getStatus() == COMPLETED) ? calculatePoints(mcqResponses) : null;

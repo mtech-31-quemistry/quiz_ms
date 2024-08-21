@@ -33,7 +33,7 @@ class QuizControllerTest {
   private final ObjectMapper objectMapper = new ObjectMapper();
   private MockMvc mockMvc;
   private final UserContext testUserContext =
-      new UserContext("test-user-id", "test-user-email", "test-user-role");
+      new UserContext("test-user-id", "test-user-email", "test-user-roles");
 
   @Mock private QuizService quizService;
 
@@ -87,7 +87,7 @@ class QuizControllerTest {
             post("/v1/quizzes")
                 .header("x-user-id", "test-user-id")
                 .header("x-user-email", "test-user-email")
-                .header("x-user-role", "test-user-role")
+                .header("x-user-roles", "test-user-roles")
                 .contentType(APPLICATION_JSON)
                 .content(quizRequestJson))
         .andExpect(status().isOk())
@@ -118,7 +118,7 @@ class QuizControllerTest {
             get("/v1/quizzes/1")
                 .header("x-user-id", "test-user-id")
                 .header("x-user-email", "test-user-email")
-                .header("x-user-role", "test-user-role")
+                .header("x-user-roles", "test-user-roles")
                 .param("pageNumber", "0")
                 .param("pageSize", "1")
                 .contentType(APPLICATION_JSON))
@@ -138,7 +138,7 @@ class QuizControllerTest {
             get("/v1/quizzes/1")
                 .header("x-user-id", "test-user-id")
                 .header("x-user-email", "test-user-email")
-                .header("x-user-role", "test-user-role")
+                .header("x-user-roles", "test-user-roles")
                 .param("pageNumber", "0")
                 .param("pageSize", "1")
                 .contentType(APPLICATION_JSON))
@@ -170,7 +170,7 @@ class QuizControllerTest {
             get("/v1/quizzes/me/in-progress")
                 .header("x-user-id", "test-user-id")
                 .header("x-user-email", "test-user-email")
-                .header("x-user-role", "test-user-role")
+                .header("x-user-roles", "test-user-roles")
                 .param("pageNumber", "0")
                 .param("pageSize", "1")
                 .contentType(APPLICATION_JSON))
@@ -201,7 +201,7 @@ class QuizControllerTest {
             get("/v1/quizzes/me/completed")
                 .header("x-user-id", "test-user-id")
                 .header("x-user-email", "test-user-email")
-                .header("x-user-role", "test-user-role")
+                .header("x-user-roles", "test-user-roles")
                 .param("pageNumber", "0")
                 .param("pageSize", "1")
                 .contentType(APPLICATION_JSON))

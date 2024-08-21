@@ -35,10 +35,10 @@ public class QuizController {
   public QuizResponse createQuiz(
       @RequestHeader("x-user-id") String studentId,
       @RequestHeader("x-user-email") String studentEmail,
-      @RequestHeader("x-user-role") String role,
+      @RequestHeader("x-user-roles") String roles,
       @RequestBody QuizRequest quizRequest) {
     log.info("POST /v1/quizzes");
-    return quizService.createQuiz(new UserContext(studentId, studentEmail, role), quizRequest);
+    return quizService.createQuiz(new UserContext(studentId, studentEmail, roles), quizRequest);
   }
 
   @GetMapping("{id}")
@@ -46,38 +46,38 @@ public class QuizController {
       @PathVariable Long id,
       @RequestHeader("x-user-id") String studentId,
       @RequestHeader("x-user-email") String studentEmail,
-      @RequestHeader("x-user-role") String role,
+      @RequestHeader("x-user-roles") String roles,
       @RequestParam Integer pageNumber,
       @RequestParam Integer pageSize) {
     log.info("GET /v1/quizzes/{}", id);
     return quizService.getQuiz(
-        id, new UserContext(studentId, studentEmail, role), pageNumber, pageSize);
+        id, new UserContext(studentId, studentEmail, roles), pageNumber, pageSize);
   }
 
   @GetMapping("me/in-progress")
   public QuizResponse getInProgressQuiz(
       @RequestHeader("x-user-id") String studentId,
       @RequestHeader("x-user-email") String studentEmail,
-      @RequestHeader("x-user-role") String role,
+      @RequestHeader("x-user-roles") String roles,
       @RequestParam Integer pageNumber,
       @RequestParam Integer pageSize) {
     log.info("GET /v1/me/in-progress");
 
     return quizService.getInProgressQuiz(
-        new UserContext(studentId, studentEmail, role), pageNumber, pageSize);
+        new UserContext(studentId, studentEmail, roles), pageNumber, pageSize);
   }
 
   @GetMapping("me/completed")
   public QuizListResponse getCompletedQuiz(
       @RequestHeader("x-user-id") String studentId,
       @RequestHeader("x-user-email") String studentEmail,
-      @RequestHeader("x-user-role") String role,
+      @RequestHeader("x-user-roles") String roles,
       @RequestParam Integer pageNumber,
       @RequestParam Integer pageSize) {
     log.info("GET /v1/me/completed");
 
     return quizService.getCompletedQuiz(
-        new UserContext(studentId, studentEmail, role), pageNumber, pageSize);
+        new UserContext(studentId, studentEmail, roles), pageNumber, pageSize);
   }
 
   @PutMapping("{id}/mcqs/{mcqId}/attempt")

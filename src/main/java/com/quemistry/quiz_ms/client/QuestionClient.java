@@ -18,12 +18,12 @@ public interface QuestionClient {
       @RequestBody RetrieveMCQRequest retrieveMCQRequest,
       @RequestHeader("x-user-id") String studentId,
       @RequestHeader("x-user-email") String studentEmail,
-      @RequestHeader("x-user-role") String userRole);
+      @RequestHeader("x-user-roles") String userRoles);
 
   @RequestMapping(value = "/retrieve-by-ids", method = POST, produces = APPLICATION_JSON_VALUE)
   RetrieveMCQResponse retrieveMCQsByIds(
       @RequestBody RetrieveMCQByIdsRequest retrieveMCQRequest,
       @RequestHeader("x-user-id") String studentId,
       @RequestHeader("x-user-email") String studentEmail,
-      @RequestHeader("x-user-role") String userRole);
+      @RequestHeader("x-user-roless") String userRoles);
 }

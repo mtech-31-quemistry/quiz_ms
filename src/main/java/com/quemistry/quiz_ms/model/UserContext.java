@@ -8,5 +8,5 @@ import lombok.Data;
 public class UserContext {
   private String userId;
   private String userEmail;
-  private String userRole;
+  private String userRoles;
 }
