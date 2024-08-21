@@ -16,6 +16,7 @@ import com.quemistry.quiz_ms.exception.NotFoundException;
 import com.quemistry.quiz_ms.mapper.MCQMapper;
 import com.quemistry.quiz_ms.model.Attempt;
 import com.quemistry.quiz_ms.model.Quiz;
+import com.quemistry.quiz_ms.model.UserContext;
 import com.quemistry.quiz_ms.repository.AttemptRepository;
 import com.quemistry.quiz_ms.repository.QuizRepository;
 import java.util.List;
@@ -46,14 +47,14 @@ public class QuizService {
     this.questionClient = questionClient;
   }
 
-  public QuizResponse createQuiz(String studentId, QuizRequest quizRequest) {
+  public QuizResponse createQuiz(UserContext userContext, QuizRequest quizRequest) {
     Optional<Quiz> existingQuiz =
-        quizRepository.findOneByStudentIdAndStatus(studentId, IN_PROGRESS);
+        quizRepository.findOneByStudentIdAndStatus(userContext.getUserId(), IN_PROGRESS);
     if (existingQuiz.isPresent()) {
       throw new InProgressQuizAlreadyExistsException();
     }
 
-    Quiz quiz = Quiz.create(studentId);
+    Quiz quiz = Quiz.create(userContext.getUserId());
     quiz = quizRepository.save(quiz);
 
     RetrieveMCQResponse retrieveMCQRequests =
@@ -63,7 +64,10 @@ public class QuizService {
                 .skills(quizRequest.getSkills())
                 .pageNumber(0)
                 .pageSize(60)
-                .build());
+                .build(),
+            userContext.getUserId(),
+            userContext.getUserEmail(),
+            userContext.getUserRole());
 
     List<Long> mcqIds = retrieveMCQRequests.getMcqs().stream().map(MCQDto::getId).toList();
 
@@ -91,21 +95,25 @@ public class QuizService {
         .build();
   }
 
-  public QuizResponse getQuiz(Long id, String studentId, Integer pageNumber, Integer pageSize) {
-    Optional<Quiz> quiz = quizRepository.findOneByIdAndStudentId(id, studentId);
-    return convertQuiz(pageNumber, pageSize, quiz);
+  public QuizResponse getQuiz(
+      Long id, UserContext userContext, Integer pageNumber, Integer pageSize) {
+    Optional<Quiz> quiz = quizRepository.findOneByIdAndStudentId(id, userContext.getUserId());
+    return convertQuiz(pageNumber, pageSize, quiz, userContext);
   }
 
-  public QuizResponse getInProgressQuiz(String studentId, Integer pageNumber, Integer pageSize) {
-    Optional<Quiz> quiz = quizRepository.findOneByStudentIdAndStatus(studentId, IN_PROGRESS);
+  public QuizResponse getInProgressQuiz(
+      UserContext userContext, Integer pageNumber, Integer pageSize) {
+    Optional<Quiz> quiz =
+        quizRepository.findOneByStudentIdAndStatus(userContext.getUserId(), IN_PROGRESS);
 
-    return convertQuiz(pageNumber, pageSize, quiz);
+    return convertQuiz(pageNumber, pageSize, quiz, userContext);
   }
 
-  public QuizListResponse getCompletedQuiz(String studentId, Integer pageNumber, Integer pageSize) {
+  public QuizListResponse getCompletedQuiz(
+      UserContext userContext, Integer pageNumber, Integer pageSize) {
     Page<Quiz> quizzes =
         quizRepository.findPageByStudentIdAndStatus(
-            studentId, COMPLETED, PageRequest.of(pageNumber, pageSize));
+            userContext.getUserId(), COMPLETED, PageRequest.of(pageNumber, pageSize));
 
     List<MCQDto> mcqs =
         questionClient
@@ -117,7 +125,10 @@ public class QuizService {
                             .toList())
                     .pageNumber(0)
                     .pageSize(quizzes.getNumberOfElements() * 60)
-                    .build())
+                    .build(),
+                userContext.getUserId(),
+                userContext.getUserEmail(),
+                userContext.getUserRole())
             .getMcqs();
     List<SimpleQuizResponse> quizResponses =
         quizzes.stream()
@@ -182,7 +193,7 @@ public class QuizService {
   }
 
   private QuizResponse convertQuiz(
-      Integer pageNumber, Integer pageSize, Optional<Quiz> quizResponse) {
+      Integer pageNumber, Integer pageSize, Optional<Quiz> quizResponse, UserContext userContext) {
     if (quizResponse.isEmpty()) {
       throw new NotFoundException("Quiz not found");
     }
@@ -194,7 +205,10 @@ public class QuizService {
                 .ids(quiz.getAttempts().stream().map(Attempt::getMcqId).toList())
                 .pageNumber(pageNumber)
                 .pageSize(pageSize)
-                .build());
+                .build(),
+            userContext.getUserId(),
+            userContext.getUserEmail(),
+            userContext.getUserRole());
 
     List<MCQResponse> mcqResponses = getMcqResponses(mcqs.getMcqs(), quiz.getAttempts());
     Integer points = (quiz.getStatus() == COMPLETED) ? calculatePoints(mcqResponses) : null;

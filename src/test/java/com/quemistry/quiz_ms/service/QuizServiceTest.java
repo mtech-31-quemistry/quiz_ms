@@ -15,6 +15,7 @@ import com.quemistry.quiz_ms.exception.InProgressQuizAlreadyExistsException;
 import com.quemistry.quiz_ms.exception.NotFoundException;
 import com.quemistry.quiz_ms.model.Attempt;
 import com.quemistry.quiz_ms.model.Quiz;
+import com.quemistry.quiz_ms.model.UserContext;
 import com.quemistry.quiz_ms.repository.AttemptRepository;
 import com.quemistry.quiz_ms.repository.QuizRepository;
 import java.util.Date;
@@ -37,6 +38,8 @@ class QuizServiceTest {
   @Mock private QuestionClient questionClient;
 
   @InjectMocks private QuizService quizService;
+
+  private final UserContext testUserContext = new UserContext("student1", "email1", "role1");
 
   @BeforeEach
   void setUp() {
@@ -62,7 +65,7 @@ class QuizServiceTest {
 
     when(quizRepository.findOneByStudentIdAndStatus("student1", IN_PROGRESS))
         .thenReturn(Optional.empty());
-    when(questionClient.retrieveMCQs(any(RetrieveMCQRequest.class)))
+    when(questionClient.retrieveMCQs(any(RetrieveMCQRequest.class), any(), any(), any()))
         .thenReturn(retrieveMCQResponse);
     when(quizRepository.save(any(Quiz.class)))
         .thenAnswer(
@@ -74,7 +77,7 @@ class QuizServiceTest {
               return quiz;
             });
 
-    QuizResponse response = quizService.createQuiz("student1", quizRequest);
+    QuizResponse response = quizService.createQuiz(testUserContext, quizRequest);
 
     assertEquals(1, response.getMcqs().size());
     assertEquals(0, response.getPageNumber());
@@ -84,7 +87,7 @@ class QuizServiceTest {
     assertEquals(IN_PROGRESS, response.getStatus());
 
     verify(quizRepository).findOneByStudentIdAndStatus("student1", IN_PROGRESS);
-    verify(questionClient).retrieveMCQs(any(RetrieveMCQRequest.class));
+    verify(questionClient).retrieveMCQs(any(RetrieveMCQRequest.class), any(), any(), any());
     verify(quizRepository, times(2)).save(any(Quiz.class));
   }
 
@@ -107,11 +110,11 @@ class QuizServiceTest {
 
     when(quizRepository.findOneByStudentIdAndStatus("student1", IN_PROGRESS))
         .thenReturn(Optional.empty());
-    when(questionClient.retrieveMCQs(any(RetrieveMCQRequest.class)))
+    when(questionClient.retrieveMCQs(any(RetrieveMCQRequest.class), any(), any(), any()))
         .thenReturn(retrieveMCQResponse);
     when(quizRepository.save(any(Quiz.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-    QuizResponse response = quizService.createQuiz("student1", quizRequest);
+    QuizResponse response = quizService.createQuiz(testUserContext, quizRequest);
 
     assertEquals(1, response.getMcqs().size());
     assertEquals(0, response.getPageNumber());
@@ -140,11 +143,11 @@ class QuizServiceTest {
 
     when(quizRepository.findOneByStudentIdAndStatus("student1", IN_PROGRESS))
         .thenReturn(Optional.empty());
-    when(questionClient.retrieveMCQs(any(RetrieveMCQRequest.class)))
+    when(questionClient.retrieveMCQs(any(RetrieveMCQRequest.class), any(), any(), any()))
         .thenReturn(retrieveMCQResponse);
     when(quizRepository.save(any(Quiz.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-    QuizResponse response = quizService.createQuiz("student1", quizRequest);
+    QuizResponse response = quizService.createQuiz(testUserContext, quizRequest);
 
     assertEquals(1, response.getMcqs().size());
     assertEquals(0, response.getPageNumber());
@@ -169,14 +172,14 @@ class QuizServiceTest {
 
     assertThrows(
         InProgressQuizAlreadyExistsException.class,
-        () -> quizService.createQuiz("student1", quizRequest));
+        () -> quizService.createQuiz(testUserContext, quizRequest));
   }
 
   @Test
   void getQuizByIdAndStudentIdWithQuizNotOwnedByStudent() {
     when(quizRepository.findOneByIdAndStudentId(1L, "student1")).thenReturn(Optional.empty());
 
-    assertThrows(NotFoundException.class, () -> quizService.getQuiz(1L, "student1", 0, 10));
+    assertThrows(NotFoundException.class, () -> quizService.getQuiz(1L, testUserContext, 0, 10));
   }
 
   @Test
@@ -191,10 +194,10 @@ class QuizServiceTest {
             .build();
 
     when(quizRepository.findOneByIdAndStudentId(1L, "student1")).thenReturn(Optional.of(quiz));
-    when(questionClient.retrieveMCQsByIds(any(RetrieveMCQByIdsRequest.class)))
+    when(questionClient.retrieveMCQsByIds(any(RetrieveMCQByIdsRequest.class), any(), any(), any()))
         .thenReturn(retrieveMCQResponse);
 
-    QuizResponse response = quizService.getQuiz(1L, "student1", 0, 1);
+    QuizResponse response = quizService.getQuiz(1L, testUserContext, 0, 1);
 
     assertEquals(1L, response.getId());
     assertEquals(1, response.getMcqs().size());
@@ -219,10 +222,10 @@ class QuizServiceTest {
             .build();
 
     when(quizRepository.findOneByIdAndStudentId(1L, "student1")).thenReturn(Optional.of(quiz));
-    when(questionClient.retrieveMCQsByIds(any(RetrieveMCQByIdsRequest.class)))
+    when(questionClient.retrieveMCQsByIds(any(RetrieveMCQByIdsRequest.class), any(), any(), any()))
         .thenReturn(retrieveMCQResponse);
 
-    QuizResponse response = quizService.getQuiz(1L, "student1", 0, 1);
+    QuizResponse response = quizService.getQuiz(1L, testUserContext, 0, 1);
 
     assertEquals(1L, response.getId());
     assertEquals(1, response.getMcqs().size());
@@ -247,10 +250,10 @@ class QuizServiceTest {
             .build();
 
     when(quizRepository.findOneByIdAndStudentId(1L, "student1")).thenReturn(Optional.of(quiz));
-    when(questionClient.retrieveMCQsByIds(any(RetrieveMCQByIdsRequest.class)))
+    when(questionClient.retrieveMCQsByIds(any(RetrieveMCQByIdsRequest.class), any(), any(), any()))
         .thenReturn(retrieveMCQResponse);
 
-    QuizResponse response = quizService.getQuiz(1L, "student1", 0, 1);
+    QuizResponse response = quizService.getQuiz(1L, testUserContext, 0, 1);
 
     assertEquals(0, response.getPoints());
   }
@@ -268,10 +271,10 @@ class QuizServiceTest {
 
     when(quizRepository.findOneByStudentIdAndStatus("student1", IN_PROGRESS))
         .thenReturn(Optional.of(quiz));
-    when(questionClient.retrieveMCQsByIds(any(RetrieveMCQByIdsRequest.class)))
+    when(questionClient.retrieveMCQsByIds(any(RetrieveMCQByIdsRequest.class), any(), any(), any()))
         .thenReturn(retrieveMCQResponse);
 
-    QuizResponse response = quizService.getInProgressQuiz("student1", 0, 1);
+    QuizResponse response = quizService.getInProgressQuiz(testUserContext, 0, 1);
 
     assertEquals(1L, response.getId());
     assertEquals(1, response.getMcqs().size());
@@ -299,10 +302,10 @@ class QuizServiceTest {
 
     when(quizRepository.findOneByStudentIdAndStatus("student1", IN_PROGRESS))
         .thenReturn(Optional.of(quiz));
-    when(questionClient.retrieveMCQsByIds(any(RetrieveMCQByIdsRequest.class)))
+    when(questionClient.retrieveMCQsByIds(any(RetrieveMCQByIdsRequest.class), any(), any(), any()))
         .thenReturn(retrieveMCQResponse);
 
-    QuizResponse response = quizService.getInProgressQuiz("student1", 0, 1);
+    QuizResponse response = quizService.getInProgressQuiz(testUserContext, 0, 1);
 
     assertEquals(1L, response.getId());
     assertEquals(1, response.getMcqs().size());
@@ -329,10 +332,10 @@ class QuizServiceTest {
 
     when(quizRepository.findOneByStudentIdAndStatus("student1", IN_PROGRESS))
         .thenReturn(Optional.of(quiz));
-    when(questionClient.retrieveMCQsByIds(any(RetrieveMCQByIdsRequest.class)))
+    when(questionClient.retrieveMCQsByIds(any(RetrieveMCQByIdsRequest.class), any(), any(), any()))
         .thenReturn(retrieveMCQResponse);
 
-    QuizResponse response = quizService.getInProgressQuiz("student1", 0, 1);
+    QuizResponse response = quizService.getInProgressQuiz(testUserContext, 0, 1);
 
     assertEquals(1L, response.getId());
     assertEquals(1, response.getMcqs().size());
@@ -347,7 +350,7 @@ class QuizServiceTest {
 
   @Test
   void getCompletedQuizWithFirstPage() {
-    String student1 = "student 1";
+
     Page<Quiz> quizzes =
         new PageImpl<>(
             List.of(
@@ -355,7 +358,7 @@ class QuizServiceTest {
                     .id(1L)
                     .status(COMPLETED)
                     .attempts(List.of(Attempt.builder().mcqId(1L).optionNo(1).build()))
-                    .studentId(student1)
+                    .studentId("student1")
                     .build()));
     RetrieveMCQResponse retrieveMCQResponse =
         RetrieveMCQResponse.builder()
@@ -364,12 +367,12 @@ class QuizServiceTest {
             .totalRecords(1L)
             .build();
 
-    when(quizRepository.findPageByStudentIdAndStatus(student1, COMPLETED, PageRequest.of(0, 1)))
+    when(quizRepository.findPageByStudentIdAndStatus("student1", COMPLETED, PageRequest.of(0, 1)))
         .thenReturn(quizzes);
-    when(questionClient.retrieveMCQsByIds(any(RetrieveMCQByIdsRequest.class)))
+    when(questionClient.retrieveMCQsByIds(any(RetrieveMCQByIdsRequest.class), any(), any(), any()))
         .thenReturn(retrieveMCQResponse);
 
-    QuizListResponse response = quizService.getCompletedQuiz(student1, 0, 1);
+    QuizListResponse response = quizService.getCompletedQuiz(testUserContext, 0, 1);
 
     assertEquals(1, response.getQuizzes().size());
     assertEquals(0, response.getPageNumber());

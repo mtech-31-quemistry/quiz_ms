@@ -6,6 +6,7 @@ import com.quemistry.quiz_ms.controller.model.AttemptRequest;
 import com.quemistry.quiz_ms.controller.model.QuizListResponse;
 import com.quemistry.quiz_ms.controller.model.QuizRequest;
 import com.quemistry.quiz_ms.controller.model.QuizResponse;
+import com.quemistry.quiz_ms.model.UserContext;
 import com.quemistry.quiz_ms.service.QuizService;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,39 +33,51 @@ public class QuizController {
 
   @PostMapping
   public QuizResponse createQuiz(
-      @RequestHeader("x-user-id") String studentId, @RequestBody QuizRequest quizRequest) {
+      @RequestHeader("x-user-id") String studentId,
+      @RequestHeader("x-user-email") String studentEmail,
+      @RequestHeader("x-user-role") String role,
+      @RequestBody QuizRequest quizRequest) {
     log.info("POST /v1/quizzes");
-    return quizService.createQuiz(studentId, quizRequest);
+    return quizService.createQuiz(new UserContext(studentId, studentEmail, role), quizRequest);
   }
 
   @GetMapping("{id}")
   public QuizResponse getQuiz(
       @PathVariable Long id,
       @RequestHeader("x-user-id") String studentId,
+      @RequestHeader("x-user-email") String studentEmail,
+      @RequestHeader("x-user-role") String role,
       @RequestParam Integer pageNumber,
       @RequestParam Integer pageSize) {
     log.info("GET /v1/quizzes/{}", id);
-    return quizService.getQuiz(id, studentId, pageNumber, pageSize);
+    return quizService.getQuiz(
+        id, new UserContext(studentId, studentEmail, role), pageNumber, pageSize);
   }
 
   @GetMapping("me/in-progress")
   public QuizResponse getInProgressQuiz(
       @RequestHeader("x-user-id") String studentId,
+      @RequestHeader("x-user-email") String studentEmail,
+      @RequestHeader("x-user-role") String role,
       @RequestParam Integer pageNumber,
       @RequestParam Integer pageSize) {
     log.info("GET /v1/me/in-progress");
 
-    return quizService.getInProgressQuiz(studentId, pageNumber, pageSize);
+    return quizService.getInProgressQuiz(
+        new UserContext(studentId, studentEmail, role), pageNumber, pageSize);
   }
 
   @GetMapping("me/completed")
   public QuizListResponse getCompletedQuiz(
       @RequestHeader("x-user-id") String studentId,
+      @RequestHeader("x-user-email") String studentEmail,
+      @RequestHeader("x-user-role") String role,
       @RequestParam Integer pageNumber,
       @RequestParam Integer pageSize) {
     log.info("GET /v1/me/completed");
 
-    return quizService.getCompletedQuiz(studentId, pageNumber, pageSize);
+    return quizService.getCompletedQuiz(
+        new UserContext(studentId, studentEmail, role), pageNumber, pageSize);
   }
 
   @PutMapping("{id}/mcqs/{mcqId}/attempt")
