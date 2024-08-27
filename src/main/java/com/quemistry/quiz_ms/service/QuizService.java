@@ -226,22 +226,20 @@ public class QuizService {
   }
 
   private List<MCQResponse> getMcqResponses(List<MCQDto> mcqs, List<Attempt> attempts) {
-    return mcqs.stream()
+    return attempts.stream()
         .map(
-            mcq -> {
-              Attempt attempt =
-                  attempts.stream()
-                      .filter(it -> it.getMcqId().equals(mcq.getId()))
+            attempt -> {
+              MCQDto mcqDto =
+                  mcqs.stream()
+                      .filter(mcq -> mcq.getId().equals(attempt.getMcqId()))
                       .findFirst()
                       .orElse(null);
-              MCQResponse response = mcqMapper.toMCQResponse(mcq);
-              if (attempt != null) {
-                response.setAttemptOption(attempt.getOptionNo());
-                response.setAttemptOn(attempt.getAttemptTime());
-              }
+              MCQResponse response = mcqMapper.toMCQResponse(mcqDto);
+              response.setAttemptOption(attempt.getOptionNo());
+              response.setAttemptOn(attempt.getAttemptTime());
               return response;
             })
-        .collect(Collectors.toList());
+        .toList();
   }
 
   private int calculatePoints(List<MCQResponse> mcqs) {
