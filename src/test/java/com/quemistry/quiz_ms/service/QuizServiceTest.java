@@ -188,7 +188,7 @@ class QuizServiceTest {
     quiz.setAttempts(List.of(Attempt.create(quiz, 1L), Attempt.create(quiz, 2L)));
     RetrieveMCQResponse retrieveMCQResponse =
         RetrieveMCQResponse.builder()
-            .mcqs(List.of(generateMCQDto(1L, "Question 1")))
+            .mcqs(List.of(generateMCQDto(1L, "Question 1"), generateMCQDto(2L, "Question 2")))
             .totalPages(1)
             .totalRecords(2L)
             .build();
@@ -200,7 +200,7 @@ class QuizServiceTest {
     QuizResponse response = quizService.getQuiz(1L, testUserContext, 0, 1);
 
     assertEquals(1L, response.getId());
-    assertEquals(1, response.getMcqs().size());
+    assertEquals(2, response.getMcqs().size());
     assertEquals(0, response.getPageNumber());
     assertEquals(1, response.getPageSize());
     assertEquals(1, response.getTotalPages());
@@ -264,7 +264,7 @@ class QuizServiceTest {
     quiz.setAttempts(List.of(Attempt.create(quiz, 1L), Attempt.create(quiz, 2L)));
     RetrieveMCQResponse retrieveMCQResponse =
         RetrieveMCQResponse.builder()
-            .mcqs(List.of(generateMCQDto(1L, "Question 1")))
+            .mcqs(List.of(generateMCQDto(1L, "Question 1"), generateMCQDto(2L, "Question 2")))
             .totalPages(1)
             .totalRecords(2L)
             .build();
@@ -277,7 +277,7 @@ class QuizServiceTest {
     QuizResponse response = quizService.getInProgressQuiz(testUserContext, 0, 1);
 
     assertEquals(1L, response.getId());
-    assertEquals(1, response.getMcqs().size());
+    assertEquals(2, response.getMcqs().size());
     assertEquals(0, response.getPageNumber());
     assertEquals(1, response.getPageSize());
     assertEquals(1, response.getTotalPages());
