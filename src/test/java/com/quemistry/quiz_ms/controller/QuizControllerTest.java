@@ -18,9 +18,7 @@ import com.quemistry.quiz_ms.model.UserContext;
 import com.quemistry.quiz_ms.service.QuizService;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -46,20 +44,6 @@ class QuizControllerTest {
         MockMvcBuilders.standaloneSetup(quizController)
             .setControllerAdvice(new ExceptionAdvisor())
             .build();
-  }
-
-  @Test
-  void testHealth() throws Exception {
-    Map<String, String> expectedResponse = new HashMap<>();
-    expectedResponse.put("service", "quiz");
-    expectedResponse.put("status", "UP");
-
-    String expectedResponseBody = objectMapper.writeValueAsString(expectedResponse);
-
-    mockMvc
-        .perform(get("/v1/quizzes/health"))
-        .andExpect(status().isOk())
-        .andExpect(content().json(expectedResponseBody));
   }
 
   @Test

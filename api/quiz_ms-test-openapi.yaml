@@ -1,0 +1,51 @@
+openapi: "3.1.0"
+info:
+  title: "quiz_ms test API"
+  description: "quiz test API"
+  version: "1.0.0"
+servers:
+  - url: "http://quiz"
+paths:
+  /v1/tests:
+    post:
+      summary: "POST v1/tests"
+      operationId: "createTest"
+      parameters:
+        - name: "x-user-id"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+        - name: "x-user-email"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+        - name: "x-user-roles"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TestRequest"
+        required: true
+      responses:
+        "201":
+          description: "Created"
+components:
+  schemas:
+    TestRequest:
+      type: "object"
+      properties:
+        mcqIds:
+          type: "array"
+          items:
+            type: "integer"
+            format: "int64"
+        studentIds:
+          type: "array"
+          items:
+            type: "string"

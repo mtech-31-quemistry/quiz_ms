@@ -1,0 +1,395 @@
+openapi: "3.1.0"
+info:
+  title: "quiz_ms quiz API"
+  description: "quiz quiz API"
+  version: "1.0.0"
+servers:
+  - url: "http://quiz"
+paths:
+  /v1/quizzes/health:
+    get:
+      summary: "GET v1/quizzes/health"
+      operationId: "health"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                type: "string"
+  /v1/quizzes:
+    post:
+      summary: "POST v1/quizzes"
+      operationId: "createQuiz"
+      parameters:
+        - name: "x-user-id"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+        - name: "x-user-email"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+        - name: "x-user-roles"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuizRequest"
+        required: true
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/QuizResponse"
+  /v1/quizzes/{id}:
+    get:
+      summary: "GET v1/quizzes/{id}"
+      operationId: "getQuiz"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+        - name: "pageNumber"
+          in: "query"
+          required: true
+          schema:
+            type: "integer"
+            format: "int32"
+        - name: "pageSize"
+          in: "query"
+          required: true
+          schema:
+            type: "integer"
+            format: "int32"
+        - name: "x-user-id"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+        - name: "x-user-email"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+        - name: "x-user-roles"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/QuizResponse"
+  /v1/quizzes/me/in-progress:
+    get:
+      summary: "GET v1/quizzes/me/in-progress"
+      operationId: "getInProgressQuiz"
+      parameters:
+        - name: "pageNumber"
+          in: "query"
+          required: true
+          schema:
+            type: "integer"
+            format: "int32"
+        - name: "pageSize"
+          in: "query"
+          required: true
+          schema:
+            type: "integer"
+            format: "int32"
+        - name: "x-user-id"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+        - name: "x-user-email"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+        - name: "x-user-roles"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/QuizResponse"
+  /v1/quizzes/me/completed:
+    get:
+      summary: "GET v1/quizzes/me/completed"
+      operationId: "getCompletedQuiz"
+      parameters:
+        - name: "pageNumber"
+          in: "query"
+          required: true
+          schema:
+            type: "integer"
+            format: "int32"
+        - name: "pageSize"
+          in: "query"
+          required: true
+          schema:
+            type: "integer"
+            format: "int32"
+        - name: "x-user-id"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+        - name: "x-user-email"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+        - name: "x-user-roles"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/QuizListResponse"
+  /v1/quizzes/{id}/mcqs/{mcqId}/attempt:
+    put:
+      summary: "PUT v1/quizzes/{id}/mcqs/{mcqId}/attempt"
+      operationId: "updateAttempt"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+        - name: "mcqId"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+        - name: "x-user-id"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AttemptRequest"
+        required: true
+      responses:
+        "204":
+          description: "No Content"
+  /v1/quizzes/{id}/abandon:
+    patch:
+      summary: "PATCH v1/quizzes/{id}/abandon"
+      operationId: "abandonQuiz"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+        - name: "x-user-id"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "204":
+          description: "No Content"
+components:
+  schemas:
+    QuizRequest:
+      type: "object"
+      properties:
+        topics:
+          type: "array"
+          items:
+            type: "integer"
+            format: "int64"
+        skills:
+          type: "array"
+          items:
+            type: "integer"
+            format: "int64"
+        pageSize:
+          type: "integer"
+          format: "int32"
+        totalSize:
+          type: "integer"
+          format: "int64"
+    OptionDto:
+      type: "object"
+      properties:
+        "no":
+          type: "integer"
+          format: "int32"
+        text:
+          type: "string"
+        explanation:
+          type: "string"
+        isAnswer:
+          type: "boolean"
+    TopicDto:
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+          format: "int32"
+        name:
+          type: "string"
+    SkillDto:
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+          format: "int32"
+        name:
+          type: "string"
+        topicId:
+          type: "integer"
+          format: "int32"
+    MCQResponse:
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+          format: "int64"
+        stem:
+          type: "string"
+        options:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/OptionDto"
+        topics:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/TopicDto"
+        skills:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/SkillDto"
+        status:
+          type: "string"
+        publishedOn:
+          type: "string"
+          format: "date-time"
+        publishedBy:
+          type: "string"
+        closedOn:
+          type: "string"
+          format: "date-time"
+        closedBy:
+          type: "string"
+        createdOn:
+          type: "string"
+          format: "date-time"
+        createdBy:
+          type: "string"
+        attemptOption:
+          type: "integer"
+          format: "int32"
+        attemptOn:
+          type: "string"
+          format: "date-time"
+    QuizResponse:
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+          format: "int64"
+        mcqs:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/MCQResponse"
+        status:
+          type: "string"
+          enum:
+            - "IN_PROGRESS"
+            - "COMPLETED"
+            - "ABANDONED"
+        points:
+          type: "integer"
+          format: "int32"
+        pageNumber:
+          type: "integer"
+          format: "int32"
+        pageSize:
+          type: "integer"
+          format: "int32"
+        totalPages:
+          type: "integer"
+          format: "int32"
+        totalRecords:
+          type: "integer"
+          format: "int64"
+    SimpleQuizResponse:
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+          format: "int64"
+        mcqs:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/MCQResponse"
+        status:
+          type: "string"
+          enum:
+            - "IN_PROGRESS"
+            - "COMPLETED"
+            - "ABANDONED"
+        points:
+          type: "integer"
+          format: "int32"
+    QuizListResponse:
+      type: "object"
+      properties:
+        pageNumber:
+          type: "integer"
+          format: "int32"
+        pageSize:
+          type: "integer"
+          format: "int32"
+        totalPages:
+          type: "integer"
+          format: "int32"
+        totalRecords:
+          type: "integer"
+          format: "int64"
+        quizzes:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/SimpleQuizResponse"
+    AttemptRequest:
+      type: "object"
+      properties:
+        attemptOption:
+          type: "integer"
+          format: "int32"

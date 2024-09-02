@@ -8,8 +8,6 @@ import com.quemistry.quiz_ms.controller.model.QuizRequest;
 import com.quemistry.quiz_ms.controller.model.QuizResponse;
 import com.quemistry.quiz_ms.model.UserContext;
 import com.quemistry.quiz_ms.service.QuizService;
-import java.util.HashMap;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,14 +19,6 @@ public class QuizController {
 
   public QuizController(QuizService quizService) {
     this.quizService = quizService;
-  }
-
-  @GetMapping("health")
-  public Map<String, String> health() {
-    Map<String, String> responseBody = new HashMap<>();
-    responseBody.put("service", "quiz");
-    responseBody.put("status", "UP");
-    return responseBody;
   }
 
   @PostMapping
