@@ -34,7 +34,7 @@ public class Quiz {
   private Date updatedOn;
 
   @OneToMany(mappedBy = "quiz", cascade = ALL, orphanRemoval = true)
-  private List<Attempt> attempts;
+  private List<QuizAttempt> attempts;
 
   public static Quiz create(String studentId) {
     Date now = new Date();
@@ -48,7 +48,7 @@ public class Quiz {
   }
 
   public void addAttempts(List<Long> mcqIds) {
-    mcqIds.forEach(mcqId -> this.attempts.add(Attempt.create(this, mcqId)));
+    mcqIds.forEach(mcqId -> this.attempts.add(QuizAttempt.create(this, mcqId)));
   }
 
   public void complete() {

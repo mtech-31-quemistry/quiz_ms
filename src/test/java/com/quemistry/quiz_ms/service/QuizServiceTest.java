@@ -13,10 +13,10 @@ import com.quemistry.quiz_ms.controller.model.QuizResponse;
 import com.quemistry.quiz_ms.exception.AttemptAlreadyExistsException;
 import com.quemistry.quiz_ms.exception.InProgressQuizAlreadyExistsException;
 import com.quemistry.quiz_ms.exception.NotFoundException;
-import com.quemistry.quiz_ms.model.Attempt;
 import com.quemistry.quiz_ms.model.Quiz;
+import com.quemistry.quiz_ms.model.QuizAttempt;
 import com.quemistry.quiz_ms.model.UserContext;
-import com.quemistry.quiz_ms.repository.AttemptRepository;
+import com.quemistry.quiz_ms.repository.QuizAttemptRepository;
 import com.quemistry.quiz_ms.repository.QuizRepository;
 import java.util.Date;
 import java.util.List;
@@ -33,7 +33,7 @@ import org.springframework.data.domain.PageRequest;
 class QuizServiceTest {
 
   @Mock private QuizRepository quizRepository;
-  @Mock private AttemptRepository attemptRepository;
+  @Mock private QuizAttemptRepository attemptRepository;
 
   @Mock private QuestionClient questionClient;
 
@@ -185,7 +185,7 @@ class QuizServiceTest {
   @Test
   void getQuizByIdAndStudentIdWithFirstPage() {
     Quiz quiz = Quiz.builder().id(1L).status(IN_PROGRESS).studentId("student1").build();
-    quiz.setAttempts(List.of(Attempt.create(quiz, 1L), Attempt.create(quiz, 2L)));
+    quiz.setAttempts(List.of(QuizAttempt.create(quiz, 1L), QuizAttempt.create(quiz, 2L)));
     RetrieveMCQResponse retrieveMCQResponse =
         RetrieveMCQResponse.builder()
             .mcqs(List.of(generateMCQDto(1L, "Question 1"), generateMCQDto(2L, "Question 2")))
@@ -213,7 +213,7 @@ class QuizServiceTest {
   @Test
   void getQuizByIdAndStudentIdReturnCompletedQuizWithCorrectAnswer() {
     Quiz quiz = Quiz.builder().id(1L).status(COMPLETED).studentId("student1").build();
-    quiz.setAttempts(List.of(Attempt.builder().quiz(quiz).mcqId(1L).optionNo(1).build()));
+    quiz.setAttempts(List.of(QuizAttempt.builder().quiz(quiz).mcqId(1L).optionNo(1).build()));
     RetrieveMCQResponse retrieveMCQResponse =
         RetrieveMCQResponse.builder()
             .mcqs(List.of(generateMCQDto(1L, "Question 1")))
@@ -241,7 +241,7 @@ class QuizServiceTest {
   @Test
   void getQuizByIdAndStudentIdReturnCompletedQuizWithIncorrectAnswer() {
     Quiz quiz = Quiz.builder().id(1L).status(COMPLETED).studentId("student1").build();
-    quiz.setAttempts(List.of(Attempt.builder().quiz(quiz).mcqId(1L).optionNo(2).build()));
+    quiz.setAttempts(List.of(QuizAttempt.builder().quiz(quiz).mcqId(1L).optionNo(2).build()));
     RetrieveMCQResponse retrieveMCQResponse =
         RetrieveMCQResponse.builder()
             .mcqs(List.of(generateMCQDto(1L, "Question 1")))
@@ -261,7 +261,7 @@ class QuizServiceTest {
   @Test
   void getInProgressQuizWithFirstPage() {
     Quiz quiz = Quiz.builder().id(1L).status(IN_PROGRESS).studentId("student1").build();
-    quiz.setAttempts(List.of(Attempt.create(quiz, 1L), Attempt.create(quiz, 2L)));
+    quiz.setAttempts(List.of(QuizAttempt.create(quiz, 1L), QuizAttempt.create(quiz, 2L)));
     RetrieveMCQResponse retrieveMCQResponse =
         RetrieveMCQResponse.builder()
             .mcqs(List.of(generateMCQDto(1L, "Question 1"), generateMCQDto(2L, "Question 2")))
@@ -292,7 +292,7 @@ class QuizServiceTest {
     Date now = new Date();
     Quiz quiz = Quiz.builder().id(1L).status(IN_PROGRESS).studentId("student1").build();
     quiz.setAttempts(
-        List.of(Attempt.builder().quiz(quiz).mcqId(1L).optionNo(1).attemptTime(now).build()));
+        List.of(QuizAttempt.builder().quiz(quiz).mcqId(1L).optionNo(1).attemptTime(now).build()));
     RetrieveMCQResponse retrieveMCQResponse =
         RetrieveMCQResponse.builder()
             .mcqs(List.of(generateMCQDto(1L, "Question 1")))
@@ -322,7 +322,7 @@ class QuizServiceTest {
   void getInProgressQuizWithFirstPageWithoutAttempt() {
     Quiz quiz =
         Quiz.builder().id(1L).status(IN_PROGRESS).attempts(List.of()).studentId("student1").build();
-    quiz.setAttempts(List.of(Attempt.create(quiz, 1L)));
+    quiz.setAttempts(List.of(QuizAttempt.create(quiz, 1L)));
     RetrieveMCQResponse retrieveMCQResponse =
         RetrieveMCQResponse.builder()
             .mcqs(List.of(generateMCQDto(1L, "Question 1")))
@@ -357,7 +357,7 @@ class QuizServiceTest {
                 Quiz.builder()
                     .id(1L)
                     .status(COMPLETED)
-                    .attempts(List.of(Attempt.builder().mcqId(1L).optionNo(1).build()))
+                    .attempts(List.of(QuizAttempt.builder().mcqId(1L).optionNo(1).build()))
                     .studentId("student1")
                     .build()));
     RetrieveMCQResponse retrieveMCQResponse =
@@ -390,8 +390,8 @@ class QuizServiceTest {
     String studentId = "student1";
     Integer attemptOption = 1;
     Quiz quiz = Quiz.builder().id(quizId).status(IN_PROGRESS).studentId("student1").build();
-    Attempt attempt =
-        Attempt.builder().optionNo(null).quizId(quizId).quiz(quiz).mcqId(mcqId).build();
+    QuizAttempt attempt =
+        QuizAttempt.builder().optionNo(null).quizId(quizId).quiz(quiz).mcqId(mcqId).build();
 
     when(quizRepository.existsByIdAndStudentId(quizId, studentId)).thenReturn(true);
     when(attemptRepository.findByQuizIdAndMcqId(quizId, mcqId)).thenReturn(Optional.of(attempt));
@@ -409,8 +409,8 @@ class QuizServiceTest {
     String studentId = "student1";
     Integer attemptOption = 1;
     Quiz quiz = Quiz.builder().id(quizId).status(IN_PROGRESS).studentId("student1").build();
-    Attempt attempt =
-        Attempt.builder().optionNo(null).quizId(quizId).quiz(quiz).mcqId(mcqId).build();
+    QuizAttempt attempt =
+        QuizAttempt.builder().optionNo(null).quizId(quizId).quiz(quiz).mcqId(mcqId).build();
 
     when(quizRepository.existsByIdAndStudentId(quizId, studentId)).thenReturn(true);
     when(attemptRepository.findByQuizIdAndMcqId(quizId, mcqId)).thenReturn(Optional.of(attempt));
@@ -460,7 +460,7 @@ class QuizServiceTest {
     Integer attemptOption = 1;
 
     when(quizRepository.existsByIdAndStudentId(quizId, studentId)).thenReturn(true);
-    Attempt attempt = new Attempt();
+    QuizAttempt attempt = new QuizAttempt();
     attempt.setOptionNo(1);
     when(attemptRepository.findByQuizIdAndMcqId(quizId, mcqId)).thenReturn(Optional.of(attempt));
 
@@ -476,8 +476,8 @@ class QuizServiceTest {
     String studentId = "student1";
     Integer attemptOption = 1;
     Quiz quiz = Quiz.builder().id(quizId).status(IN_PROGRESS).studentId("student1").build();
-    Attempt attempt =
-        Attempt.builder().optionNo(null).quizId(quizId).quiz(quiz).mcqId(mcqId).build();
+    QuizAttempt attempt =
+        QuizAttempt.builder().optionNo(null).quizId(quizId).quiz(quiz).mcqId(mcqId).build();
 
     when(quizRepository.existsByIdAndStudentId(quizId, studentId)).thenReturn(true);
     when(attemptRepository.findByQuizIdAndMcqId(quizId, mcqId)).thenReturn(Optional.of(attempt));

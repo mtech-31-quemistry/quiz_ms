@@ -11,6 +11,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class TestRequest {
-  private List<Long> mcqIds;
+  private List<McqIndex> mcqs;
   private List<String> studentIds;
 }

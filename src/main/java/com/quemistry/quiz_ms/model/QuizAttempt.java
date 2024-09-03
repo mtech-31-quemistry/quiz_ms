@@ -11,13 +11,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "attempt", schema = "qms_quiz")
+@Table(name = "quiz_attempt", schema = "qms_quiz")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@IdClass(Attempt.AttemptId.class)
-public class Attempt {
+@IdClass(QuizAttempt.QuizAttemptId.class)
+public class QuizAttempt {
   @Id
   @Column(name = "quiz_id")
   private Long quizId;
@@ -32,8 +32,8 @@ public class Attempt {
 
   private Date attemptTime;
 
-  public static Attempt create(Quiz quiz, Long mcqId) {
-    return Attempt.builder()
+  public static QuizAttempt create(Quiz quiz, Long mcqId) {
+    return QuizAttempt.builder()
         .quiz(quiz)
         .quizId(quiz.getId())
         .mcqId(mcqId)
@@ -49,7 +49,7 @@ public class Attempt {
 
   @Data
   @NoArgsConstructor
-  public static class AttemptId implements Serializable {
+  public static class QuizAttemptId implements Serializable {
     private Long quizId;
     private Long mcqId;
   }

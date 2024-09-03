@@ -37,15 +37,36 @@ paths:
           description: "Created"
 components:
   schemas:
+    McqIndex:
+      type: "object"
+      properties:
+        mcqId:
+          type: "integer"
+          format: "int64"
+        index:
+          type: "integer"
+          format: "int32"
     TestRequest:
       type: "object"
       properties:
-        mcqIds:
+        mcqs:
           type: "array"
           items:
-            type: "integer"
-            format: "int64"
+            $ref: "#/components/schemas/McqIndex"
         studentIds:
           type: "array"
           items:
             type: "string"
+    schemas:
+      TestRequest:
+        type: "object"
+        properties:
+          mcqIds:
+            type: "array"
+            items:
+              type: "integer"
+              format: "int64"
+          studentIds:
+            type: "array"
+            items:
+              type: "string"

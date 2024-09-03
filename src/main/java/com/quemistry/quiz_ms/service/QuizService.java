@@ -14,10 +14,10 @@ import com.quemistry.quiz_ms.exception.AttemptAlreadyExistsException;
 import com.quemistry.quiz_ms.exception.InProgressQuizAlreadyExistsException;
 import com.quemistry.quiz_ms.exception.NotFoundException;
 import com.quemistry.quiz_ms.mapper.MCQMapper;
-import com.quemistry.quiz_ms.model.Attempt;
 import com.quemistry.quiz_ms.model.Quiz;
+import com.quemistry.quiz_ms.model.QuizAttempt;
 import com.quemistry.quiz_ms.model.UserContext;
-import com.quemistry.quiz_ms.repository.AttemptRepository;
+import com.quemistry.quiz_ms.repository.QuizAttemptRepository;
 import com.quemistry.quiz_ms.repository.QuizRepository;
 import java.util.List;
 import java.util.Optional;
@@ -32,7 +32,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class QuizService {
   private final QuizRepository quizRepository;
-  private final AttemptRepository attemptRepository;
+  private final QuizAttemptRepository attemptRepository;
   private final QuestionClient questionClient;
   private final MCQMapper mcqMapper = INSTANCE;
   private RetrieveMCQResponse mcq;
@@ -40,7 +40,7 @@ public class QuizService {
   @Autowired
   public QuizService(
       QuizRepository quizRepository,
-      AttemptRepository attemptRepository,
+      QuizAttemptRepository attemptRepository,
       QuestionClient questionClient) {
     this.quizRepository = quizRepository;
     this.attemptRepository = attemptRepository;
@@ -121,7 +121,7 @@ public class QuizService {
                 RetrieveMCQByIdsRequest.builder()
                     .ids(
                         quizzes.stream()
-                            .flatMap(quiz -> quiz.getAttempts().stream().map(Attempt::getMcqId))
+                            .flatMap(quiz -> quiz.getAttempts().stream().map(QuizAttempt::getMcqId))
                             .toList())
                     .pageNumber(0)
                     .pageSize(quizzes.getNumberOfElements() * 60)
@@ -158,7 +158,7 @@ public class QuizService {
       throw new NotFoundException("Quiz not found");
     }
 
-    Attempt attempt =
+    QuizAttempt attempt =
         attemptRepository
             .findByQuizIdAndMcqId(quizId, mcqId)
             .orElseThrow(() -> new NotFoundException("Attempt not found"));
@@ -202,7 +202,7 @@ public class QuizService {
     RetrieveMCQResponse mcqs =
         questionClient.retrieveMCQsByIds(
             RetrieveMCQByIdsRequest.builder()
-                .ids(quiz.getAttempts().stream().map(Attempt::getMcqId).toList())
+                .ids(quiz.getAttempts().stream().map(QuizAttempt::getMcqId).toList())
                 .pageNumber(pageNumber)
                 .pageSize(pageSize)
                 .build(),
@@ -225,7 +225,7 @@ public class QuizService {
         .build();
   }
 
-  private List<MCQResponse> getMcqResponses(List<MCQDto> mcqs, List<Attempt> attempts) {
+  private List<MCQResponse> getMcqResponses(List<MCQDto> mcqs, List<QuizAttempt> attempts) {
     return attempts.stream()
         .map(
             attempt -> {
