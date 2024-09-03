@@ -4,7 +4,7 @@ info:
   description: "quiz health API"
   version: "1.0.0"
 servers:
-  - url: "https://quiz"
+  - url: "http://localhost"
 paths:
   /v1/health:
     get:

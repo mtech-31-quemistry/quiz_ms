@@ -4,19 +4,8 @@ info:
   description: "quiz quiz API"
   version: "1.0.0"
 servers:
-  - url: "http://quiz"
+  - url: "http://localhost"
 paths:
-  /v1/quizzes/health:
-    get:
-      summary: "GET v1/quizzes/health"
-      operationId: "health"
-      responses:
-        "200":
-          description: "OK"
-          content:
-            '*/*':
-              schema:
-                type: "string"
   /v1/quizzes:
     post:
       summary: "POST v1/quizzes"

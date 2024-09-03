@@ -1,4 +1,4 @@
-package com.quemistry.quiz_ms.controller.model;
+package com.quemistry.quiz_ms.controller;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -4,7 +4,7 @@ info:
   description: "quiz test API"
   version: "1.0.0"
 servers:
-  - url: "http://quiz"
+  - url: "http://localhost"
 paths:
   /v1/tests:
     post:

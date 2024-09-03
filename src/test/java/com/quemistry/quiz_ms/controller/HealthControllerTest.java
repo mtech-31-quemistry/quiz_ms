@@ -5,7 +5,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.quemistry.quiz_ms.controller.model.HealthController;
 import com.quemistry.quiz_ms.exception.ExceptionAdvisor;
 import java.util.HashMap;
 import java.util.Map;
