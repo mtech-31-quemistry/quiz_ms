@@ -2,10 +2,8 @@ package com.quemistry.quiz_ms.service;
 
 import com.quemistry.quiz_ms.client.QuestionClient;
 import com.quemistry.quiz_ms.controller.model.TestRequest;
-import com.quemistry.quiz_ms.model.Test;
-import com.quemistry.quiz_ms.model.TestAttempt;
-import com.quemistry.quiz_ms.model.TestMcqs;
-import com.quemistry.quiz_ms.model.TestStudent;
+import com.quemistry.quiz_ms.exception.InProgressTestAlreadyExistsException;
+import com.quemistry.quiz_ms.model.*;
 import com.quemistry.quiz_ms.repository.TestAttemptRepository;
 import com.quemistry.quiz_ms.repository.TestMcqRepository;
 import com.quemistry.quiz_ms.repository.TestRepository;
@@ -38,9 +36,12 @@ public class TestService {
   public Long createTest(String tutorId, TestRequest testRequest) {
     log.info("Creating test for tutor {} with request {}", tutorId, testRequest);
 
-    Test test = Test.create(tutorId);
-    test = testRepository.save(test);
-    Long testId = test.getId();
+    if (testRepository.existsByTutorIdAndStatus(tutorId, TestStatus.IN_PROGRESS)) {
+      throw new InProgressTestAlreadyExistsException();
+    }
+
+    TestEntity test = TestEntity.create(tutorId);
+    Long testId = testRepository.save(test).getId();
 
     testRequest
         .getMcqs()

@@ -29,6 +29,6 @@ public class TestController {
       HttpServletResponse response) {
     log.info("POST /v1/testes");
     Long testId = testService.createTest(tutorId, testRequest);
-    response.setHeader("Location", "/v1/testes/" + testId);
+    response.setHeader("Location", "/v1/tests/" + testId);
   }
 }

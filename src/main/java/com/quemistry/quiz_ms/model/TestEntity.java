@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Test {
+public class TestEntity {
   @Id
   @GeneratedValue(strategy = IDENTITY)
   private Long id;
@@ -29,9 +29,9 @@ public class Test {
 
   private Date updatedOn;
 
-  public static Test create(String tutorId) {
+  public static TestEntity create(String tutorId) {
     Date now = new Date();
-    return Test.builder()
+    return TestEntity.builder()
         .status(TestStatus.IN_PROGRESS)
         .tutorId(tutorId)
         .createdOn(now)
