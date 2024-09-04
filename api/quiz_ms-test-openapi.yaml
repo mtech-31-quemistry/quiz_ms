@@ -35,6 +35,260 @@ paths:
       responses:
         "201":
           description: "Created"
+  /v1/tests/tutor:
+    get:
+      summary: "GET v1/tests/tutor"
+      operationId: "getTestsForTutor"
+      parameters:
+        - name: "pageNumber"
+          in: "query"
+          required: true
+          schema:
+            type: "integer"
+            format: "int32"
+        - name: "pageSize"
+          in: "query"
+          required: true
+          schema:
+            type: "integer"
+            format: "int32"
+        - name: "x-user-id"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+        - name: "x-user-email"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+        - name: "x-user-roles"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TestEntity"
+  /v1/tests/student:
+    get:
+      summary: "GET v1/tests/student"
+      operationId: "getTestsForStudent"
+      parameters:
+        - name: "pageNumber"
+          in: "query"
+          required: true
+          schema:
+            type: "integer"
+            format: "int32"
+        - name: "pageSize"
+          in: "query"
+          required: true
+          schema:
+            type: "integer"
+            format: "int32"
+        - name: "x-user-id"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+        - name: "x-user-email"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+        - name: "x-user-roles"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TestEntity"
+  /v1/tests/{testId}/mcqs:
+    get:
+      summary: "GET v1/tests/{testId}/mcqs"
+      operationId: "getTestMcqDetail"
+      parameters:
+        - name: "testId"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+        - name: "x-user-id"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+        - name: "x-user-email"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+        - name: "x-user-roles"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TestMcqDetailResponse"
+  /v1/tests/{testId}/students:
+    get:
+      summary: "GET v1/tests/{testId}/students"
+      operationId: "getTestStudentDetail"
+      parameters:
+        - name: "testId"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+        - name: "x-user-id"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+        - name: "x-user-email"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+        - name: "x-user-roles"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TestStudentDetailResponse"
+  /v1/tests/{testId}/students/{studentId}/attempts:
+    get:
+      summary: "GET v1/tests/{testId}/students/{studentId}/attempts"
+      operationId: "getTestStudentAttempts"
+      parameters:
+        - name: "testId"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+        - name: "studentId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+        - name: "x-user-id"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+        - name: "x-user-email"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+        - name: "x-user-roles"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TestStudentAttemptResponse"
+  /v1/tests/{testId}/students/me/attempts:
+    get:
+      summary: "GET v1/tests/{testId}/students/me/attempts"
+      operationId: "getMyTestStudentAttempts"
+      parameters:
+        - name: "testId"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+        - name: "x-user-id"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+        - name: "x-user-email"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+        - name: "x-user-roles"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TestStudentAttemptResponse"
+  /v1/tests/{testId}/mcq/{mcqId}/attempts:
+    get:
+      summary: "GET v1/tests/{testId}/mcq/{mcqId}/attempts"
+      operationId: "getTestMcqAttempts"
+      parameters:
+        - name: "testId"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+        - name: "mcqId"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+        - name: "x-user-id"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+        - name: "x-user-email"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+        - name: "x-user-roles"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TestMcqAttemptResponse"
 components:
   schemas:
     McqIndex:
@@ -57,16 +311,325 @@ components:
           type: "array"
           items:
             type: "string"
-    schemas:
-      TestRequest:
-        type: "object"
-        properties:
-          mcqIds:
-            type: "array"
-            items:
-              type: "integer"
-              format: "int64"
-          studentIds:
-            type: "array"
-            items:
-              type: "string"
+    TestEntity:
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+          format: "int64"
+        status:
+          type: "string"
+          enum:
+            - "IN_PROGRESS"
+            - "COMPLETED"
+        tutorId:
+          type: "string"
+        createdOn:
+          type: "string"
+          format: "date-time"
+        updatedOn:
+          type: "string"
+          format: "date-time"
+    OptionDto:
+      type: "object"
+      properties:
+        "no":
+          type: "integer"
+          format: "int32"
+        text:
+          type: "string"
+        explanation:
+          type: "string"
+        isAnswer:
+          type: "boolean"
+    TopicDto:
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+          format: "int32"
+        name:
+          type: "string"
+    SkillDto:
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+          format: "int32"
+        name:
+          type: "string"
+        topicId:
+          type: "integer"
+          format: "int32"
+    TestMcqResponse:
+      type: "object"
+      properties:
+        index:
+          type: "integer"
+          format: "int32"
+        attemptStudentsCount:
+          type: "integer"
+          format: "int32"
+        correctStudentsCount:
+          type: "integer"
+          format: "int32"
+        id:
+          type: "integer"
+          format: "int64"
+        stem:
+          type: "string"
+        options:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/OptionDto"
+        topics:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/TopicDto"
+        skills:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/SkillDto"
+        status:
+          type: "string"
+        publishedOn:
+          type: "string"
+          format: "date-time"
+        publishedBy:
+          type: "string"
+        closedOn:
+          type: "string"
+          format: "date-time"
+        closedBy:
+          type: "string"
+        createdOn:
+          type: "string"
+          format: "date-time"
+        createdBy:
+          type: "string"
+        attemptOption:
+          type: "integer"
+          format: "int32"
+        attemptOn:
+          type: "string"
+          format: "date-time"
+    TestMcqDetailResponse:
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+          format: "int64"
+        status:
+          type: "string"
+          enum:
+            - "IN_PROGRESS"
+            - "COMPLETED"
+        tutorId:
+          type: "string"
+        createdOn:
+          type: "string"
+          format: "date-time"
+        updatedOn:
+          type: "string"
+          format: "date-time"
+        mcqs:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/TestMcqResponse"
+        totalStudentsCount:
+          type: "integer"
+          format: "int32"
+    TestStudentResponse:
+      type: "object"
+      properties:
+        studentId:
+          type: "string"
+        studentName:
+          type: "string"
+        points:
+          type: "integer"
+          format: "int32"
+        attemptMcqCount:
+          type: "integer"
+          format: "int32"
+        correctMcqCount:
+          type: "integer"
+          format: "int32"
+    TestStudentDetailResponse:
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+          format: "int64"
+        status:
+          type: "string"
+          enum:
+            - "IN_PROGRESS"
+            - "COMPLETED"
+        tutorId:
+          type: "string"
+        createdOn:
+          type: "string"
+          format: "date-time"
+        updatedOn:
+          type: "string"
+          format: "date-time"
+        totalMcqCount:
+          type: "integer"
+          format: "int32"
+        students:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/TestStudentResponse"
+    StudentMcqResponse:
+      type: "object"
+      properties:
+        index:
+          type: "integer"
+          format: "int32"
+        optionNo:
+          type: "integer"
+          format: "int32"
+        attemptOn:
+          type: "string"
+          format: "date-time"
+        id:
+          type: "integer"
+          format: "int64"
+        stem:
+          type: "string"
+        options:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/OptionDto"
+        topics:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/TopicDto"
+        skills:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/SkillDto"
+        status:
+          type: "string"
+        publishedOn:
+          type: "string"
+          format: "date-time"
+        publishedBy:
+          type: "string"
+        closedOn:
+          type: "string"
+          format: "date-time"
+        closedBy:
+          type: "string"
+        createdOn:
+          type: "string"
+          format: "date-time"
+        createdBy:
+          type: "string"
+        attemptOption:
+          type: "integer"
+          format: "int32"
+    TestStudentAttemptResponse:
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+          format: "int64"
+        status:
+          type: "string"
+          enum:
+            - "IN_PROGRESS"
+            - "COMPLETED"
+        tutorId:
+          type: "string"
+        createdOn:
+          type: "string"
+          format: "date-time"
+        updatedOn:
+          type: "string"
+          format: "date-time"
+        studentId:
+          type: "string"
+        studentName:
+          type: "string"
+        points:
+          type: "integer"
+          format: "int32"
+        mcqs:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/StudentMcqResponse"
+    McqStudentAttemptResponse:
+      type: "object"
+      properties:
+        studentId:
+          type: "string"
+        studentName:
+          type: "string"
+        optionNo:
+          type: "integer"
+          format: "int32"
+        attemptTime:
+          type: "string"
+          format: "date-time"
+    TestMcqAttemptResponse:
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+          format: "int64"
+        testStatus:
+          type: "string"
+          enum:
+            - "IN_PROGRESS"
+            - "COMPLETED"
+        tutorId:
+          type: "string"
+        createdOn:
+          type: "string"
+          format: "date-time"
+        updatedOn:
+          type: "string"
+          format: "date-time"
+        index:
+          type: "integer"
+          format: "int32"
+        attempts:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/McqStudentAttemptResponse"
+        stem:
+          type: "string"
+        options:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/OptionDto"
+        topics:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/TopicDto"
+        skills:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/SkillDto"
+        status:
+          type: "string"
+        publishedOn:
+          type: "string"
+          format: "date-time"
+        publishedBy:
+          type: "string"
+        closedOn:
+          type: "string"
+          format: "date-time"
+        closedBy:
+          type: "string"
+        createdBy:
+          type: "string"
+        attemptOption:
+          type: "integer"
+          format: "int32"
+        attemptOn:
+          type: "string"
+          format: "date-time"
