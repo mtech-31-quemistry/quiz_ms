@@ -14,7 +14,7 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
-public class TestMcqAttemptResponse extends MCQResponse {
+public class TestMcqAttemptResponse extends MCQDto {
   private Long id;
   private TestStatus testStatus;
   private String tutorId;
@@ -26,13 +26,15 @@ public class TestMcqAttemptResponse extends MCQResponse {
   private List<McqStudentAttemptResponse> attempts;
 
   public static TestMcqAttemptResponse from(
-      TestEntity test, MCQDto mcq, List<TestAttempt> attempts) {
+      TestEntity test, int index, MCQDto mcq, List<TestAttempt> attempts) {
     return TestMcqAttemptResponse.builder()
         .id(test.getId())
         .testStatus(test.getStatus())
         .tutorId(test.getTutorId())
         .createdOn(test.getCreatedOn())
+        .createdBy(mcq.getCreatedBy())
         .updatedOn(test.getUpdatedOn())
+        .index(index)
         .stem(mcq.getStem())
         .options(mcq.getOptions())
         .topics(mcq.getTopics())
@@ -42,8 +44,6 @@ public class TestMcqAttemptResponse extends MCQResponse {
         .publishedBy(mcq.getPublishedBy())
         .closedOn(mcq.getClosedOn())
         .closedBy(mcq.getClosedBy())
-        .createdOn(mcq.getCreatedOn())
-        .createdBy(mcq.getCreatedBy())
         .attempts(attempts.stream().map(McqStudentAttemptResponse::from).toList())
         .build();
   }

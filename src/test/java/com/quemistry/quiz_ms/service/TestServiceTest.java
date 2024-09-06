@@ -211,7 +211,6 @@ class TestServiceTest {
     assertEquals(TEST_ID, testStudentDetailResponse.getId());
     assertEquals(IN_PROGRESS, testStudentDetailResponse.getStatus());
     assertEquals(TUTOR_ID, testStudentDetailResponse.getTutorId());
-    assertEquals(IN_PROGRESS, testStudentDetailResponse.getStatus());
 
     assertEquals(1, testStudentDetailResponse.getTotalMcqCount());
 
@@ -251,5 +250,31 @@ class TestServiceTest {
     assertEquals(MCQ_ID, studentMcqResponse.getId());
     assertEquals(MCQ_INDEX, studentMcqResponse.getIndex());
     assertEquals(CURRENT_OPTION_NO, studentMcqResponse.getAttemptOption());
+  }
+
+  @Test
+  void TestMcqAttemptResponseTest() {
+    when(testRepository.findById(TEST_ID)).thenReturn(Optional.of(testEntity));
+    when(testMcqRepository.findOneByTestIdAndMcqId(TEST_ID, MCQ_ID))
+        .thenReturn(Optional.of(testMcqs));
+    when(questionClient.retrieveMCQsByIds(
+            argThat(request -> request.getIds().contains(MCQ_ID)), any(), any(), any()))
+        .thenReturn(getRetrieveMCQResponse());
+    when(testAttemptRepository.findByTestIdAndMcqId(TEST_ID, MCQ_ID))
+        .thenReturn(List.of(testAttempt));
+    when(testStudentRepository.findOneByTestIdAndStudentId(TEST_ID, STUDENT_ID))
+        .thenReturn(Optional.of(testStudent));
+
+    TestMcqAttemptResponse testMcqAttemptResponse =
+        testService.getTestMcqAttempts(TEST_ID, MCQ_ID, userContext);
+
+    assertNotNull(testMcqAttemptResponse);
+    assertEquals(TEST_ID, testMcqAttemptResponse.getId());
+    assertEquals(IN_PROGRESS, testMcqAttemptResponse.getTestStatus());
+    assertEquals(TUTOR_ID, testMcqAttemptResponse.getTutorId());
+    assertEquals(MCQ_INDEX, testMcqAttemptResponse.getIndex());
+
+    assertEquals(STUDENT_ID, testMcqAttemptResponse.getAttempts().getFirst().getStudentId());
+    assertEquals(CURRENT_OPTION_NO, testMcqAttemptResponse.getAttempts().getFirst().getOptionNo());
   }
 }

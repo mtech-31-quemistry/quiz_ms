@@ -155,7 +155,7 @@ public class TestService {
         questionClient
             .retrieveMCQsByIds(
                 RetrieveMCQByIdsRequest.builder()
-                    .ids(List.of(testMcq.get().getTestId()))
+                    .ids(List.of(testMcq.get().getMcqId()))
                     .pageNumber(0)
                     .pageSize(10)
                     .build(),
@@ -172,7 +172,7 @@ public class TestService {
 
     List<TestAttempt> attempts = testAttemptRepository.findByTestIdAndMcqId(testId, mcqId);
 
-    return TestMcqAttemptResponse.from(test, mcq.get(), attempts);
+    return TestMcqAttemptResponse.from(test, testMcq.get().getIndex(), mcq.get(), attempts);
   }
 
   private Quartet<TestEntity, List<TestMcqs>, List<MCQResponse>, List<TestAttempt>> getTestData(
