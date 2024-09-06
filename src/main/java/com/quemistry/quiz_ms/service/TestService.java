@@ -84,7 +84,7 @@ public class TestService {
   }
 
   public Page<TestEntity> getTestsForTutor(String tutorId, Integer pageNumber, Integer pageSize) {
-    return testRepository.findPageByTutorIdOOrderByIdDesc(
+    return testRepository.findPageByTutorIdOrderByIdDesc(
         tutorId, PageRequest.of(pageNumber, pageSize));
   }
 

@@ -11,6 +11,7 @@ import com.quemistry.quiz_ms.client.model.RetrieveMCQResponse;
 import com.quemistry.quiz_ms.model.TestAttempt;
 import com.quemistry.quiz_ms.model.TestEntity;
 import com.quemistry.quiz_ms.model.TestMcqs;
+import com.quemistry.quiz_ms.model.TestStudent;
 import java.util.List;
 
 public class TestFixture {
@@ -40,6 +41,9 @@ public class TestFixture {
           .optionNo(CURRENT_OPTION_NO)
           .build();
 
+  public static final TestStudent testStudent =
+      TestStudent.builder().studentId(STUDENT_ID).testId(TEST_ID).points(1).build();
+
   public static RetrieveMCQResponse getRetrieveMCQResponse() {
     RetrieveMCQResponse retrieveMCQResponse = new RetrieveMCQResponse();
     retrieveMCQResponse.setMcqs(List.of(getMcqResponse()));
@@ -50,12 +54,11 @@ public class TestFixture {
     return retrieveMCQResponse;
   }
 
-  public static MCQDto getMcqResponse() {
+  private static MCQDto getMcqResponse() {
     MCQDto mcqResponse =
         JMockData.mock(
             MCQDto.class,
             new MockConfig().subConfig("id").longRange(MCQ_ID, MCQ_ID).globalConfig());
-    MCQDto.OptionDto optionDto = JMockData.mock(MCQDto.OptionDto.class);
     mcqResponse.setOptions(
         List.of(
             getOptionDto(CURRENT_OPTION_NO, TRUE),

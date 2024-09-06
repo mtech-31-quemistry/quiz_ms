@@ -1,5 +1,6 @@
 package com.quemistry.quiz_ms.controller.model;
 
+import com.quemistry.quiz_ms.client.model.MCQDto;
 import com.quemistry.quiz_ms.model.*;
 import java.util.Date;
 import java.util.List;
@@ -74,14 +75,22 @@ public class TestStudentDetailResponse {
               (int)
                   mcqs.stream()
                       .filter(
-                          mcq ->
-                              attempts.stream()
-                                  .anyMatch(
-                                      attempt ->
-                                          attempt.getMcqId().equals(mcq.getId())
-                                              && attempt
-                                                  .getOptionNo()
-                                                  .equals(mcq.getAttemptOption())))
+                          mcq -> {
+                            MCQDto.OptionDto correctOptions =
+                                mcq.getOptions().stream()
+                                    .filter(MCQDto.OptionDto::getIsAnswer)
+                                    .findFirst()
+                                    .orElse(null);
+
+                            return correctOptions != null
+                                && attempts.stream()
+                                    .anyMatch(
+                                        attempt ->
+                                            attempt.getMcqId().equals(mcq.getId())
+                                                && attempt
+                                                    .getOptionNo()
+                                                    .equals(correctOptions.getNo()));
+                          })
                       .count())
           .build();
     }
