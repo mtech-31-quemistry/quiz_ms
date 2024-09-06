@@ -25,5 +25,5 @@ public interface QuestionClient {
       @RequestBody RetrieveMCQByIdsRequest retrieveMCQRequest,
       @RequestHeader("x-user-id") String studentId,
       @RequestHeader("x-user-email") String studentEmail,
-      @RequestHeader("x-user-roless") String userRoles);
+      @RequestHeader("x-user-roles") String userRoles);
 }

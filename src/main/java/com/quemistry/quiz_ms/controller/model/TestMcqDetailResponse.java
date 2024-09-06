@@ -1,5 +1,6 @@
 package com.quemistry.quiz_ms.controller.model;
 
+import com.quemistry.quiz_ms.client.model.MCQDto;
 import com.quemistry.quiz_ms.model.TestAttempt;
 import com.quemistry.quiz_ms.model.TestEntity;
 import com.quemistry.quiz_ms.model.TestMcqs;
@@ -48,7 +49,10 @@ public class TestMcqDetailResponse {
                                 .findFirst()
                                 .orElse(null),
                             attempts.stream()
-                                .filter(attempt -> attempt.getTestId().equals(testMcq.getMcqId()))
+                                .filter(
+                                    attempt ->
+                                        attempt.getTestId().equals(test.getId())
+                                            && attempt.getMcqId().equals(testMcq.getMcqId()))
                                 .toList()))
                 .collect(Collectors.toList()))
         .build();
@@ -66,8 +70,20 @@ public class TestMcqDetailResponse {
 
     public static TestMcqResponse from(int index, MCQResponse mcq, List<TestAttempt> attempts) {
       TestMcqResponseBuilder<?, ?> builder = TestMcqResponse.builder().index(index);
-
       if (mcq != null) {
+        int correctStudentsCount = 0;
+        MCQDto.OptionDto correctOption =
+            mcq.getOptions().stream()
+                .filter(MCQDto.OptionDto::getIsAnswer)
+                .findFirst()
+                .orElse(null);
+        if (correctOption != null) {
+          correctStudentsCount =
+              (int)
+                  attempts.stream()
+                      .filter(attempt -> attempt.getOptionNo().equals(correctOption.getNo()))
+                      .count();
+        }
         builder
             .id(mcq.getId())
             .stem(mcq.getStem())
@@ -84,11 +100,7 @@ public class TestMcqDetailResponse {
             .attemptOption(mcq.getAttemptOption())
             .attemptOn(mcq.getAttemptOn())
             .attemptStudentsCount(attempts.size())
-            .correctStudentsCount(
-                (int)
-                    attempts.stream()
-                        .filter(attempt -> attempt.getOptionNo().equals(mcq.getAttemptOption()))
-                        .count());
+            .correctStudentsCount(correctStudentsCount);
       }
       return builder.build();
     }

@@ -1,5 +1,6 @@
 package com.quemistry.quiz_ms.service;
 
+import static com.quemistry.quiz_ms.fixture.TestFixture.*;
 import static com.quemistry.quiz_ms.model.TestStatus.IN_PROGRESS;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -8,11 +9,11 @@ import static org.mockito.Mockito.*;
 import com.github.jsonzou.jmockdata.JMockData;
 import com.quemistry.quiz_ms.client.QuestionClient;
 import com.quemistry.quiz_ms.controller.model.McqIndex;
+import com.quemistry.quiz_ms.controller.model.TestMcqDetailResponse;
 import com.quemistry.quiz_ms.controller.model.TestRequest;
 import com.quemistry.quiz_ms.exception.InProgressTestAlreadyExistsException;
-import com.quemistry.quiz_ms.model.TestEntity;
-import com.quemistry.quiz_ms.model.TestStudent;
-import com.quemistry.quiz_ms.model.UserContext;
+import com.quemistry.quiz_ms.exception.NotFoundException;
+import com.quemistry.quiz_ms.model.*;
 import com.quemistry.quiz_ms.repository.TestAttemptRepository;
 import com.quemistry.quiz_ms.repository.TestMcqRepository;
 import com.quemistry.quiz_ms.repository.TestRepository;
@@ -51,64 +52,59 @@ class TestServiceTest {
 
   @Test
   void testCreateTest() {
-    String tutorId = "tutor 1";
-    String studentId = "student 1";
-    Long testId = 1L;
-    Long mcqId = 2L;
-    int mcqIndex = 1;
-    when(testRepository.existsByTutorIdAndStatus(tutorId, IN_PROGRESS)).thenReturn(false);
-    when(testRepository.save(any())).thenReturn(TestEntity.builder().id(testId).build());
+
+    when(testRepository.existsByTutorIdAndStatus(TUTOR_ID, IN_PROGRESS)).thenReturn(false);
+    when(testRepository.save(any())).thenReturn(TestEntity.builder().id(TEST_ID).build());
 
     TestRequest testRequest = new TestRequest();
-    testRequest.setMcqs(List.of(new McqIndex(mcqId, mcqIndex)));
-    testRequest.setStudentIds(List.of(studentId));
+    testRequest.setMcqs(List.of(new McqIndex(MCQ_ID, MCQ_INDEX)));
+    testRequest.setStudentIds(List.of(STUDENT_ID));
 
-    Long actualTestId = testService.createTest(tutorId, testRequest);
+    Long actualTestId = testService.createTest(TUTOR_ID, testRequest);
 
     assertNotNull(actualTestId);
-    assertEquals(testId, actualTestId);
+    assertEquals(TEST_ID, actualTestId);
     verify(testRepository, times(1))
         .save(
             argThat(
                 testEntity ->
-                    testEntity.getTutorId().equals(tutorId)
+                    testEntity.getTutorId().equals(TUTOR_ID)
                         && testEntity.getStatus().equals(IN_PROGRESS)));
     verify(testMcqRepository, times(1))
         .save(
             argThat(
                 testMcqs ->
-                    testMcqs.getTestId().equals(testId)
-                        && testMcqs.getMcqId().equals(mcqId)
-                        && testMcqs.getIndex().equals(mcqIndex)));
+                    testMcqs.getTestId().equals(TEST_ID)
+                        && testMcqs.getMcqId().equals(MCQ_ID)
+                        && testMcqs.getIndex().equals(MCQ_INDEX)));
     verify(testStudentRepository, times(1))
         .save(
             argThat(
                 testStudent ->
-                    testStudent.getTestId().equals(testId)
-                        && testStudent.getStudentId().equals(studentId)
+                    testStudent.getTestId().equals(TEST_ID)
+                        && testStudent.getStudentId().equals(STUDENT_ID)
                         && testStudent.getPoints() == null));
     verify(testAttemptRepository, times(1))
         .save(
             argThat(
                 testAttempt ->
-                    testAttempt.getTestId().equals(testId)
-                        && testAttempt.getMcqId().equals(mcqId)
-                        && testAttempt.getStudentId().equals(studentId)
+                    testAttempt.getTestId().equals(TEST_ID)
+                        && testAttempt.getMcqId().equals(MCQ_ID)
+                        && testAttempt.getStudentId().equals(STUDENT_ID)
                         && testAttempt.getOptionNo() == null));
   }
 
   @Test
   void testCreateTestInProgressTestExists() {
-    String tutorId = "tutor 1";
-    when(testRepository.existsByTutorIdAndStatus(tutorId, IN_PROGRESS)).thenReturn(true);
+    when(testRepository.existsByTutorIdAndStatus(TUTOR_ID, IN_PROGRESS)).thenReturn(true);
 
     TestRequest testRequest = JMockData.mock(TestRequest.class);
-    testRequest.setMcqs(List.of(new McqIndex(1L, 1)));
-    testRequest.setStudentIds(List.of("student 1"));
+    testRequest.setMcqs(List.of(new McqIndex(MCQ_ID, MCQ_INDEX)));
+    testRequest.setStudentIds(List.of(STUDENT_ID));
 
     assertThrows(
         InProgressTestAlreadyExistsException.class,
-        () -> testService.createTest(tutorId, testRequest));
+        () -> testService.createTest(TUTOR_ID, testRequest));
 
     verify(testRepository, times(0)).save(any());
     verify(testMcqRepository, times(0)).save(any());
@@ -118,89 +114,80 @@ class TestServiceTest {
 
   @Test
   void getTestsForTutorTest() {
-    String tutorId = "tutor 1";
-    Long testId = 1L;
-    int pageNumber = 0;
-    int pageSize = 10;
-    int totalTests = 1;
-    TestEntity testEntity = new TestEntity();
-    testEntity.setId(testId);
-    testEntity.setStatus(IN_PROGRESS);
-    testEntity.setTutorId(tutorId);
     when(testRepository.findPageByTutorIdOOrderByIdDesc(
-            tutorId, PageRequest.of(pageNumber, pageSize)))
+            TUTOR_ID, PageRequest.of(PAGE_NUMBER, PAGE_SIZE)))
         .thenReturn(
-            new PageImpl<>(List.of(testEntity), PageRequest.of(pageNumber, pageSize), totalTests));
+            new PageImpl<>(
+                List.of(testEntity), PageRequest.of(PAGE_NUMBER, PAGE_SIZE), TOTAL_RECORDS));
 
-    Page<TestEntity> testEntities = testService.getTestsForTutor(tutorId, pageNumber, pageSize);
+    Page<TestEntity> testEntities = testService.getTestsForTutor(TUTOR_ID, PAGE_NUMBER, PAGE_SIZE);
 
     assertNotNull(testEntities);
-    assertEquals(totalTests, testEntities.getTotalElements());
-    assertEquals(testId, testEntities.getContent().getFirst().getId());
-    assertEquals(tutorId, testEntities.getContent().getFirst().getTutorId());
-    assertEquals(IN_PROGRESS, testEntities.getContent().getFirst().getStatus());
-    assertEquals(pageNumber, testEntities.getPageable().getPageNumber());
-    assertEquals(pageSize, testEntities.getPageable().getPageSize());
+    assertEquals(TOTAL_RECORDS, testEntities.getTotalElements());
+    assertEquals(PAGE_NUMBER, testEntities.getPageable().getPageNumber());
+    assertEquals(PAGE_SIZE, testEntities.getPageable().getPageSize());
+
+    TestEntity test = testEntities.getContent().getFirst();
+    assertEquals(TEST_ID, test.getId());
+    assertEquals(TUTOR_ID, test.getTutorId());
+    assertEquals(IN_PROGRESS, test.getStatus());
   }
 
   @Test
   void getTestsForStudentTest() {
-    String studentId = "student 1";
-    Long testId = 1L;
-    int pageNumber = 0;
-    int pageSize = 10;
-    int totalTests = 1;
-    TestEntity testEntity = new TestEntity();
-    testEntity.setId(testId);
-    testEntity.setStatus(IN_PROGRESS);
-    testEntity.setTutorId("tutor 1");
     when(testStudentRepository.findPageByStudentIdOrderByTestIdDesc(
-            studentId, PageRequest.of(pageNumber, pageSize)))
+            STUDENT_ID, PageRequest.of(PAGE_NUMBER, PAGE_SIZE)))
         .thenReturn(
             new PageImpl<>(
                 List.of(
-                    TestStudent.builder().testId(testId).studentId(studentId).points(10).build()),
-                PageRequest.of(pageNumber, pageSize),
-                totalTests));
-    when(testRepository.findAllById(List.of(testId))).thenReturn(List.of(testEntity));
+                    TestStudent.builder().testId(TEST_ID).studentId(STUDENT_ID).points(10).build()),
+                PageRequest.of(PAGE_NUMBER, PAGE_SIZE),
+                TOTAL_RECORDS));
+    when(testRepository.findAllById(List.of(TEST_ID))).thenReturn(List.of(testEntity));
 
-    Page<TestEntity> testEntities = testService.getTestsForStudent(studentId, pageNumber, pageSize);
+    Page<TestEntity> testEntities =
+        testService.getTestsForStudent(STUDENT_ID, PAGE_NUMBER, PAGE_SIZE);
 
     assertNotNull(testEntities);
-    assertEquals(totalTests, testEntities.getTotalElements());
-    assertEquals(testId, testEntities.getContent().getFirst().getId());
-    assertEquals("tutor 1", testEntities.getContent().getFirst().getTutorId());
+    assertEquals(TOTAL_RECORDS, testEntities.getTotalElements());
+    assertEquals(TEST_ID, testEntities.getContent().getFirst().getId());
+    assertEquals(TUTOR_ID, testEntities.getContent().getFirst().getTutorId());
     assertEquals(IN_PROGRESS, testEntities.getContent().getFirst().getStatus());
-    assertEquals(pageNumber, testEntities.getPageable().getPageNumber());
-    assertEquals(pageSize, testEntities.getPageable().getPageSize());
+    assertEquals(PAGE_NUMBER, testEntities.getPageable().getPageNumber());
+    assertEquals(PAGE_SIZE, testEntities.getPageable().getPageSize());
   }
 
   @Test
   void getTestMcqDetailTest() {
-    Long testId = 1L;
-    String tutorId = "tutor 1";
-    TestEntity testEntity = new TestEntity();
-    testEntity.setId(testId);
-    testEntity.setStatus(IN_PROGRESS);
-    testEntity.setTutorId(tutorId);
-    when(testRepository.findById(testId)).thenReturn(Optional.of(testEntity));
+    when(testRepository.findById(TEST_ID)).thenReturn(Optional.of(testEntity));
+    when(testMcqRepository.findByTestId(TEST_ID)).thenReturn(List.of(testMcqs));
+    when(questionClient.retrieveMCQsByIds(
+            argThat(request -> request.getIds().contains(MCQ_ID)), any(), any(), any()))
+        .thenReturn(getRetrieveMCQResponse());
+    when(testAttemptRepository.findByTestId(TEST_ID)).thenReturn(List.of(testAttempt));
 
-    //    TestMcqDetailResponse testMcqDetailResponse = testService.getTestMcqDetail(testId,
-    // userContext);
-    //
-    //    assertNotNull(testMcqDetailResponse);
-    //    assertEquals(testId, testMcqDetailResponse.getId());
-    //    assertEquals(tutorId, testMcqDetailResponse.getTutorId());
-    //    assertEquals(IN_PROGRESS, testMcqDetailResponse.getStatus());
+    TestMcqDetailResponse testMcqDetailResponse =
+        testService.getTestMcqDetail(TEST_ID, userContext);
+
+    assertNotNull(testMcqDetailResponse);
+    assertEquals(TEST_ID, testMcqDetailResponse.getId());
+    assertEquals(TUTOR_ID, testMcqDetailResponse.getTutorId());
+    assertEquals(IN_PROGRESS, testMcqDetailResponse.getStatus());
+    assertEquals(MCQ_ID, testMcqDetailResponse.getMcqs().getFirst().getId());
+
+    assertEquals(1, testMcqDetailResponse.getTotalStudentsCount());
+    assertEquals(1, testMcqDetailResponse.getMcqs().getFirst().getAttemptStudentsCount());
+    assertEquals(1, testMcqDetailResponse.getMcqs().getFirst().getCorrectStudentsCount());
   }
 
   @Test
   void getTestMcqDetailTestTestNotFound() {
-    Long testId = 1L;
-    TestEntity testEntity = new TestEntity();
-    testEntity.setId(testId);
-    testEntity.setStatus(IN_PROGRESS);
-    testEntity.setTutorId("tutor 1");
-    when(testRepository.findById(testId)).thenReturn(Optional.of(testEntity));
+    when(testRepository.findById(TEST_ID)).thenReturn(Optional.empty());
+
+    assertThrows(NotFoundException.class, () -> testService.getTestMcqDetail(TEST_ID, userContext));
+
+    verify(testMcqRepository, times(0)).findByTestId(TEST_ID);
+    verify(questionClient, times(0)).retrieveMCQsByIds(any(), any(), any(), any());
+    verify(testAttemptRepository, times(0)).findByTestId(TEST_ID);
   }
 }
