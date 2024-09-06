@@ -27,6 +27,8 @@ public class TestFixture {
   public static final int PAGE_SIZE = 10;
   public static final Long TOTAL_RECORDS = 1L;
 
+  public static final int STUDENT_POINTS = 1;
+
   public static final TestEntity testEntity =
       TestEntity.builder().id(TEST_ID).tutorId(TUTOR_ID).status(IN_PROGRESS).build();
 
@@ -42,7 +44,7 @@ public class TestFixture {
           .build();
 
   public static final TestStudent testStudent =
-      TestStudent.builder().studentId(STUDENT_ID).testId(TEST_ID).points(1).build();
+      TestStudent.builder().studentId(STUDENT_ID).testId(TEST_ID).points(STUDENT_POINTS).build();
 
   public static RetrieveMCQResponse getRetrieveMCQResponse() {
     RetrieveMCQResponse retrieveMCQResponse = new RetrieveMCQResponse();

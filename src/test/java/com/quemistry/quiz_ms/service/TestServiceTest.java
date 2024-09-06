@@ -8,10 +8,7 @@ import static org.mockito.Mockito.*;
 
 import com.github.jsonzou.jmockdata.JMockData;
 import com.quemistry.quiz_ms.client.QuestionClient;
-import com.quemistry.quiz_ms.controller.model.McqIndex;
-import com.quemistry.quiz_ms.controller.model.TestMcqDetailResponse;
-import com.quemistry.quiz_ms.controller.model.TestRequest;
-import com.quemistry.quiz_ms.controller.model.TestStudentDetailResponse;
+import com.quemistry.quiz_ms.controller.model.*;
 import com.quemistry.quiz_ms.exception.InProgressTestAlreadyExistsException;
 import com.quemistry.quiz_ms.exception.NotFoundException;
 import com.quemistry.quiz_ms.model.*;
@@ -151,11 +148,13 @@ class TestServiceTest {
 
     assertNotNull(testEntities);
     assertEquals(TOTAL_RECORDS, testEntities.getTotalElements());
-    assertEquals(TEST_ID, testEntities.getContent().getFirst().getId());
-    assertEquals(TUTOR_ID, testEntities.getContent().getFirst().getTutorId());
-    assertEquals(IN_PROGRESS, testEntities.getContent().getFirst().getStatus());
     assertEquals(PAGE_NUMBER, testEntities.getPageable().getPageNumber());
     assertEquals(PAGE_SIZE, testEntities.getPageable().getPageSize());
+
+    TestEntity test = testEntities.getContent().getFirst();
+    assertEquals(TEST_ID, test.getId());
+    assertEquals(TUTOR_ID, test.getTutorId());
+    assertEquals(IN_PROGRESS, test.getStatus());
   }
 
   @Test
@@ -174,11 +173,14 @@ class TestServiceTest {
     assertEquals(TEST_ID, testMcqDetailResponse.getId());
     assertEquals(TUTOR_ID, testMcqDetailResponse.getTutorId());
     assertEquals(IN_PROGRESS, testMcqDetailResponse.getStatus());
-    assertEquals(MCQ_ID, testMcqDetailResponse.getMcqs().getFirst().getId());
 
     assertEquals(1, testMcqDetailResponse.getTotalStudentsCount());
-    assertEquals(1, testMcqDetailResponse.getMcqs().getFirst().getAttemptStudentsCount());
-    assertEquals(1, testMcqDetailResponse.getMcqs().getFirst().getCorrectStudentsCount());
+
+    TestMcqDetailResponse.TestMcqResponse testMcqResponse =
+        testMcqDetailResponse.getMcqs().getFirst();
+    assertEquals(MCQ_ID, testMcqResponse.getId());
+    assertEquals(1, testMcqResponse.getAttemptStudentsCount());
+    assertEquals(1, testMcqResponse.getCorrectStudentsCount());
   }
 
   @Test
@@ -210,11 +212,44 @@ class TestServiceTest {
     assertEquals(IN_PROGRESS, testStudentDetailResponse.getStatus());
     assertEquals(TUTOR_ID, testStudentDetailResponse.getTutorId());
     assertEquals(IN_PROGRESS, testStudentDetailResponse.getStatus());
-    assertEquals(STUDENT_ID, testStudentDetailResponse.getStudents().getFirst().getStudentId());
 
     assertEquals(1, testStudentDetailResponse.getTotalMcqCount());
-    assertEquals(1, testStudentDetailResponse.getStudents().getFirst().getPoints());
-    assertEquals(1, testStudentDetailResponse.getStudents().getFirst().getAttemptMcqCount());
-    assertEquals(1, testStudentDetailResponse.getStudents().getFirst().getCorrectMcqCount());
+
+    TestStudentDetailResponse.TestStudentResponse testStudentResponse =
+        testStudentDetailResponse.getStudents().getFirst();
+    assertEquals(STUDENT_ID, testStudentResponse.getStudentId());
+    assertEquals(STUDENT_POINTS, testStudentResponse.getPoints());
+    assertEquals(1, testStudentResponse.getAttemptMcqCount());
+    assertEquals(1, testStudentResponse.getCorrectMcqCount());
+  }
+
+  @Test
+  void getTestStudentAttemptsTest() {
+    when(testRepository.findById(TEST_ID)).thenReturn(Optional.of(testEntity));
+    when(testMcqRepository.findByTestId(TEST_ID)).thenReturn(List.of(testMcqs));
+    when(questionClient.retrieveMCQsByIds(
+            argThat(request -> request.getIds().contains(MCQ_ID)), any(), any(), any()))
+        .thenReturn(getRetrieveMCQResponse());
+    when(testAttemptRepository.findByTestIdAndStudentId(TEST_ID, STUDENT_ID))
+        .thenReturn(List.of(testAttempt));
+    when(testStudentRepository.findOneByTestIdAndStudentId(TEST_ID, STUDENT_ID))
+        .thenReturn(Optional.of(testStudent));
+
+    TestStudentAttemptResponse testStudentAttemptResponse =
+        testService.getTestStudentAttempts(TEST_ID, STUDENT_ID, userContext);
+
+    assertNotNull(testStudentAttemptResponse);
+    assertEquals(TEST_ID, testStudentAttemptResponse.getId());
+    assertEquals(IN_PROGRESS, testStudentAttemptResponse.getStatus());
+    assertEquals(TUTOR_ID, testStudentAttemptResponse.getTutorId());
+    assertEquals(STUDENT_ID, testStudentAttemptResponse.getStudentId());
+
+    assertEquals(STUDENT_POINTS, testStudentAttemptResponse.getPoints());
+
+    TestStudentAttemptResponse.StudentMcqResponse studentMcqResponse =
+        testStudentAttemptResponse.getMcqs().getFirst();
+    assertEquals(MCQ_ID, studentMcqResponse.getId());
+    assertEquals(MCQ_INDEX, studentMcqResponse.getIndex());
+    assertEquals(CURRENT_OPTION_NO, studentMcqResponse.getAttemptOption());
   }
 }

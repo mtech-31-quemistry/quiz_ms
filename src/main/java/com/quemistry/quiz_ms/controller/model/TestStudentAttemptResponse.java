@@ -66,8 +66,6 @@ public class TestStudentAttemptResponse {
   @SuperBuilder(toBuilder = true)
   public static class StudentMcqResponse extends MCQResponse {
     private int index;
-    private int optionNo;
-    private Date attemptOn;
 
     public static StudentMcqResponse from(MCQResponse mcq, Integer index, TestAttempt attempt) {
       StudentMcqResponseBuilder<?, ?> builder = StudentMcqResponse.builder().index(index);
@@ -89,7 +87,7 @@ public class TestStudentAttemptResponse {
       }
 
       if (attempt != null) {
-        builder.optionNo(attempt.getOptionNo()).attemptOn(attempt.getAttemptTime());
+        builder.attemptOption(attempt.getOptionNo()).attemptOn(attempt.getAttemptTime());
       }
 
       return builder.build();
