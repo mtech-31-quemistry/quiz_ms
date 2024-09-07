@@ -40,12 +40,9 @@ class TestServiceTest {
 
   @InjectMocks private TestService testService;
 
-  private UserContext userContext;
-
   @BeforeEach
   void setUp() {
     MockitoAnnotations.openMocks(this);
-    userContext = new UserContext("user1", "user1@example.com", "ROLE_USER");
   }
 
   @Test
@@ -118,7 +115,8 @@ class TestServiceTest {
             new PageImpl<>(
                 List.of(testEntity), PageRequest.of(PAGE_NUMBER, PAGE_SIZE), TOTAL_RECORDS));
 
-    Page<TestEntity> testEntities = testService.getTestsForTutor(TUTOR_ID, PAGE_NUMBER, PAGE_SIZE);
+    Page<TestEntity> testEntities =
+        testService.getTestsForTutor(TUTOR_ID, PAGE_NUMBER, PAGE_SIZE, tutorContext);
 
     assertNotNull(testEntities);
     assertEquals(TOTAL_RECORDS, testEntities.getTotalElements());
@@ -144,7 +142,7 @@ class TestServiceTest {
     when(testRepository.findAllById(List.of(TEST_ID))).thenReturn(List.of(testEntity));
 
     Page<TestEntity> testEntities =
-        testService.getTestsForStudent(STUDENT_ID, PAGE_NUMBER, PAGE_SIZE);
+        testService.getTestsForStudent(STUDENT_ID, PAGE_NUMBER, PAGE_SIZE, studentContext);
 
     assertNotNull(testEntities);
     assertEquals(TOTAL_RECORDS, testEntities.getTotalElements());
@@ -167,7 +165,7 @@ class TestServiceTest {
     when(testAttemptRepository.findByTestId(TEST_ID)).thenReturn(List.of(testAttempt));
 
     TestMcqDetailResponse testMcqDetailResponse =
-        testService.getTestMcqDetail(TEST_ID, userContext);
+        testService.getTestMcqDetail(TEST_ID, tutorContext);
 
     assertNotNull(testMcqDetailResponse);
     assertEquals(TEST_ID, testMcqDetailResponse.getId());
@@ -187,7 +185,8 @@ class TestServiceTest {
   void getTestMcqDetailTestTestNotFound() {
     when(testRepository.findById(TEST_ID)).thenReturn(Optional.empty());
 
-    assertThrows(NotFoundException.class, () -> testService.getTestMcqDetail(TEST_ID, userContext));
+    assertThrows(
+        NotFoundException.class, () -> testService.getTestMcqDetail(TEST_ID, tutorContext));
 
     verify(testMcqRepository, times(0)).findByTestId(TEST_ID);
     verify(questionClient, times(0)).retrieveMCQsByIds(any(), any(), any(), any());
@@ -205,7 +204,7 @@ class TestServiceTest {
         .thenReturn(getRetrieveMCQResponse());
 
     TestStudentDetailResponse testStudentDetailResponse =
-        testService.getTestStudentDetail(TEST_ID, userContext);
+        testService.getTestStudentDetail(TEST_ID, tutorContext);
 
     assertNotNull(testStudentDetailResponse);
     assertEquals(TEST_ID, testStudentDetailResponse.getId());
@@ -235,7 +234,7 @@ class TestServiceTest {
         .thenReturn(Optional.of(testStudent));
 
     TestStudentAttemptResponse testStudentAttemptResponse =
-        testService.getTestStudentAttempts(TEST_ID, STUDENT_ID, userContext);
+        testService.getTestStudentAttempts(TEST_ID, STUDENT_ID, tutorContext);
 
     assertNotNull(testStudentAttemptResponse);
     assertEquals(TEST_ID, testStudentAttemptResponse.getId());
@@ -266,7 +265,7 @@ class TestServiceTest {
         .thenReturn(Optional.of(testStudent));
 
     TestMcqAttemptResponse testMcqAttemptResponse =
-        testService.getTestMcqAttempts(TEST_ID, MCQ_ID, userContext);
+        testService.getTestMcqAttempts(TEST_ID, MCQ_ID, tutorContext);
 
     assertNotNull(testMcqAttemptResponse);
     assertEquals(TEST_ID, testMcqAttemptResponse.getId());

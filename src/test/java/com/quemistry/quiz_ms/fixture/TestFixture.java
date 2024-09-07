@@ -8,10 +8,7 @@ import com.github.jsonzou.jmockdata.JMockData;
 import com.github.jsonzou.jmockdata.MockConfig;
 import com.quemistry.quiz_ms.client.model.MCQDto;
 import com.quemistry.quiz_ms.client.model.RetrieveMCQResponse;
-import com.quemistry.quiz_ms.model.TestAttempt;
-import com.quemistry.quiz_ms.model.TestEntity;
-import com.quemistry.quiz_ms.model.TestMcqs;
-import com.quemistry.quiz_ms.model.TestStudent;
+import com.quemistry.quiz_ms.model.*;
 import java.util.List;
 
 public class TestFixture {
@@ -28,6 +25,11 @@ public class TestFixture {
   public static final Long TOTAL_RECORDS = 1L;
 
   public static final int STUDENT_POINTS = 1;
+
+  public static final UserContext studentContext =
+      new UserContext(STUDENT_ID, "student@test.com", "student");
+  public static final UserContext tutorContext =
+      new UserContext(TUTOR_ID, "tutor@test.com", "tutor");
 
   public static final TestEntity testEntity =
       TestEntity.builder().id(TEST_ID).tutorId(TUTOR_ID).status(IN_PROGRESS).build();

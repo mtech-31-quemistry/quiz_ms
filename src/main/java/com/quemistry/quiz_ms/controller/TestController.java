@@ -7,13 +7,14 @@ import com.quemistry.quiz_ms.model.TestEntity;
 import com.quemistry.quiz_ms.model.UserContext;
 import com.quemistry.quiz_ms.service.TestService;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
-@Controller
+@RestController
 @RequestMapping("/v1/tests")
 public class TestController {
   private final TestService testService;
@@ -40,11 +41,12 @@ public class TestController {
       @RequestHeader("x-user-id") String tutorId,
       @RequestHeader("x-user-email") String studentEmail,
       @RequestHeader("x-user-roles") String roles,
-      @RequestParam Integer pageNumber,
-      @RequestParam Integer pageSize) {
+      @RequestParam @PositiveOrZero Integer pageNumber,
+      @RequestParam @PositiveOrZero Integer pageSize) {
     log.info("GET /v1/tests/tutor");
 
-    return testService.getTestsForTutor(tutorId, pageNumber, pageSize);
+    return testService.getTestsForTutor(
+        tutorId, pageNumber, pageSize, new UserContext(tutorId, studentEmail, roles));
   }
 
   @GetMapping("student")
@@ -52,10 +54,11 @@ public class TestController {
       @RequestHeader("x-user-id") String studentId,
       @RequestHeader("x-user-email") String studentEmail,
       @RequestHeader("x-user-roles") String roles,
-      @RequestParam Integer pageNumber,
-      @RequestParam Integer pageSize) {
+      @RequestParam @PositiveOrZero Integer pageNumber,
+      @RequestParam @PositiveOrZero @Max(60) Integer pageSize) {
     log.info("GET /v1/tests/student");
-    return testService.getTestsForStudent(studentId, pageNumber, pageSize);
+    return testService.getTestsForStudent(
+        studentId, pageNumber, pageSize, new UserContext(studentId, studentEmail, roles));
   }
 
   @GetMapping("{testId}/mcqs")

@@ -83,13 +83,14 @@ public class TestService {
     return testId;
   }
 
-  public Page<TestEntity> getTestsForTutor(String tutorId, Integer pageNumber, Integer pageSize) {
+  public Page<TestEntity> getTestsForTutor(
+      String tutorId, Integer pageNumber, Integer pageSize, UserContext userContext) {
     return testRepository.findPageByTutorIdOrderByIdDesc(
         tutorId, PageRequest.of(pageNumber, pageSize));
   }
 
   public Page<TestEntity> getTestsForStudent(
-      String studentId, Integer pageNumber, Integer pageSize) {
+      String studentId, Integer pageNumber, Integer pageSize, UserContext userContext) {
     Page<TestStudent> testStudentPage =
         testStudentRepository.findPageByStudentIdOrderByTestIdDesc(
             studentId, PageRequest.of(pageNumber, pageSize));

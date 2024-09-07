@@ -81,7 +81,7 @@ public class TestMcqDetailResponse {
           correctStudentsCount =
               (int)
                   attempts.stream()
-                      .filter(attempt -> attempt.getOptionNo().equals(correctOption.getNo()))
+                      .filter(attempt -> correctOption.getNo().equals(attempt.getOptionNo()))
                       .count();
         }
         builder

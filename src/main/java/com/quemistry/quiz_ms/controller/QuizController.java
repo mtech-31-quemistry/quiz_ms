@@ -8,6 +8,8 @@ import com.quemistry.quiz_ms.controller.model.QuizRequest;
 import com.quemistry.quiz_ms.controller.model.QuizResponse;
 import com.quemistry.quiz_ms.model.UserContext;
 import com.quemistry.quiz_ms.service.QuizService;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,8 +39,8 @@ public class QuizController {
       @RequestHeader("x-user-id") String studentId,
       @RequestHeader("x-user-email") String studentEmail,
       @RequestHeader("x-user-roles") String roles,
-      @RequestParam Integer pageNumber,
-      @RequestParam Integer pageSize) {
+      @RequestParam @PositiveOrZero Integer pageNumber,
+      @RequestParam @PositiveOrZero @Max(60) Integer pageSize) {
     log.info("GET /v1/quizzes/{}", id);
     return quizService.getQuiz(
         id, new UserContext(studentId, studentEmail, roles), pageNumber, pageSize);
@@ -49,9 +51,9 @@ public class QuizController {
       @RequestHeader("x-user-id") String studentId,
       @RequestHeader("x-user-email") String studentEmail,
       @RequestHeader("x-user-roles") String roles,
-      @RequestParam Integer pageNumber,
-      @RequestParam Integer pageSize) {
-    log.info("GET /v1/me/in-progress");
+      @RequestParam @PositiveOrZero Integer pageNumber,
+      @RequestParam @PositiveOrZero @Max(60) Integer pageSize) {
+    log.info("GET /v1/quizzes/me/in-progress");
 
     return quizService.getInProgressQuiz(
         new UserContext(studentId, studentEmail, roles), pageNumber, pageSize);
@@ -62,9 +64,9 @@ public class QuizController {
       @RequestHeader("x-user-id") String studentId,
       @RequestHeader("x-user-email") String studentEmail,
       @RequestHeader("x-user-roles") String roles,
-      @RequestParam Integer pageNumber,
-      @RequestParam Integer pageSize) {
-    log.info("GET /v1/me/completed");
+      @RequestParam @PositiveOrZero Integer pageNumber,
+      @RequestParam @PositiveOrZero @Max(60) Integer pageSize) {
+    log.info("GET /v1/quizzes/me/completed");
 
     return quizService.getCompletedQuiz(
         new UserContext(studentId, studentEmail, roles), pageNumber, pageSize);

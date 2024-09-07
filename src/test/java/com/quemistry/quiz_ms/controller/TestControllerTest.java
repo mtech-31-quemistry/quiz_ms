@@ -1,5 +1,6 @@
 package com.quemistry.quiz_ms.controller;
 
+import static com.quemistry.quiz_ms.fixture.TestFixture.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -12,7 +13,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.quemistry.quiz_ms.controller.model.*;
 import com.quemistry.quiz_ms.exception.ExceptionAdvisor;
 import com.quemistry.quiz_ms.model.TestEntity;
-import com.quemistry.quiz_ms.model.UserContext;
 import com.quemistry.quiz_ms.service.TestService;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,8 +29,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 class TestControllerTest {
   private final ObjectMapper objectMapper = new ObjectMapper();
   private MockMvc mockMvc;
-  private final UserContext testUserContext =
-      new UserContext("test-user-id", "test-user-email", "test-user-roles");
 
   @Mock private TestService testService;
 
@@ -49,141 +47,141 @@ class TestControllerTest {
   void createTest() throws Exception {
     TestRequest testRequest =
         TestRequest.builder()
-            .mcqs(List.of(new McqIndex(1L, 1)))
-            .studentIds(List.of("student1", "student2"))
+            .mcqs(List.of(new McqIndex(MCQ_ID, MCQ_INDEX)))
+            .studentIds(List.of(STUDENT_ID))
             .build();
 
-    Long testId = 1L;
-    when(testService.createTest("test-user-id", testRequest)).thenReturn(testId);
+    when(testService.createTest(TUTOR_ID, testRequest)).thenReturn(TEST_ID);
 
     mockMvc
         .perform(
             post("/v1/tests")
-                .header("x-user-id", testUserContext.getUserId())
-                .header("x-user-email", testUserContext.getUserEmail())
-                .header("x-user-roles", testUserContext.getUserRoles())
+                .header("x-user-id", tutorContext.getUserId())
+                .header("x-user-email", tutorContext.getUserEmail())
+                .header("x-user-roles", tutorContext.getUserRoles())
                 .contentType(APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(testRequest)))
         .andExpect(status().isCreated())
-        .andExpect(header().string("Location", "/v1/tests/" + testId));
+        .andExpect(header().string("Location", "/v1/tests/" + TEST_ID));
 
-    verify(testService).createTest("test-user-id", testRequest);
+    verify(testService).createTest(tutorContext.getUserId(), testRequest);
   }
 
   @Test
   void getTestsForTutor() throws Exception {
     Page<TestEntity> testPage = new PageImpl<>(List.of(), PageRequest.of(0, 10), 0);
-    when(testService.getTestsForTutor("test-user-id", 0, 10)).thenReturn(testPage);
+    when(testService.getTestsForTutor(STUDENT_ID, 0, 10, tutorContext)).thenReturn(testPage);
 
     mockMvc
         .perform(
             get("/v1/tests/tutor")
-                .header("x-user-id", testUserContext.getUserId())
-                .header("x-user-email", testUserContext.getUserEmail())
-                .header("x-user-roles", testUserContext.getUserRoles())
+                .header("x-user-id", tutorContext.getUserId())
+                .header("x-user-email", tutorContext.getUserEmail())
+                .header("x-user-roles", tutorContext.getUserRoles())
                 .param("pageNumber", "0")
                 .param("pageSize", "10"))
         .andExpect(status().isOk());
 
-    verify(testService).getTestsForTutor(testUserContext.getUserId(), 0, 10);
+    verify(testService).getTestsForTutor(tutorContext.getUserId(), 0, 10, tutorContext);
   }
 
   @Test
   void getTestsForStudent() throws Exception {
     Page<TestEntity> testPage = new PageImpl<>(List.of(), PageRequest.of(0, 10), 0);
-    when(testService.getTestsForStudent("test-user-id", 0, 10)).thenReturn(testPage);
+    when(testService.getTestsForStudent(STUDENT_ID, 0, 10, studentContext)).thenReturn(testPage);
 
     mockMvc
         .perform(
             get("/v1/tests/student")
-                .header("x-user-id", testUserContext.getUserId())
-                .header("x-user-email", testUserContext.getUserEmail())
-                .header("x-user-roles", testUserContext.getUserRoles())
+                .header("x-user-id", studentContext.getUserId())
+                .header("x-user-email", studentContext.getUserEmail())
+                .header("x-user-roles", studentContext.getUserRoles())
                 .param("pageNumber", "0")
                 .param("pageSize", "10"))
         .andExpect(status().isOk());
 
-    verify(testService).getTestsForStudent(testUserContext.getUserId(), 0, 10);
+    verify(testService).getTestsForStudent(studentContext.getUserId(), 0, 10, studentContext);
   }
 
   @Test
   void getTestMcqDetail() throws Exception {
     TestMcqDetailResponse response = new TestMcqDetailResponse();
-    when(testService.getTestMcqDetail(1L, testUserContext)).thenReturn(response);
+    when(testService.getTestMcqDetail(TEST_ID, tutorContext)).thenReturn(response);
 
     mockMvc
         .perform(
-            get("/v1/tests/1/mcqs")
-                .header("x-user-id", testUserContext.getUserId())
-                .header("x-user-email", testUserContext.getUserEmail())
-                .header("x-user-roles", testUserContext.getUserRoles()))
+            get("/v1/tests/" + TEST_ID + "/mcqs")
+                .header("x-user-id", tutorContext.getUserId())
+                .header("x-user-email", tutorContext.getUserEmail())
+                .header("x-user-roles", tutorContext.getUserRoles()))
         .andExpect(status().isOk());
 
-    verify(testService).getTestMcqDetail(1L, testUserContext);
+    verify(testService).getTestMcqDetail(TEST_ID, tutorContext);
   }
 
   @Test
   void getTestStudentDetail() throws Exception {
     TestStudentDetailResponse response = new TestStudentDetailResponse();
-    when(testService.getTestStudentDetail(1L, testUserContext)).thenReturn(response);
+    when(testService.getTestStudentDetail(TEST_ID, tutorContext)).thenReturn(response);
 
     mockMvc
         .perform(
-            get("/v1/tests/1/students")
-                .header("x-user-id", testUserContext.getUserId())
-                .header("x-user-email", testUserContext.getUserEmail())
-                .header("x-user-roles", testUserContext.getUserRoles()))
+            get("/v1/tests/" + TEST_ID + "/students")
+                .header("x-user-id", tutorContext.getUserId())
+                .header("x-user-email", tutorContext.getUserEmail())
+                .header("x-user-roles", tutorContext.getUserRoles()))
         .andExpect(status().isOk());
 
-    verify(testService).getTestStudentDetail(1L, testUserContext);
+    verify(testService).getTestStudentDetail(TEST_ID, tutorContext);
   }
 
   @Test
   void getTestStudentAttempts() throws Exception {
     TestStudentAttemptResponse response = new TestStudentAttemptResponse();
-    when(testService.getTestStudentAttempts(1L, "student1", testUserContext)).thenReturn(response);
+    when(testService.getTestStudentAttempts(TEST_ID, STUDENT_ID, tutorContext))
+        .thenReturn(response);
 
     mockMvc
         .perform(
-            get("/v1/tests/1/students/student1/attempts")
-                .header("x-user-id", testUserContext.getUserId())
-                .header("x-user-email", testUserContext.getUserEmail())
-                .header("x-user-roles", testUserContext.getUserRoles()))
+            get("/v1/tests/" + TEST_ID + "/students/" + STUDENT_ID + "/attempts")
+                .header("x-user-id", tutorContext.getUserId())
+                .header("x-user-email", tutorContext.getUserEmail())
+                .header("x-user-roles", tutorContext.getUserRoles()))
         .andExpect(status().isOk());
 
-    verify(testService).getTestStudentAttempts(1L, "student1", testUserContext);
+    verify(testService).getTestStudentAttempts(TEST_ID, STUDENT_ID, tutorContext);
   }
 
   @Test
   void getMyTestStudentAttempts() throws Exception {
     TestStudentAttemptResponse response = new TestStudentAttemptResponse();
-    when(testService.getTestStudentAttempts(1L, "test-user-id", testUserContext))
+    when(testService.getTestStudentAttempts(TEST_ID, STUDENT_ID, studentContext))
         .thenReturn(response);
 
     mockMvc
         .perform(
-            get("/v1/tests/1/students/me/attempts")
-                .header("x-user-id", testUserContext.getUserId())
-                .header("x-user-email", testUserContext.getUserEmail())
-                .header("x-user-roles", testUserContext.getUserRoles()))
+            get("/v1/tests/" + TEST_ID + "/students/me/attempts")
+                .header("x-user-id", studentContext.getUserId())
+                .header("x-user-email", studentContext.getUserEmail())
+                .header("x-user-roles", studentContext.getUserRoles()))
         .andExpect(status().isOk());
 
-    verify(testService).getTestStudentAttempts(1L, "test-user-id", testUserContext);
+    verify(testService).getTestStudentAttempts(TEST_ID, STUDENT_ID, studentContext);
   }
 
   @Test
   void getTestMcqAttempts() throws Exception {
     TestMcqAttemptResponse response = new TestMcqAttemptResponse();
-    when(testService.getTestMcqAttempts(1L, 1L, testUserContext)).thenReturn(response);
+    when(testService.getTestMcqAttempts(TEST_ID, MCQ_ID, tutorContext)).thenReturn(response);
 
     mockMvc
         .perform(
-            get("/v1/tests/1/mcq/1/attempts")
-                .header("x-user-id", testUserContext.getUserId())
-                .header("x-user-email", testUserContext.getUserEmail())
-                .header("x-user-roles", testUserContext.getUserRoles()))
+            get("/v1/tests/" + TEST_ID + "/mcq/" + MCQ_ID + "/attempts")
+                .header("x-user-id", tutorContext.getUserId())
+                .header("x-user-email", tutorContext.getUserEmail())
+                .header("x-user-roles", tutorContext.getUserRoles()))
         .andExpect(status().isOk());
 
-    verify(testService).getTestMcqAttempts(1L, 1L, testUserContext);
+    verify(testService).getTestMcqAttempts(TEST_ID, MCQ_ID, tutorContext);
   }
 }
