@@ -55,12 +55,14 @@ public class TestMcqAttemptResponse extends MCQDto {
   public static class McqStudentAttemptResponse {
     private String studentId;
     private String studentName;
-    private int optionNo;
+    private Integer optionNo;
     private Date attemptTime;
 
     public static McqStudentAttemptResponse from(TestAttempt attempt) {
       return McqStudentAttemptResponse.builder()
           .studentId(attempt.getStudentId())
+          // TODO: studentName should be set to the student's name
+          .studentName("Student " + attempt.getStudentId())
           .optionNo(attempt.getOptionNo())
           .attemptTime(attempt.getAttemptTime())
           .build();

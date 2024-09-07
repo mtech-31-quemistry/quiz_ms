@@ -87,9 +87,9 @@ public class TestStudentDetailResponse {
                                     .anyMatch(
                                         attempt ->
                                             attempt.getMcqId().equals(mcq.getId())
-                                                && attempt
-                                                    .getOptionNo()
-                                                    .equals(correctOptions.getNo()));
+                                                && correctOptions
+                                                    .getNo()
+                                                    .equals(attempt.getOptionNo()));
                           })
                       .count())
           .build();
