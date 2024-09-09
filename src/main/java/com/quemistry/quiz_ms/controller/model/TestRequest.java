@@ -1,5 +1,7 @@
 package com.quemistry.quiz_ms.controller.model;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,6 +13,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class TestRequest {
-  private List<McqIndex> mcqs;
-  private List<String> studentIds;
+  @NotEmpty private List<McqIndex> mcqs;
+  @NotEmpty private List<String> studentIds;
+  @NotBlank private String title;
 }

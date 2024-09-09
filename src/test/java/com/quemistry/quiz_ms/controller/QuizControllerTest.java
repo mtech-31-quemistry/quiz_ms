@@ -1,5 +1,6 @@
 package com.quemistry.quiz_ms.controller;
 
+import static com.quemistry.quiz_ms.fixture.TestFixture.tutorContext;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.doThrow;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -14,7 +15,6 @@ import com.quemistry.quiz_ms.exception.AttemptAlreadyExistsException;
 import com.quemistry.quiz_ms.exception.ExceptionAdvisor;
 import com.quemistry.quiz_ms.exception.NotFoundException;
 import com.quemistry.quiz_ms.model.QuizStatus;
-import com.quemistry.quiz_ms.model.UserContext;
 import com.quemistry.quiz_ms.service.QuizService;
 import java.util.ArrayList;
 import java.util.Date;
@@ -30,8 +30,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 class QuizControllerTest {
   private final ObjectMapper objectMapper = new ObjectMapper();
   private MockMvc mockMvc;
-  private final UserContext testUserContext =
-      new UserContext("test-user-id", "test-user-email", "test-user-roles");
 
   @Mock private QuizService quizService;
 
@@ -64,20 +62,20 @@ class QuizControllerTest {
     QuizRequest quizRequest = QuizRequest.builder().pageSize(1).totalSize(1L).build();
 
     String quizRequestJson = objectMapper.writeValueAsString(quizRequest);
-    when(quizService.createQuiz(testUserContext, quizRequest)).thenReturn(quizResponse);
+    when(quizService.createQuiz(tutorContext, quizRequest)).thenReturn(quizResponse);
 
     mockMvc
         .perform(
             post("/v1/quizzes")
-                .header("x-user-id", "test-user-id")
-                .header("x-user-email", "test-user-email")
-                .header("x-user-roles", "test-user-roles")
+                .header("x-user-id", tutorContext.getUserId())
+                .header("x-user-email", tutorContext.getUserEmail())
+                .header("x-user-roles", tutorContext.getUserRoles())
                 .contentType(APPLICATION_JSON)
                 .content(quizRequestJson))
         .andExpect(status().isOk())
         .andExpect(content().json(objectMapper.writeValueAsString(quizResponse)));
 
-    verify(quizService).createQuiz(testUserContext, quizRequest);
+    verify(quizService).createQuiz(tutorContext, quizRequest);
   }
 
   @Test
@@ -95,41 +93,41 @@ class QuizControllerTest {
             .totalRecords(1L)
             .build();
 
-    when(quizService.getQuiz(1L, testUserContext, 0, 1)).thenReturn(quizResponse);
+    when(quizService.getQuiz(1L, tutorContext, 0, 1)).thenReturn(quizResponse);
 
     mockMvc
         .perform(
             get("/v1/quizzes/1")
-                .header("x-user-id", "test-user-id")
-                .header("x-user-email", "test-user-email")
-                .header("x-user-roles", "test-user-roles")
+                .header("x-user-id", tutorContext.getUserId())
+                .header("x-user-email", tutorContext.getUserEmail())
+                .header("x-user-roles", tutorContext.getUserRoles())
                 .param("pageNumber", "0")
                 .param("pageSize", "1")
                 .contentType(APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().json(objectMapper.writeValueAsString(quizResponse)));
 
-    verify(quizService).getQuiz(1L, testUserContext, 0, 1);
+    verify(quizService).getQuiz(1L, tutorContext, 0, 1);
   }
 
   @Test
   void getQuizNotFound() throws Exception {
-    when(quizService.getQuiz(1L, testUserContext, 0, 1))
+    when(quizService.getQuiz(1L, tutorContext, 0, 1))
         .thenThrow(new NotFoundException("Quiz not found"));
 
     mockMvc
         .perform(
             get("/v1/quizzes/1")
-                .header("x-user-id", "test-user-id")
-                .header("x-user-email", "test-user-email")
-                .header("x-user-roles", "test-user-roles")
+                .header("x-user-id", tutorContext.getUserId())
+                .header("x-user-email", tutorContext.getUserEmail())
+                .header("x-user-roles", tutorContext.getUserRoles())
                 .param("pageNumber", "0")
                 .param("pageSize", "1")
                 .contentType(APPLICATION_JSON))
         .andExpect(status().isNotFound())
         .andExpect(content().json("{\"message\":\"Quiz not found\"}"));
 
-    verify(quizService).getQuiz(1L, testUserContext, 0, 1);
+    verify(quizService).getQuiz(1L, tutorContext, 0, 1);
   }
 
   @Test
@@ -147,21 +145,21 @@ class QuizControllerTest {
             .totalRecords(1L)
             .build();
 
-    when(quizService.getInProgressQuiz(testUserContext, 0, 1)).thenReturn(quizResponse);
+    when(quizService.getInProgressQuiz(tutorContext, 0, 1)).thenReturn(quizResponse);
 
     mockMvc
         .perform(
             get("/v1/quizzes/me/in-progress")
-                .header("x-user-id", "test-user-id")
-                .header("x-user-email", "test-user-email")
-                .header("x-user-roles", "test-user-roles")
+                .header("x-user-id", tutorContext.getUserId())
+                .header("x-user-email", tutorContext.getUserEmail())
+                .header("x-user-roles", tutorContext.getUserRoles())
                 .param("pageNumber", "0")
                 .param("pageSize", "1")
                 .contentType(APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().json(objectMapper.writeValueAsString(quizResponse)));
 
-    verify(quizService).getInProgressQuiz(testUserContext, 0, 1);
+    verify(quizService).getInProgressQuiz(tutorContext, 0, 1);
   }
 
   @Test
@@ -178,21 +176,21 @@ class QuizControllerTest {
             .quizzes(List.of(simpleQuizResponse))
             .build();
 
-    when(quizService.getCompletedQuiz(testUserContext, 0, 1)).thenReturn(quizResponse);
+    when(quizService.getCompletedQuiz(tutorContext, 0, 1)).thenReturn(quizResponse);
 
     mockMvc
         .perform(
             get("/v1/quizzes/me/completed")
-                .header("x-user-id", "test-user-id")
-                .header("x-user-email", "test-user-email")
-                .header("x-user-roles", "test-user-roles")
+                .header("x-user-id", tutorContext.getUserId())
+                .header("x-user-email", tutorContext.getUserEmail())
+                .header("x-user-roles", tutorContext.getUserRoles())
                 .param("pageNumber", "0")
                 .param("pageSize", "1")
                 .contentType(APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(content().json(objectMapper.writeValueAsString(quizResponse)));
 
-    verify(quizService).getCompletedQuiz(testUserContext, 0, 1);
+    verify(quizService).getCompletedQuiz(tutorContext, 0, 1);
   }
 
   @Test

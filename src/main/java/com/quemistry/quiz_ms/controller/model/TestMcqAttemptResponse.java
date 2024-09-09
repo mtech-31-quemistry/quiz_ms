@@ -17,6 +17,7 @@ import lombok.experimental.SuperBuilder;
 public class TestMcqAttemptResponse extends MCQDto {
   private Long id;
   private TestStatus testStatus;
+  private String title;
   private String tutorId;
   private Date createdOn;
   private Date updatedOn;
@@ -30,6 +31,7 @@ public class TestMcqAttemptResponse extends MCQDto {
     return TestMcqAttemptResponse.builder()
         .id(test.getId())
         .testStatus(test.getStatus())
+        .title(test.getTitle())
         .tutorId(test.getTutorId())
         .createdOn(test.getCreatedOn())
         .createdBy(mcq.getCreatedBy())

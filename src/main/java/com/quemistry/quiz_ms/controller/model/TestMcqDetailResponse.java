@@ -18,6 +18,7 @@ import lombok.experimental.SuperBuilder;
 public class TestMcqDetailResponse {
   private Long id;
   private TestStatus status;
+  private String title;
   private String tutorId;
   private Date createdOn;
   private Date updatedOn;
@@ -33,6 +34,7 @@ public class TestMcqDetailResponse {
     return TestMcqDetailResponse.builder()
         .id(test.getId())
         .status(test.getStatus())
+        .title(test.getTitle())
         .tutorId(test.getTutorId())
         .createdOn(test.getCreatedOn())
         .updatedOn(test.getUpdatedOn())

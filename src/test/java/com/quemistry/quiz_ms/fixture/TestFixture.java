@@ -19,6 +19,7 @@ public class TestFixture {
 
   public static final String STUDENT_ID = "student Id";
   public static final String TUTOR_ID = "tutor Id";
+  public static final String TEST_TITLE = "test title";
 
   public static final int PAGE_NUMBER = 0;
   public static final int PAGE_SIZE = 10;
@@ -32,7 +33,12 @@ public class TestFixture {
       new UserContext(TUTOR_ID, "tutor@test.com", "tutor");
 
   public static final TestEntity testEntity =
-      TestEntity.builder().id(TEST_ID).tutorId(TUTOR_ID).status(IN_PROGRESS).build();
+      TestEntity.builder()
+          .id(TEST_ID)
+          .tutorId(TUTOR_ID)
+          .status(IN_PROGRESS)
+          .title(TEST_TITLE)
+          .build();
 
   public static final TestMcqs testMcqs =
       TestMcqs.builder().mcqId(MCQ_ID).testId(TEST_ID).index(MCQ_INDEX).build();

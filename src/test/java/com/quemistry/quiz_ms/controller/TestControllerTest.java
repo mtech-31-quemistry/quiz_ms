@@ -49,6 +49,7 @@ class TestControllerTest {
         TestRequest.builder()
             .mcqs(List.of(new McqIndex(MCQ_ID, MCQ_INDEX)))
             .studentIds(List.of(STUDENT_ID))
+            .title(TEST_TITLE)
             .build();
 
     when(testService.createTest(TUTOR_ID, testRequest)).thenReturn(TEST_ID);

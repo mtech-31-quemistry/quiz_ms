@@ -25,15 +25,18 @@ public class TestEntity {
 
   private String tutorId;
 
+  private String title;
+
   private Date createdOn;
 
   private Date updatedOn;
 
-  public static TestEntity create(String tutorId) {
+  public static TestEntity create(String tutorId, String title) {
     Date now = new Date();
     return TestEntity.builder()
         .status(TestStatus.IN_PROGRESS)
         .tutorId(tutorId)
+        .title(title)
         .createdOn(now)
         .updatedOn(now)
         .build();

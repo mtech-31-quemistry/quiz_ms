@@ -52,7 +52,7 @@ public class TestService {
       throw new InProgressTestAlreadyExistsException();
     }
 
-    TestEntity test = TestEntity.create(tutorId);
+    TestEntity test = TestEntity.create(tutorId, testRequest.getTitle());
     Long testId = testRepository.save(test).getId();
 
     testRequest

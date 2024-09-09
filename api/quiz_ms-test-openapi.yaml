@@ -315,6 +315,8 @@ components:
           type: "array"
           items:
             type: "string"
+        title:
+          type: "string"
     TestEntity:
       type: "object"
       properties:
@@ -327,6 +329,8 @@ components:
             - "IN_PROGRESS"
             - "COMPLETED"
         tutorId:
+          type: "string"
+        title:
           type: "string"
         createdOn:
           type: "string"
@@ -377,6 +381,12 @@ components:
         correctStudentsCount:
           type: "integer"
           format: "int32"
+        attemptOption:
+          type: "integer"
+          format: "int32"
+        attemptOn:
+          type: "string"
+          format: "date-time"
         id:
           type: "integer"
           format: "int64"
@@ -411,12 +421,6 @@ components:
           format: "date-time"
         createdBy:
           type: "string"
-        attemptOption:
-          type: "integer"
-          format: "int32"
-        attemptOn:
-          type: "string"
-          format: "date-time"
     TestMcqDetailResponse:
       type: "object"
       properties:
@@ -428,6 +432,8 @@ components:
           enum:
             - "IN_PROGRESS"
             - "COMPLETED"
+        title:
+          type: "string"
         tutorId:
           type: "string"
         createdOn:
@@ -470,6 +476,8 @@ components:
           enum:
             - "IN_PROGRESS"
             - "COMPLETED"
+        title:
+          type: "string"
         tutorId:
           type: "string"
         createdOn:
@@ -491,7 +499,7 @@ components:
         index:
           type: "integer"
           format: "int32"
-        optionNo:
+        attemptOption:
           type: "integer"
           format: "int32"
         attemptOn:
@@ -531,9 +539,6 @@ components:
           format: "date-time"
         createdBy:
           type: "string"
-        attemptOption:
-          type: "integer"
-          format: "int32"
     TestStudentAttemptResponse:
       type: "object"
       properties:
@@ -545,6 +550,8 @@ components:
           enum:
             - "IN_PROGRESS"
             - "COMPLETED"
+        title:
+          type: "string"
         tutorId:
           type: "string"
         createdOn:
@@ -588,6 +595,8 @@ components:
           enum:
             - "IN_PROGRESS"
             - "COMPLETED"
+        title:
+          type: "string"
         tutorId:
           type: "string"
         createdOn:
@@ -631,9 +640,3 @@ components:
           type: "string"
         createdBy:
           type: "string"
-        attemptOption:
-          type: "integer"
-          format: "int32"
-        attemptOn:
-          type: "string"
-          format: "date-time"

@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-import com.github.jsonzou.jmockdata.JMockData;
 import com.quemistry.quiz_ms.client.QuestionClient;
 import com.quemistry.quiz_ms.controller.model.*;
 import com.quemistry.quiz_ms.exception.InProgressTestAlreadyExistsException;
@@ -54,6 +53,7 @@ class TestServiceTest {
     TestRequest testRequest = new TestRequest();
     testRequest.setMcqs(List.of(new McqIndex(MCQ_ID, MCQ_INDEX)));
     testRequest.setStudentIds(List.of(STUDENT_ID));
+    testRequest.setTitle(TEST_TITLE);
 
     Long actualTestId = testService.createTest(TUTOR_ID, testRequest);
 
@@ -93,9 +93,10 @@ class TestServiceTest {
   void testCreateTestInProgressTestExists() {
     when(testRepository.existsByTutorIdAndStatus(TUTOR_ID, IN_PROGRESS)).thenReturn(true);
 
-    TestRequest testRequest = JMockData.mock(TestRequest.class);
+    TestRequest testRequest = new TestRequest();
     testRequest.setMcqs(List.of(new McqIndex(MCQ_ID, MCQ_INDEX)));
     testRequest.setStudentIds(List.of(STUDENT_ID));
+    testRequest.setTitle(TEST_TITLE);
 
     assertThrows(
         InProgressTestAlreadyExistsException.class,
@@ -127,6 +128,7 @@ class TestServiceTest {
     assertEquals(TEST_ID, test.getId());
     assertEquals(TUTOR_ID, test.getTutorId());
     assertEquals(IN_PROGRESS, test.getStatus());
+    assertEquals(TEST_TITLE, test.getTitle());
   }
 
   @Test
@@ -153,6 +155,7 @@ class TestServiceTest {
     assertEquals(TEST_ID, test.getId());
     assertEquals(TUTOR_ID, test.getTutorId());
     assertEquals(IN_PROGRESS, test.getStatus());
+    assertEquals(TEST_TITLE, test.getTitle());
   }
 
   @Test
@@ -171,6 +174,7 @@ class TestServiceTest {
     assertEquals(TEST_ID, testMcqDetailResponse.getId());
     assertEquals(TUTOR_ID, testMcqDetailResponse.getTutorId());
     assertEquals(IN_PROGRESS, testMcqDetailResponse.getStatus());
+    assertEquals(TEST_TITLE, testMcqDetailResponse.getTitle());
 
     assertEquals(1, testMcqDetailResponse.getTotalStudentsCount());
 
@@ -209,6 +213,7 @@ class TestServiceTest {
     assertNotNull(testStudentDetailResponse);
     assertEquals(TEST_ID, testStudentDetailResponse.getId());
     assertEquals(IN_PROGRESS, testStudentDetailResponse.getStatus());
+    assertEquals(TEST_TITLE, testStudentDetailResponse.getTitle());
     assertEquals(TUTOR_ID, testStudentDetailResponse.getTutorId());
 
     assertEquals(1, testStudentDetailResponse.getTotalMcqCount());
@@ -239,6 +244,7 @@ class TestServiceTest {
     assertNotNull(testStudentAttemptResponse);
     assertEquals(TEST_ID, testStudentAttemptResponse.getId());
     assertEquals(IN_PROGRESS, testStudentAttemptResponse.getStatus());
+    assertEquals(TEST_TITLE, testStudentAttemptResponse.getTitle());
     assertEquals(TUTOR_ID, testStudentAttemptResponse.getTutorId());
     assertEquals(STUDENT_ID, testStudentAttemptResponse.getStudentId());
 
@@ -270,6 +276,7 @@ class TestServiceTest {
     assertNotNull(testMcqAttemptResponse);
     assertEquals(TEST_ID, testMcqAttemptResponse.getId());
     assertEquals(IN_PROGRESS, testMcqAttemptResponse.getTestStatus());
+    assertEquals(TEST_TITLE, testMcqAttemptResponse.getTitle());
     assertEquals(TUTOR_ID, testMcqAttemptResponse.getTutorId());
     assertEquals(MCQ_INDEX, testMcqAttemptResponse.getIndex());
 

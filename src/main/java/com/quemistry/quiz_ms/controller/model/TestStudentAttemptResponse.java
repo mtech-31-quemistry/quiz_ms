@@ -13,6 +13,7 @@ import lombok.experimental.SuperBuilder;
 public class TestStudentAttemptResponse {
   private Long id;
   private TestStatus status;
+  private String title;
   private String tutorId;
   private Date createdOn;
   private Date updatedOn;
@@ -32,6 +33,7 @@ public class TestStudentAttemptResponse {
     return TestStudentAttemptResponse.builder()
         .id(test.getId())
         .status(test.getStatus())
+        .title(test.getTitle())
         .tutorId(test.getTutorId())
         .createdOn(test.getCreatedOn())
         .updatedOn(test.getUpdatedOn())
