@@ -53,6 +53,7 @@ services:
       URLS: '[{"url":"./quiz_ms-quiz-openapi.yaml","name":"Quiz API"},
         {"url":"./quiz_ms-test-openapi.yaml","name":"Test API"},
         {"url":"./quiz_ms-health-openapi.yaml","name":"Health API"}]'
+      QUIZ_MS_HOST: localhost
     volumes:
       - ./api:/swagger
     ports:

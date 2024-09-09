@@ -4,7 +4,11 @@ info:
   description: "quiz test API"
   version: "1.0.0"
 servers:
-  - url: "http://localhost"
+  - url: "http://{QUIZ_MS_HOST}"
+    variables:
+      QUIZ_MS_HOST:
+        default: "localhost"
+        description: "quiz ms host"
 paths:
   /v1/tests:
     post:
