@@ -4,8 +4,7 @@ import static com.quemistry.quiz_ms.fixture.TestFixture.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -226,5 +225,18 @@ class TestControllerTest {
         .andExpect(status().isOk());
 
     verify(testService).getTestMcqAttempts(TEST_ID, MCQ_ID, tutorContext);
+  }
+
+  @Test
+  void completeTest() throws Exception {
+    mockMvc
+        .perform(
+            patch("/v1/tests/" + TEST_ID + "/complete")
+                .header("x-user-id", tutorContext.getUserId())
+                .header("x-user-email", tutorContext.getUserEmail())
+                .header("x-user-roles", tutorContext.getUserRoles()))
+        .andExpect(status().isNoContent());
+
+    verify(testService).completeTest(TEST_ID, tutorContext);
   }
 }

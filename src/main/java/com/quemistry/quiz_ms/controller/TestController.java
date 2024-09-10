@@ -1,6 +1,7 @@
 package com.quemistry.quiz_ms.controller;
 
 import static org.springframework.http.HttpStatus.CREATED;
+import static org.springframework.http.HttpStatus.NO_CONTENT;
 
 import com.quemistry.quiz_ms.controller.model.*;
 import com.quemistry.quiz_ms.model.TestEntity;
@@ -124,5 +125,16 @@ public class TestController {
 
     return testService.getTestMcqAttempts(
         testId, mcqId, new UserContext(tutorId, tutorEmail, roles));
+  }
+
+  @PatchMapping("{testId}/complete")
+  @ResponseStatus(NO_CONTENT)
+  public void completeTest(
+      @PathVariable Long testId,
+      @RequestHeader("x-user-id") @NotBlank String tutorId,
+      @RequestHeader("x-user-email") @Email String tutorEmail,
+      @RequestHeader("x-user-roles") @NotBlank String roles) {
+    log.info("PATCH /v1/tests/{}/complete", testId);
+    testService.completeTest(testId, new UserContext(tutorId, tutorEmail, roles));
   }
 }

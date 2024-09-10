@@ -389,4 +389,18 @@ class TestServiceTest {
         () -> testService.getTestMcqAttempts(TEST_ID, MCQ_ID, tutorContext),
         "MCQ not found in question service");
   }
+
+  @Test
+  void completeTestTest() {
+    when(testRepository.findById(TEST_ID)).thenReturn(Optional.of(testEntity));
+
+    testService.completeTest(TEST_ID, tutorContext);
+
+    verify(testRepository, times(1))
+        .save(
+            argThat(
+                testEntity ->
+                    testEntity.getId().equals(TEST_ID)
+                        && testEntity.getStatus().equals(TestStatus.COMPLETED)));
+  }
 }

@@ -222,4 +222,10 @@ public class TestService {
     }
     return OptionalTestEntity.get();
   }
+
+  public void completeTest(Long testId, UserContext userContext) {
+    TestEntity test = getTest(testId);
+    test.complete();
+    testRepository.save(test);
+  }
 }
