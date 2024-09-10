@@ -228,6 +228,19 @@ class TestControllerTest {
   }
 
   @Test
+  void startTest() throws Exception {
+    mockMvc
+        .perform(
+            patch("/v1/tests/" + TEST_ID + "/start")
+                .header("x-user-id", tutorContext.getUserId())
+                .header("x-user-email", tutorContext.getUserEmail())
+                .header("x-user-roles", tutorContext.getUserRoles()))
+        .andExpect(status().isNoContent());
+
+    verify(testService).startTest(TEST_ID, tutorContext);
+  }
+
+  @Test
   void completeTest() throws Exception {
     mockMvc
         .perform(
@@ -238,5 +251,22 @@ class TestControllerTest {
         .andExpect(status().isNoContent());
 
     verify(testService).completeTest(TEST_ID, tutorContext);
+  }
+
+  @Test
+  void updateTestStudentAttempts() throws Exception {
+    int attemptOption = 1;
+    TestAttemptRequest request = TestAttemptRequest.builder().attemptOption(attemptOption).build();
+    mockMvc
+        .perform(
+            put("/v1/tests/" + TEST_ID + "/students/me/mcq/" + MCQ_ID + "/attempts")
+                .header("x-user-id", studentContext.getUserId())
+                .header("x-user-email", studentContext.getUserEmail())
+                .header("x-user-roles", studentContext.getUserRoles())
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isNoContent());
+
+    verify(testService).updateTestStudentAttempts(TEST_ID, MCQ_ID, attemptOption, studentContext);
   }
 }

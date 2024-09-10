@@ -1,6 +1,6 @@
 package com.quemistry.quiz_ms.fixture;
 
-import static com.quemistry.quiz_ms.model.TestStatus.IN_PROGRESS;
+import static com.quemistry.quiz_ms.model.TestStatus.DRAFT;
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 
@@ -33,12 +33,7 @@ public class TestFixture {
       new UserContext(TUTOR_ID, "tutor@test.com", "tutor");
 
   public static final TestEntity testEntity =
-      TestEntity.builder()
-          .id(TEST_ID)
-          .tutorId(TUTOR_ID)
-          .status(IN_PROGRESS)
-          .title(TEST_TITLE)
-          .build();
+      TestEntity.builder().id(TEST_ID).tutorId(TUTOR_ID).status(DRAFT).title(TEST_TITLE).build();
 
   public static final TestMcqs testMcqs =
       TestMcqs.builder().mcqId(MCQ_ID).testId(TEST_ID).index(MCQ_INDEX).build();

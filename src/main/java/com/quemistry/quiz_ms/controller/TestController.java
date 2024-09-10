@@ -127,6 +127,18 @@ public class TestController {
         testId, mcqId, new UserContext(tutorId, tutorEmail, roles));
   }
 
+  @PatchMapping("{testId}/start")
+  @ResponseStatus(NO_CONTENT)
+  public void startTest(
+      @PathVariable Long testId,
+      @RequestHeader("x-user-id") @NotBlank String tutorId,
+      @RequestHeader("x-user-email") @Email String tutorEmail,
+      @RequestHeader("x-user-roles") @NotBlank String roles) {
+    log.info("PATCH /v1/tests/{}/start", testId);
+
+    testService.startTest(testId, new UserContext(tutorId, tutorEmail, roles));
+  }
+
   @PatchMapping("{testId}/complete")
   @ResponseStatus(NO_CONTENT)
   public void completeTest(
@@ -135,6 +147,25 @@ public class TestController {
       @RequestHeader("x-user-email") @Email String tutorEmail,
       @RequestHeader("x-user-roles") @NotBlank String roles) {
     log.info("PATCH /v1/tests/{}/complete", testId);
+
     testService.completeTest(testId, new UserContext(tutorId, tutorEmail, roles));
+  }
+
+  @PutMapping("{testId}/students/me/mcq/{mcqId}/attempts")
+  @ResponseStatus(NO_CONTENT)
+  public void updateTestStudentAttempts(
+      @PathVariable Long testId,
+      @PathVariable Long mcqId,
+      @RequestHeader("x-user-id") @NotBlank String studentId,
+      @RequestHeader("x-user-email") @Email String studentEmail,
+      @RequestHeader("x-user-roles") @NotBlank String roles,
+      @RequestBody TestAttemptRequest attemptRequest) {
+    log.info("PUT /v1/tests/{}/students/me/attempts", testId);
+
+    testService.updateTestStudentAttempts(
+        testId,
+        mcqId,
+        attemptRequest.getAttemptOption(),
+        new UserContext(studentId, studentEmail, roles));
   }
 }

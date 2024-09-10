@@ -1,6 +1,8 @@
 package com.quemistry.quiz_ms.service;
 
 import static com.quemistry.quiz_ms.mapper.MCQMapper.INSTANCE;
+import static com.quemistry.quiz_ms.model.TestStatus.DRAFT;
+import static com.quemistry.quiz_ms.model.TestStatus.IN_PROGRESS;
 
 import com.quemistry.quiz_ms.client.QuestionClient;
 import com.quemistry.quiz_ms.client.model.MCQDto;
@@ -9,6 +11,8 @@ import com.quemistry.quiz_ms.client.model.RetrieveMCQResponse;
 import com.quemistry.quiz_ms.controller.model.*;
 import com.quemistry.quiz_ms.exception.InProgressTestAlreadyExistsException;
 import com.quemistry.quiz_ms.exception.NotFoundException;
+import com.quemistry.quiz_ms.exception.TestCannotCompleteException;
+import com.quemistry.quiz_ms.exception.TestCannotStartException;
 import com.quemistry.quiz_ms.mapper.MCQMapper;
 import com.quemistry.quiz_ms.model.*;
 import com.quemistry.quiz_ms.repository.TestAttemptRepository;
@@ -48,7 +52,7 @@ public class TestService {
   }
 
   public Long createTest(String tutorId, TestRequest testRequest) {
-    if (testRepository.existsByTutorIdAndStatus(tutorId, TestStatus.IN_PROGRESS)) {
+    if (testRepository.existsByTutorIdAndStatus(tutorId, DRAFT)) {
       throw new InProgressTestAlreadyExistsException();
     }
 
@@ -106,10 +110,11 @@ public class TestService {
     List<TestStudent> testStudents = testStudentRepository.findByStudentId(studentId);
     List<Long> testIds = testStudents.stream().map(TestStudent::getTestId).toList();
     if (search != null) {
-      return testRepository.findPageByIdInAndTitleContaining(
-          testIds, search, PageRequest.of(pageNumber, pageSize));
+      return testRepository.findPageByIdInAndStatusIsNotAndTitleContaining(
+          testIds, DRAFT, search, PageRequest.of(pageNumber, pageSize));
     }
-    return testRepository.findPageByIdIn(testIds, PageRequest.of(pageNumber, pageSize));
+    return testRepository.findPageByIdInAndStatusIsNot(
+        testIds, DRAFT, PageRequest.of(pageNumber, pageSize));
   }
 
   public TestMcqDetailResponse getTestMcqDetail(Long testId, UserContext userContext) {
@@ -184,6 +189,34 @@ public class TestService {
     return TestMcqAttemptResponse.from(test, testMcq.get().getIndex(), mcq.get(), attempts);
   }
 
+  public void startTest(Long testId, UserContext userContext) {
+    TestEntity test = getTest(testId);
+    if (!test.getStatus().equals(DRAFT)) {
+      throw new TestCannotStartException();
+    }
+    test.start(userContext.getUserId());
+    testRepository.save(test);
+  }
+
+  public void completeTest(Long testId, UserContext userContext) {
+    TestEntity test = getTest(testId);
+    if (!test.getStatus().equals(IN_PROGRESS)) {
+      throw new TestCannotCompleteException();
+    }
+    test.complete(userContext.getUserId());
+    testRepository.save(test);
+  }
+
+  public void updateTestStudentAttempts(
+      Long testId, Long mcqId, int attemptOption, UserContext userContext) {
+    TestAttempt attempt =
+        testAttemptRepository
+            .findOneByTestIdAndMcqIdAndStudentId(testId, mcqId, userContext.getUserId())
+            .orElseThrow(() -> new NotFoundException("Attempt not found"));
+    attempt.updateAttempt(attemptOption);
+    testAttemptRepository.save(attempt);
+  }
+
   private Quartet<TestEntity, List<TestMcqs>, List<MCQResponse>, List<TestAttempt>> getTestData(
       Long testId, UserContext userContext) {
     Triplet<TestEntity, List<TestMcqs>, List<MCQResponse>> testMcqDetail =
@@ -223,9 +256,48 @@ public class TestService {
     return OptionalTestEntity.get();
   }
 
-  public void completeTest(Long testId, UserContext userContext) {
-    TestEntity test = getTest(testId);
-    test.complete();
-    testRepository.save(test);
+  private void updateTestStudentPoints(Long testId, UserContext userContext) {
+    if (!testAttemptRepository.existsByTestIdAndStudentIdAndOptionNoIsNull(
+        testId, userContext.getUserId())) {
+      List<TestAttempt> allAttempts =
+          testAttemptRepository.findByTestIdAndStudentId(testId, userContext.getUserId());
+      RetrieveMCQResponse retrieveMCQResponse =
+          questionClient.retrieveMCQsByIds(
+              RetrieveMCQByIdsRequest.builder()
+                  .ids(allAttempts.stream().map(TestAttempt::getMcqId).toList())
+                  .pageNumber(0)
+                  .pageSize(180)
+                  .build(),
+              userContext.getUserId(),
+              userContext.getUserEmail(),
+              userContext.getUserRoles());
+
+      int points =
+          (int)
+              allAttempts.stream()
+                  .filter(
+                      attemptItem ->
+                          retrieveMCQResponse.getMcqs().stream()
+                              .filter(mcq -> mcq.getId().equals(attemptItem.getMcqId()))
+                              .findFirst()
+                              .map(
+                                  mcqDto ->
+                                      mcqDto.getOptions().stream()
+                                          .filter(MCQDto.OptionDto::getIsAnswer)
+                                          .findFirst()
+                                          .filter(
+                                              optionDto ->
+                                                  (int) optionDto.getNo()
+                                                      == attemptItem.getOptionNo())
+                                          .isPresent())
+                              .orElse(false))
+                  .count();
+      TestStudent testStudent =
+          testStudentRepository
+              .findOneByTestIdAndStudentId(testId, userContext.getUserId())
+              .orElseThrow(() -> new NotFoundException("Student not found in this test"));
+      testStudent.updatePoints(points);
+      testStudentRepository.save(testStudent);
+    }
   }
 }

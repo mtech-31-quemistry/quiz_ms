@@ -1,7 +1,7 @@
 package com.quemistry.quiz_ms.service;
 
 import static com.quemistry.quiz_ms.fixture.TestFixture.*;
-import static com.quemistry.quiz_ms.model.TestStatus.IN_PROGRESS;
+import static com.quemistry.quiz_ms.model.TestStatus.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -11,6 +11,8 @@ import com.quemistry.quiz_ms.client.model.RetrieveMCQResponse;
 import com.quemistry.quiz_ms.controller.model.*;
 import com.quemistry.quiz_ms.exception.InProgressTestAlreadyExistsException;
 import com.quemistry.quiz_ms.exception.NotFoundException;
+import com.quemistry.quiz_ms.exception.TestCannotCompleteException;
+import com.quemistry.quiz_ms.exception.TestCannotStartException;
 import com.quemistry.quiz_ms.model.*;
 import com.quemistry.quiz_ms.repository.TestAttemptRepository;
 import com.quemistry.quiz_ms.repository.TestMcqRepository;
@@ -48,7 +50,7 @@ class TestServiceTest {
   @Test
   void testCreateTest() {
 
-    when(testRepository.existsByTutorIdAndStatus(TUTOR_ID, IN_PROGRESS)).thenReturn(false);
+    when(testRepository.existsByTutorIdAndStatus(TUTOR_ID, DRAFT)).thenReturn(false);
     when(testRepository.save(any())).thenReturn(TestEntity.builder().id(TEST_ID).build());
 
     TestRequest testRequest = new TestRequest();
@@ -65,7 +67,7 @@ class TestServiceTest {
             argThat(
                 testEntity ->
                     testEntity.getTutorId().equals(TUTOR_ID)
-                        && testEntity.getStatus().equals(IN_PROGRESS)));
+                        && testEntity.getStatus().equals(DRAFT)));
     verify(testMcqRepository, times(1))
         .save(
             argThat(
@@ -92,7 +94,7 @@ class TestServiceTest {
 
   @Test
   void testCreateTestInProgressTestExists() {
-    when(testRepository.existsByTutorIdAndStatus(TUTOR_ID, IN_PROGRESS)).thenReturn(true);
+    when(testRepository.existsByTutorIdAndStatus(TUTOR_ID, DRAFT)).thenReturn(true);
 
     TestRequest testRequest = new TestRequest();
     testRequest.setMcqs(List.of(new McqIndex(MCQ_ID, MCQ_INDEX)));
@@ -128,7 +130,7 @@ class TestServiceTest {
     TestEntity test = testEntities.getContent().getFirst();
     assertEquals(TEST_ID, test.getId());
     assertEquals(TUTOR_ID, test.getTutorId());
-    assertEquals(IN_PROGRESS, test.getStatus());
+    assertEquals(DRAFT, test.getStatus());
     assertEquals(TEST_TITLE, test.getTitle());
   }
 
@@ -151,7 +153,7 @@ class TestServiceTest {
     TestEntity test = testEntities.getContent().getFirst();
     assertEquals(TEST_ID, test.getId());
     assertEquals(TUTOR_ID, test.getTutorId());
-    assertEquals(IN_PROGRESS, test.getStatus());
+    assertEquals(DRAFT, test.getStatus());
     assertEquals(TEST_TITLE, test.getTitle());
   }
 
@@ -161,7 +163,8 @@ class TestServiceTest {
         .thenReturn(
             List.of(
                 TestStudent.builder().testId(TEST_ID).studentId(STUDENT_ID).points(10).build()));
-    when(testRepository.findPageByIdIn(List.of(TEST_ID), PageRequest.of(PAGE_NUMBER, PAGE_SIZE)))
+    when(testRepository.findPageByIdInAndStatusIsNot(
+            List.of(TEST_ID), DRAFT, PageRequest.of(PAGE_NUMBER, PAGE_SIZE)))
         .thenReturn(
             new PageImpl<>(
                 List.of(testEntity), PageRequest.of(PAGE_NUMBER, PAGE_SIZE), TOTAL_RECORDS));
@@ -177,7 +180,7 @@ class TestServiceTest {
     TestEntity test = testEntities.getContent().getFirst();
     assertEquals(TEST_ID, test.getId());
     assertEquals(TUTOR_ID, test.getTutorId());
-    assertEquals(IN_PROGRESS, test.getStatus());
+    assertEquals(DRAFT, test.getStatus());
     assertEquals(TEST_TITLE, test.getTitle());
   }
 
@@ -187,8 +190,8 @@ class TestServiceTest {
         .thenReturn(
             List.of(
                 TestStudent.builder().testId(TEST_ID).studentId(STUDENT_ID).points(10).build()));
-    when(testRepository.findPageByIdInAndTitleContaining(
-            List.of(TEST_ID), TEST_TITLE, PageRequest.of(PAGE_NUMBER, PAGE_SIZE)))
+    when(testRepository.findPageByIdInAndStatusIsNotAndTitleContaining(
+            List.of(TEST_ID), DRAFT, TEST_TITLE, PageRequest.of(PAGE_NUMBER, PAGE_SIZE)))
         .thenReturn(
             new PageImpl<>(
                 List.of(testEntity), PageRequest.of(PAGE_NUMBER, PAGE_SIZE), TOTAL_RECORDS));
@@ -205,7 +208,7 @@ class TestServiceTest {
     TestEntity test = testEntities.getContent().getFirst();
     assertEquals(TEST_ID, test.getId());
     assertEquals(TUTOR_ID, test.getTutorId());
-    assertEquals(IN_PROGRESS, test.getStatus());
+    assertEquals(DRAFT, test.getStatus());
     assertEquals(TEST_TITLE, test.getTitle());
   }
 
@@ -224,7 +227,7 @@ class TestServiceTest {
     assertNotNull(testMcqDetailResponse);
     assertEquals(TEST_ID, testMcqDetailResponse.getId());
     assertEquals(TUTOR_ID, testMcqDetailResponse.getTutorId());
-    assertEquals(IN_PROGRESS, testMcqDetailResponse.getStatus());
+    assertEquals(DRAFT, testMcqDetailResponse.getStatus());
     assertEquals(TEST_TITLE, testMcqDetailResponse.getTitle());
 
     assertEquals(1, testMcqDetailResponse.getTotalStudentsCount());
@@ -263,7 +266,7 @@ class TestServiceTest {
 
     assertNotNull(testStudentDetailResponse);
     assertEquals(TEST_ID, testStudentDetailResponse.getId());
-    assertEquals(IN_PROGRESS, testStudentDetailResponse.getStatus());
+    assertEquals(DRAFT, testStudentDetailResponse.getStatus());
     assertEquals(TEST_TITLE, testStudentDetailResponse.getTitle());
     assertEquals(TUTOR_ID, testStudentDetailResponse.getTutorId());
 
@@ -294,7 +297,7 @@ class TestServiceTest {
 
     assertNotNull(testStudentAttemptResponse);
     assertEquals(TEST_ID, testStudentAttemptResponse.getId());
-    assertEquals(IN_PROGRESS, testStudentAttemptResponse.getStatus());
+    assertEquals(DRAFT, testStudentAttemptResponse.getStatus());
     assertEquals(TEST_TITLE, testStudentAttemptResponse.getTitle());
     assertEquals(TUTOR_ID, testStudentAttemptResponse.getTutorId());
     assertEquals(STUDENT_ID, testStudentAttemptResponse.getStudentId());
@@ -344,7 +347,7 @@ class TestServiceTest {
 
     assertNotNull(testMcqAttemptResponse);
     assertEquals(TEST_ID, testMcqAttemptResponse.getId());
-    assertEquals(IN_PROGRESS, testMcqAttemptResponse.getTestStatus());
+    assertEquals(DRAFT, testMcqAttemptResponse.getTestStatus());
     assertEquals(TEST_TITLE, testMcqAttemptResponse.getTitle());
     assertEquals(TUTOR_ID, testMcqAttemptResponse.getTutorId());
     assertEquals(MCQ_INDEX, testMcqAttemptResponse.getIndex());
@@ -391,8 +394,35 @@ class TestServiceTest {
   }
 
   @Test
+  void startTestTest() {
+    TestEntity test = TestEntity.builder().id(TEST_ID).status(DRAFT).build();
+    when(testRepository.findById(TEST_ID)).thenReturn(Optional.of(test));
+
+    testService.startTest(TEST_ID, tutorContext);
+
+    verify(testRepository, times(1))
+        .save(
+            argThat(
+                testEntity ->
+                    testEntity.getId().equals(TEST_ID)
+                        && testEntity.getStartedBy().equals(TUTOR_ID)
+                        && testEntity.getStartedOn().equals(testEntity.getUpdatedOn())
+                        && testEntity.getStatus().equals(IN_PROGRESS)));
+  }
+
+  @Test
+  void startTestTestWithIncorrectStatus() {
+    TestEntity test = TestEntity.builder().id(TEST_ID).status(IN_PROGRESS).build();
+    when(testRepository.findById(TEST_ID)).thenReturn(Optional.of(test));
+
+    assertThrows(
+        TestCannotStartException.class, () -> testService.startTest(TEST_ID, tutorContext));
+  }
+
+  @Test
   void completeTestTest() {
-    when(testRepository.findById(TEST_ID)).thenReturn(Optional.of(testEntity));
+    TestEntity test = TestEntity.builder().id(TEST_ID).status(IN_PROGRESS).build();
+    when(testRepository.findById(TEST_ID)).thenReturn(Optional.of(test));
 
     testService.completeTest(TEST_ID, tutorContext);
 
@@ -401,6 +431,34 @@ class TestServiceTest {
             argThat(
                 testEntity ->
                     testEntity.getId().equals(TEST_ID)
-                        && testEntity.getStatus().equals(TestStatus.COMPLETED)));
+                        && testEntity.getCompletedBy().equals(TUTOR_ID)
+                        && testEntity.getCompletedOn().equals(testEntity.getUpdatedOn())
+                        && testEntity.getStatus().equals(COMPLETED)));
+  }
+
+  @Test
+  void completeTestTestWithIncorrectStatus() {
+    TestEntity test = TestEntity.builder().id(TEST_ID).status(DRAFT).build();
+    when(testRepository.findById(TEST_ID)).thenReturn(Optional.of(test));
+
+    assertThrows(
+        TestCannotCompleteException.class, () -> testService.completeTest(TEST_ID, tutorContext));
+  }
+
+  @Test
+  void updateTestStudentAttemptsTest() {
+    when(testAttemptRepository.findOneByTestIdAndMcqIdAndStudentId(TEST_ID, MCQ_ID, STUDENT_ID))
+        .thenReturn(Optional.of(testAttempt));
+
+    testService.updateTestStudentAttempts(TEST_ID, MCQ_ID, CURRENT_OPTION_NO, studentContext);
+
+    verify(testAttemptRepository, times(1))
+        .save(
+            argThat(
+                testAttempt ->
+                    testAttempt.getTestId().equals(TEST_ID)
+                        && testAttempt.getMcqId().equals(MCQ_ID)
+                        && testAttempt.getStudentId().equals(STUDENT_ID)
+                        && testAttempt.getOptionNo().equals(CURRENT_OPTION_NO)));
   }
 }

@@ -303,6 +303,35 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/TestMcqAttemptResponse"
+  /v1/tests/{testId}/start:
+    patch:
+      summary: "PATCH v1/tests/{testId}/start"
+      operationId: "startTest"
+      parameters:
+        - name: "testId"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+        - name: "x-user-id"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+        - name: "x-user-email"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+        - name: "x-user-roles"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "204":
+          description: "No Content"
   /v1/tests/{testId}/complete:
     patch:
       summary: "PATCH v1/tests/{testId}/complete"
@@ -329,6 +358,47 @@ paths:
           required: true
           schema:
             type: "string"
+      responses:
+        "204":
+          description: "No Content"
+  /v1/tests/{testId}/students/me/mcq/{mcqId}/attempts:
+    put:
+      summary: "PUT v1/tests/{testId}/students/me/mcq/{mcqId}/attempts"
+      operationId: "updateTestStudentAttempts"
+      parameters:
+        - name: "testId"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+        - name: "mcqId"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+        - name: "x-user-id"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+        - name: "x-user-email"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+        - name: "x-user-roles"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TestAttemptRequest"
+        required: true
       responses:
         "204":
           description: "No Content"
@@ -365,6 +435,7 @@ components:
         status:
           type: "string"
           enum:
+            - "DRAFT"
             - "IN_PROGRESS"
             - "COMPLETED"
         tutorId:
@@ -374,6 +445,18 @@ components:
         createdOn:
           type: "string"
           format: "date-time"
+        createdBy:
+          type: "string"
+        startedOn:
+          type: "string"
+          format: "date-time"
+        startedBy:
+          type: "string"
+        completedOn:
+          type: "string"
+          format: "date-time"
+        completedBy:
+          type: "string"
         updatedOn:
           type: "string"
           format: "date-time"
@@ -469,6 +552,7 @@ components:
         status:
           type: "string"
           enum:
+            - "DRAFT"
             - "IN_PROGRESS"
             - "COMPLETED"
         title:
@@ -513,6 +597,7 @@ components:
         status:
           type: "string"
           enum:
+            - "DRAFT"
             - "IN_PROGRESS"
             - "COMPLETED"
         title:
@@ -587,6 +672,7 @@ components:
         status:
           type: "string"
           enum:
+            - "DRAFT"
             - "IN_PROGRESS"
             - "COMPLETED"
         title:
@@ -632,6 +718,7 @@ components:
         testStatus:
           type: "string"
           enum:
+            - "DRAFT"
             - "IN_PROGRESS"
             - "COMPLETED"
         title:
@@ -679,3 +766,9 @@ components:
           type: "string"
         createdBy:
           type: "string"
+    TestAttemptRequest:
+      type: "object"
+      properties:
+        attemptOption:
+          type: "integer"
+          format: "int32"

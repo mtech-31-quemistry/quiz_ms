@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AttemptRequest {
+public class TestAttemptRequest {
   private Integer attemptOption;
 }

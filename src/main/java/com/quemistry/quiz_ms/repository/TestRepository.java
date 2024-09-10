@@ -15,8 +15,9 @@ public interface TestRepository extends JpaRepository<TestEntity, Long> {
   Page<TestEntity> findPageByTutorIdAndTitleContainingOrderByIdDesc(
       String tutorId, String search, Pageable page);
 
-  Page<TestEntity> findPageByIdIn(List<Long> testIds, Pageable page);
+  Page<TestEntity> findPageByIdInAndStatusIsNot(
+      List<Long> testIds, TestStatus status, Pageable page);
 
-  Page<TestEntity> findPageByIdInAndTitleContaining(
-      List<Long> testIds, String search, Pageable page);
+  Page<TestEntity> findPageByIdInAndStatusIsNotAndTitleContaining(
+      List<Long> testIds, TestStatus status, String search, Pageable page);
 }

@@ -2,7 +2,7 @@ package com.quemistry.quiz_ms.controller;
 
 import static org.springframework.http.HttpStatus.NO_CONTENT;
 
-import com.quemistry.quiz_ms.controller.model.AttemptRequest;
+import com.quemistry.quiz_ms.controller.model.QuizAttemptRequest;
 import com.quemistry.quiz_ms.controller.model.QuizListResponse;
 import com.quemistry.quiz_ms.controller.model.QuizRequest;
 import com.quemistry.quiz_ms.controller.model.QuizResponse;
@@ -80,7 +80,7 @@ public class QuizController {
       @PathVariable Long id,
       @PathVariable Long mcqId,
       @RequestHeader("x-user-id") @NotBlank String studentId,
-      @RequestBody AttemptRequest attemptRequest) {
+      @RequestBody QuizAttemptRequest attemptRequest) {
     log.info("PUT /v1/quizzes/{}/mcqs/{}/attempt", id, mcqId);
 
     quizService.updateAttempt(id, mcqId, studentId, attemptRequest.getAttemptOption());

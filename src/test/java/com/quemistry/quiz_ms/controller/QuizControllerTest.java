@@ -198,7 +198,7 @@ class QuizControllerTest {
     Long quizId = 1L;
     Long mcqId = 1L;
     String studentId = "test-user-id";
-    AttemptRequest attemptRequest = new AttemptRequest(1);
+    QuizAttemptRequest attemptRequest = new QuizAttemptRequest(1);
 
     mockMvc
         .perform(
@@ -216,7 +216,7 @@ class QuizControllerTest {
     Long quizId = 1L;
     Long mcqId = 1L;
     String studentId = "test-user-id";
-    AttemptRequest attemptRequest = new AttemptRequest(1);
+    QuizAttemptRequest attemptRequest = new QuizAttemptRequest(1);
 
     doThrow(new NotFoundException("Quiz not found"))
         .when(quizService)
@@ -236,7 +236,7 @@ class QuizControllerTest {
     Long quizId = 1L;
     Long mcqId = 1L;
     String studentId = "test-user-id";
-    AttemptRequest attemptRequest = new AttemptRequest(1);
+    QuizAttemptRequest attemptRequest = new QuizAttemptRequest(1);
 
     doThrow(new NotFoundException("Attempt not found"))
         .when(quizService)
@@ -256,7 +256,7 @@ class QuizControllerTest {
     Long quizId = 1L;
     Long mcqId = 1L;
     String studentId = "test-user-id";
-    AttemptRequest attemptRequest = new AttemptRequest(1);
+    QuizAttemptRequest attemptRequest = new QuizAttemptRequest(1);
 
     doThrow(new AttemptAlreadyExistsException())
         .when(quizService)
