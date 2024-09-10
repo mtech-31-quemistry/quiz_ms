@@ -122,7 +122,7 @@ sonar {
 		property "sonar.projectKey", "mtech-31-quemistry_quiz_ms"
 		property "sonar.organization", "mtech-31-quemistry"
 		property "sonar.host.url", "https://sonarcloud.io"
-		property "sonar.coverage.exclusions", "**/entity/*.class,**/model/**/*.class,**/model/*.class,**/entity/**/*.class,**/Application.class,**/constant/**/*.class,**/constant/*.class,com/quemistry/quiz_ms/exception/ExceptionResponse.class"
+		property "sonar.coverage.exclusions", "**/entity/*,**/model/**/*,**/model/*,**/entity/**/*,**/Application,**/constant/**/*,**/constant/*,com/quemistry/quiz_ms/exception/ExceptionResponse"
 	}
 }
 
