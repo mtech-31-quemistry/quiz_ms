@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import com.quemistry.quiz_ms.client.QuestionClient;
+import com.quemistry.quiz_ms.client.model.RetrieveMCQResponse;
 import com.quemistry.quiz_ms.controller.model.*;
 import com.quemistry.quiz_ms.exception.InProgressTestAlreadyExistsException;
 import com.quemistry.quiz_ms.exception.NotFoundException;
@@ -258,6 +259,24 @@ class TestServiceTest {
   }
 
   @Test
+  void getTestStudentAttemptsTestStudentNotFound() {
+    when(testRepository.findById(TEST_ID)).thenReturn(Optional.of(testEntity));
+    when(testMcqRepository.findByTestId(TEST_ID)).thenReturn(List.of(testMcqs));
+    when(questionClient.retrieveMCQsByIds(
+            argThat(request -> request.getIds().contains(MCQ_ID)), any(), any(), any()))
+        .thenReturn(getRetrieveMCQResponse());
+    when(testStudentRepository.findOneByTestIdAndStudentId(TEST_ID, STUDENT_ID))
+        .thenReturn(Optional.empty());
+    when(testAttemptRepository.findByTestIdAndStudentId(TEST_ID, STUDENT_ID))
+        .thenReturn(List.of(testAttempt));
+
+    assertThrows(
+        NotFoundException.class,
+        () -> testService.getTestStudentAttempts(TEST_ID, STUDENT_ID, tutorContext),
+        "Student not found");
+  }
+
+  @Test
   void TestMcqAttemptResponseTest() {
     when(testRepository.findById(TEST_ID)).thenReturn(Optional.of(testEntity));
     when(testMcqRepository.findOneByTestIdAndMcqId(TEST_ID, MCQ_ID))
@@ -282,5 +301,42 @@ class TestServiceTest {
 
     assertEquals(STUDENT_ID, testMcqAttemptResponse.getAttempts().getFirst().getStudentId());
     assertEquals(CURRENT_OPTION_NO, testMcqAttemptResponse.getAttempts().getFirst().getOptionNo());
+  }
+
+  @Test
+  void TestMcqAttemptResponseTestMcqNotFound() {
+    when(testRepository.findById(TEST_ID)).thenReturn(Optional.of(testEntity));
+    when(testMcqRepository.findOneByTestIdAndMcqId(TEST_ID, MCQ_ID)).thenReturn(Optional.empty());
+    when(questionClient.retrieveMCQsByIds(
+            argThat(request -> request.getIds().contains(MCQ_ID)), any(), any(), any()))
+        .thenReturn(getRetrieveMCQResponse());
+    when(testAttemptRepository.findByTestIdAndMcqId(TEST_ID, MCQ_ID))
+        .thenReturn(List.of(testAttempt));
+    when(testStudentRepository.findOneByTestIdAndStudentId(TEST_ID, STUDENT_ID))
+        .thenReturn(Optional.of(testStudent));
+
+    assertThrows(
+        NotFoundException.class,
+        () -> testService.getTestMcqAttempts(TEST_ID, MCQ_ID, tutorContext),
+        "MCQ not found");
+  }
+
+  @Test
+  void TestMcqAttemptResponseTestMcqNotFoundFromQuestionMS() {
+    when(testRepository.findById(TEST_ID)).thenReturn(Optional.of(testEntity));
+    when(testMcqRepository.findOneByTestIdAndMcqId(TEST_ID, MCQ_ID))
+        .thenReturn(Optional.of(testMcqs));
+    when(questionClient.retrieveMCQsByIds(
+            argThat(request -> request.getIds().contains(MCQ_ID)), any(), any(), any()))
+        .thenReturn(RetrieveMCQResponse.builder().mcqs(List.of()).build());
+    when(testAttemptRepository.findByTestIdAndMcqId(TEST_ID, MCQ_ID))
+        .thenReturn(List.of(testAttempt));
+    when(testStudentRepository.findOneByTestIdAndStudentId(TEST_ID, STUDENT_ID))
+        .thenReturn(Optional.of(testStudent));
+
+    assertThrows(
+        NotFoundException.class,
+        () -> testService.getTestMcqAttempts(TEST_ID, MCQ_ID, tutorContext),
+        "MCQ not found in question service");
   }
 }
