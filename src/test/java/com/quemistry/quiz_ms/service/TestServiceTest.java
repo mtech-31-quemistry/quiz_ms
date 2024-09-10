@@ -118,7 +118,30 @@ class TestServiceTest {
                 List.of(testEntity), PageRequest.of(PAGE_NUMBER, PAGE_SIZE), TOTAL_RECORDS));
 
     Page<TestEntity> testEntities =
-        testService.getTestsForTutor(TUTOR_ID, PAGE_NUMBER, PAGE_SIZE, tutorContext);
+        testService.getTestsForTutor(TUTOR_ID, null, PAGE_NUMBER, PAGE_SIZE, tutorContext);
+
+    assertNotNull(testEntities);
+    assertEquals(TOTAL_RECORDS, testEntities.getTotalElements());
+    assertEquals(PAGE_NUMBER, testEntities.getPageable().getPageNumber());
+    assertEquals(PAGE_SIZE, testEntities.getPageable().getPageSize());
+
+    TestEntity test = testEntities.getContent().getFirst();
+    assertEquals(TEST_ID, test.getId());
+    assertEquals(TUTOR_ID, test.getTutorId());
+    assertEquals(IN_PROGRESS, test.getStatus());
+    assertEquals(TEST_TITLE, test.getTitle());
+  }
+
+  @Test
+  void getTestsForTutorTestWithSearchConditions() {
+    when(testRepository.findPageByTutorIdAndTitleContainingOrderByIdDesc(
+            TUTOR_ID, TEST_TITLE, PageRequest.of(PAGE_NUMBER, PAGE_SIZE)))
+        .thenReturn(
+            new PageImpl<>(
+                List.of(testEntity), PageRequest.of(PAGE_NUMBER, PAGE_SIZE), TOTAL_RECORDS));
+
+    Page<TestEntity> testEntities =
+        testService.getTestsForTutor(TUTOR_ID, TEST_TITLE, PAGE_NUMBER, PAGE_SIZE, tutorContext);
 
     assertNotNull(testEntities);
     assertEquals(TOTAL_RECORDS, testEntities.getTotalElements());
@@ -134,18 +157,45 @@ class TestServiceTest {
 
   @Test
   void getTestsForStudentTest() {
-    when(testStudentRepository.findPageByStudentIdOrderByTestIdDesc(
-            STUDENT_ID, PageRequest.of(PAGE_NUMBER, PAGE_SIZE)))
+    when(testStudentRepository.findByStudentId(STUDENT_ID))
+        .thenReturn(
+            List.of(
+                TestStudent.builder().testId(TEST_ID).studentId(STUDENT_ID).points(10).build()));
+    when(testRepository.findPageByIdIn(List.of(TEST_ID), PageRequest.of(PAGE_NUMBER, PAGE_SIZE)))
         .thenReturn(
             new PageImpl<>(
-                List.of(
-                    TestStudent.builder().testId(TEST_ID).studentId(STUDENT_ID).points(10).build()),
-                PageRequest.of(PAGE_NUMBER, PAGE_SIZE),
-                TOTAL_RECORDS));
-    when(testRepository.findAllById(List.of(TEST_ID))).thenReturn(List.of(testEntity));
+                List.of(testEntity), PageRequest.of(PAGE_NUMBER, PAGE_SIZE), TOTAL_RECORDS));
 
     Page<TestEntity> testEntities =
-        testService.getTestsForStudent(STUDENT_ID, PAGE_NUMBER, PAGE_SIZE, studentContext);
+        testService.getTestsForStudent(STUDENT_ID, null, PAGE_NUMBER, PAGE_SIZE, studentContext);
+
+    assertNotNull(testEntities);
+    assertEquals(TOTAL_RECORDS, testEntities.getTotalElements());
+    assertEquals(PAGE_NUMBER, testEntities.getPageable().getPageNumber());
+    assertEquals(PAGE_SIZE, testEntities.getPageable().getPageSize());
+
+    TestEntity test = testEntities.getContent().getFirst();
+    assertEquals(TEST_ID, test.getId());
+    assertEquals(TUTOR_ID, test.getTutorId());
+    assertEquals(IN_PROGRESS, test.getStatus());
+    assertEquals(TEST_TITLE, test.getTitle());
+  }
+
+  @Test
+  void getTestsForStudentTestWithSearchConditions() {
+    when(testStudentRepository.findByStudentId(STUDENT_ID))
+        .thenReturn(
+            List.of(
+                TestStudent.builder().testId(TEST_ID).studentId(STUDENT_ID).points(10).build()));
+    when(testRepository.findPageByIdInAndTitleContaining(
+            List.of(TEST_ID), TEST_TITLE, PageRequest.of(PAGE_NUMBER, PAGE_SIZE)))
+        .thenReturn(
+            new PageImpl<>(
+                List.of(testEntity), PageRequest.of(PAGE_NUMBER, PAGE_SIZE), TOTAL_RECORDS));
+
+    Page<TestEntity> testEntities =
+        testService.getTestsForStudent(
+            STUDENT_ID, TEST_TITLE, PAGE_NUMBER, PAGE_SIZE, studentContext);
 
     assertNotNull(testEntities);
     assertEquals(TOTAL_RECORDS, testEntities.getTotalElements());

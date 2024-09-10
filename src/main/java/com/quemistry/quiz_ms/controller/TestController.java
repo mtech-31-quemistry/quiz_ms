@@ -44,12 +44,13 @@ public class TestController {
       @RequestHeader("x-user-id") @NotBlank String tutorId,
       @RequestHeader("x-user-email") @Email String studentEmail,
       @RequestHeader("x-user-roles") @NotBlank String roles,
+      @RequestParam(required = false) String search,
       @RequestParam @PositiveOrZero Integer pageNumber,
       @RequestParam @PositiveOrZero Integer pageSize) {
     log.info("GET /v1/tests/tutor");
 
     return testService.getTestsForTutor(
-        tutorId, pageNumber, pageSize, new UserContext(tutorId, studentEmail, roles));
+        tutorId, search, pageNumber, pageSize, new UserContext(tutorId, studentEmail, roles));
   }
 
   @GetMapping("student")
@@ -57,11 +58,12 @@ public class TestController {
       @RequestHeader("x-user-id") @NotBlank String studentId,
       @RequestHeader("x-user-email") @Email String studentEmail,
       @RequestHeader("x-user-roles") @NotBlank String roles,
+      @RequestParam(required = false) String search,
       @RequestParam @PositiveOrZero Integer pageNumber,
       @RequestParam @PositiveOrZero @Max(60) Integer pageSize) {
     log.info("GET /v1/tests/student");
     return testService.getTestsForStudent(
-        studentId, pageNumber, pageSize, new UserContext(studentId, studentEmail, roles));
+        studentId, search, pageNumber, pageSize, new UserContext(studentId, studentEmail, roles));
   }
 
   @GetMapping("{testId}/mcqs")

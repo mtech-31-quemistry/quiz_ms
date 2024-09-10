@@ -71,7 +71,7 @@ class TestControllerTest {
   @Test
   void getTestsForTutor() throws Exception {
     Page<TestEntity> testPage = new PageImpl<>(List.of(), PageRequest.of(0, 10), 0);
-    when(testService.getTestsForTutor(STUDENT_ID, 0, 10, tutorContext)).thenReturn(testPage);
+    when(testService.getTestsForTutor(STUDENT_ID, null, 0, 10, tutorContext)).thenReturn(testPage);
 
     mockMvc
         .perform(
@@ -83,13 +83,34 @@ class TestControllerTest {
                 .param("pageSize", "10"))
         .andExpect(status().isOk());
 
-    verify(testService).getTestsForTutor(tutorContext.getUserId(), 0, 10, tutorContext);
+    verify(testService).getTestsForTutor(tutorContext.getUserId(), null, 0, 10, tutorContext);
+  }
+
+  @Test
+  void getTestsForTutorWithSearchConditions() throws Exception {
+    Page<TestEntity> testPage = new PageImpl<>(List.of(), PageRequest.of(0, 10), 0);
+    when(testService.getTestsForTutor(STUDENT_ID, TEST_TITLE, 0, 10, tutorContext))
+        .thenReturn(testPage);
+
+    mockMvc
+        .perform(
+            get("/v1/tests/tutor")
+                .header("x-user-id", tutorContext.getUserId())
+                .header("x-user-email", tutorContext.getUserEmail())
+                .header("x-user-roles", tutorContext.getUserRoles())
+                .param("search", TEST_TITLE)
+                .param("pageNumber", "0")
+                .param("pageSize", "10"))
+        .andExpect(status().isOk());
+
+    verify(testService).getTestsForTutor(tutorContext.getUserId(), TEST_TITLE, 0, 10, tutorContext);
   }
 
   @Test
   void getTestsForStudent() throws Exception {
     Page<TestEntity> testPage = new PageImpl<>(List.of(), PageRequest.of(0, 10), 0);
-    when(testService.getTestsForStudent(STUDENT_ID, 0, 10, studentContext)).thenReturn(testPage);
+    when(testService.getTestsForStudent(STUDENT_ID, null, 0, 10, studentContext))
+        .thenReturn(testPage);
 
     mockMvc
         .perform(
@@ -101,7 +122,28 @@ class TestControllerTest {
                 .param("pageSize", "10"))
         .andExpect(status().isOk());
 
-    verify(testService).getTestsForStudent(studentContext.getUserId(), 0, 10, studentContext);
+    verify(testService).getTestsForStudent(studentContext.getUserId(), null, 0, 10, studentContext);
+  }
+
+  @Test
+  void getTestsForStudentWithSearchConditions() throws Exception {
+    Page<TestEntity> testPage = new PageImpl<>(List.of(), PageRequest.of(0, 10), 0);
+    when(testService.getTestsForStudent(STUDENT_ID, TEST_TITLE, 0, 10, studentContext))
+        .thenReturn(testPage);
+
+    mockMvc
+        .perform(
+            get("/v1/tests/student")
+                .header("x-user-id", studentContext.getUserId())
+                .header("x-user-email", studentContext.getUserEmail())
+                .header("x-user-roles", studentContext.getUserRoles())
+                .param("search", TEST_TITLE)
+                .param("pageNumber", "0")
+                .param("pageSize", "10"))
+        .andExpect(status().isOk());
+
+    verify(testService)
+        .getTestsForStudent(studentContext.getUserId(), TEST_TITLE, 0, 10, studentContext);
   }
 
   @Test

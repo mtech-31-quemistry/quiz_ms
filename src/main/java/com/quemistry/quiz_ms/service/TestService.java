@@ -84,24 +84,32 @@ public class TestService {
   }
 
   public Page<TestEntity> getTestsForTutor(
-      String tutorId, Integer pageNumber, Integer pageSize, UserContext userContext) {
+      String tutorId,
+      String search,
+      Integer pageNumber,
+      Integer pageSize,
+      UserContext userContext) {
+    if (search != null) {
+      return testRepository.findPageByTutorIdAndTitleContainingOrderByIdDesc(
+          tutorId, search, PageRequest.of(pageNumber, pageSize));
+    }
     return testRepository.findPageByTutorIdOrderByIdDesc(
         tutorId, PageRequest.of(pageNumber, pageSize));
   }
 
   public Page<TestEntity> getTestsForStudent(
-      String studentId, Integer pageNumber, Integer pageSize, UserContext userContext) {
-    Page<TestStudent> testStudentPage =
-        testStudentRepository.findPageByStudentIdOrderByTestIdDesc(
-            studentId, PageRequest.of(pageNumber, pageSize));
-    List<Long> testIds = testStudentPage.getContent().stream().map(TestStudent::getTestId).toList();
-    List<TestEntity> testEntities = testRepository.findAllById(testIds);
-    return testStudentPage.map(
-        testStudent ->
-            testEntities.stream()
-                .filter(testEntity -> testEntity.getId().equals(testStudent.getTestId()))
-                .findFirst()
-                .orElse(null));
+      String studentId,
+      String search,
+      Integer pageNumber,
+      Integer pageSize,
+      UserContext userContext) {
+    List<TestStudent> testStudents = testStudentRepository.findByStudentId(studentId);
+    List<Long> testIds = testStudents.stream().map(TestStudent::getTestId).toList();
+    if (search != null) {
+      return testRepository.findPageByIdInAndTitleContaining(
+          testIds, search, PageRequest.of(pageNumber, pageSize));
+    }
+    return testRepository.findPageByIdIn(testIds, PageRequest.of(pageNumber, pageSize));
   }
 
   public TestMcqDetailResponse getTestMcqDetail(Long testId, UserContext userContext) {

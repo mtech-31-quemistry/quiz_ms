@@ -44,6 +44,11 @@ paths:
       summary: "GET v1/tests/tutor"
       operationId: "getTestsForTutor"
       parameters:
+        - name: "search"
+          in: "query"
+          required: false
+          schema:
+            type: "string"
         - name: "pageNumber"
           in: "query"
           required: true
@@ -83,6 +88,11 @@ paths:
       summary: "GET v1/tests/student"
       operationId: "getTestsForStudent"
       parameters:
+        - name: "search"
+          in: "query"
+          required: false
+          schema:
+            type: "string"
         - name: "pageNumber"
           in: "query"
           required: true
