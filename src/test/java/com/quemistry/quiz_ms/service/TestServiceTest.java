@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import com.quemistry.quiz_ms.client.QuestionClient;
+import com.quemistry.quiz_ms.client.model.MCQDto;
 import com.quemistry.quiz_ms.client.model.RetrieveMCQResponse;
 import com.quemistry.quiz_ms.controller.model.*;
 import com.quemistry.quiz_ms.exception.*;
@@ -36,6 +37,8 @@ class TestServiceTest {
   @Mock private TestAttemptRepository testAttemptRepository;
 
   @Mock private QuestionClient questionClient;
+
+  @Mock private TestService self;
 
   @InjectMocks private TestService testService;
 
@@ -217,6 +220,8 @@ class TestServiceTest {
             argThat(request -> request.getIds().contains(MCQ_ID)), any(), any(), any()))
         .thenReturn(getRetrieveMCQResponse());
     when(testAttemptRepository.findByTestId(TEST_ID)).thenReturn(List.of(testAttempt));
+    when(self.retrieveMCQResponse(TEST_ID, tutorContext, List.of(MCQ_ID)))
+        .thenReturn(getRetrieveMCQResponse());
 
     TestMcqDetailResponse testMcqDetailResponse =
         testService.getTestMcqDetail(TEST_ID, tutorContext);
@@ -257,6 +262,8 @@ class TestServiceTest {
     when(questionClient.retrieveMCQsByIds(
             argThat(request -> request.getIds().contains(MCQ_ID)), any(), any(), any()))
         .thenReturn(getRetrieveMCQResponse());
+    when(self.retrieveMCQResponse(TEST_ID, tutorContext, List.of(MCQ_ID)))
+        .thenReturn(getRetrieveMCQResponse());
 
     TestStudentDetailResponse testStudentDetailResponse =
         testService.getTestStudentDetail(TEST_ID, tutorContext);
@@ -288,6 +295,8 @@ class TestServiceTest {
         .thenReturn(List.of(testAttempt));
     when(testStudentRepository.findOneByTestIdAndStudentId(TEST_ID, STUDENT_ID))
         .thenReturn(Optional.of(testStudent));
+    when(self.retrieveMCQResponse(TEST_ID, tutorContext, List.of(MCQ_ID)))
+        .thenReturn(getRetrieveMCQResponse());
 
     TestStudentAttemptResponse testStudentAttemptResponse =
         testService.getTestStudentAttempts(TEST_ID, STUDENT_ID, tutorContext);
@@ -319,6 +328,8 @@ class TestServiceTest {
         .thenReturn(Optional.empty());
     when(testAttemptRepository.findByTestIdAndStudentId(TEST_ID, STUDENT_ID))
         .thenReturn(List.of(testAttempt));
+    when(self.retrieveMCQResponse(TEST_ID, tutorContext, List.of(MCQ_ID)))
+        .thenReturn(getRetrieveMCQResponse());
 
     assertThrows(
         NotFoundException.class,
@@ -512,6 +523,8 @@ class TestServiceTest {
         TestStudent.builder().studentId(STUDENT_ID).testId(TEST_ID).points(null).build();
     when(testStudentRepository.findOneByTestIdAndStudentId(TEST_ID, STUDENT_ID))
         .thenReturn(Optional.of(testStudentData));
+    when(self.retrieveMCQResponse(TEST_ID, studentContext, List.of(MCQ_ID)))
+        .thenReturn(getRetrieveMCQResponse());
 
     testService.summitStudentTest(TEST_ID, studentContext);
 
@@ -536,6 +549,8 @@ class TestServiceTest {
 
     when(testStudentRepository.findOneByTestIdAndStudentId(TEST_ID, STUDENT_ID))
         .thenReturn(Optional.of(testStudent));
+    when(self.retrieveMCQResponse(TEST_ID, studentContext, List.of(MCQ_ID)))
+        .thenReturn(getRetrieveMCQResponse());
 
     assertThrows(
         TestCannotSummitException.class,
@@ -554,6 +569,8 @@ class TestServiceTest {
         .thenReturn(getRetrieveMCQResponse());
     when(testStudentRepository.findOneByTestIdAndStudentId(TEST_ID, STUDENT_ID))
         .thenReturn(Optional.empty());
+    when(self.retrieveMCQResponse(TEST_ID, studentContext, List.of(MCQ_ID)))
+        .thenReturn(getRetrieveMCQResponse());
 
     assertThrows(
         NotFoundException.class,
@@ -581,6 +598,8 @@ class TestServiceTest {
         TestStudent.builder().studentId(STUDENT_ID).testId(TEST_ID).points(null).build();
     when(testStudentRepository.findOneByTestIdAndStudentId(TEST_ID, STUDENT_ID))
         .thenReturn(Optional.of(testStudentData));
+    when(self.retrieveMCQResponse(TEST_ID, studentContext, List.of(MCQ_ID)))
+        .thenReturn(getRetrieveMCQResponse());
 
     testService.summitStudentTest(TEST_ID, studentContext);
 
@@ -613,6 +632,8 @@ class TestServiceTest {
         TestStudent.builder().studentId(STUDENT_ID).testId(TEST_ID).points(null).build();
     when(testStudentRepository.findOneByTestIdAndStudentId(TEST_ID, STUDENT_ID))
         .thenReturn(Optional.of(testStudentData));
+    when(self.retrieveMCQResponse(TEST_ID, studentContext, List.of(MCQ_ID)))
+        .thenReturn(getRetrieveMCQResponse());
 
     testService.summitStudentTest(TEST_ID, studentContext);
 
@@ -623,5 +644,24 @@ class TestServiceTest {
                     data.getTestId().equals(TEST_ID)
                         && data.getStudentId().equals(STUDENT_ID)
                         && data.getPoints().equals(0)));
+  }
+
+  @Test
+  void retrieveMCQResponseTest() {
+    when(questionClient.retrieveMCQsByIds(
+            argThat(request -> request.getIds().contains(MCQ_ID)), any(), any(), any()))
+        .thenReturn(getRetrieveMCQResponse());
+
+    RetrieveMCQResponse retrieveMCQResponse =
+        testService.retrieveMCQResponse(TEST_ID, tutorContext, List.of(MCQ_ID));
+
+    assertNotNull(retrieveMCQResponse);
+    assertEquals(1, retrieveMCQResponse.getTotalRecords());
+    assertEquals(PAGE_NUMBER, retrieveMCQResponse.getPageNumber());
+    assertEquals(PAGE_SIZE, retrieveMCQResponse.getPageSize());
+    assertEquals(1, retrieveMCQResponse.getTotalPages());
+
+      assertEquals(MCQ_ID, retrieveMCQResponse.getMcqs().getFirst().getId());
+
   }
 }

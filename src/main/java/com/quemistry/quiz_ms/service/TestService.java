@@ -3,6 +3,7 @@ package com.quemistry.quiz_ms.service;
 import static com.quemistry.quiz_ms.mapper.MCQMapper.INSTANCE;
 import static com.quemistry.quiz_ms.model.TestStatus.DRAFT;
 import static com.quemistry.quiz_ms.model.TestStatus.IN_PROGRESS;
+import static org.springframework.context.annotation.ScopedProxyMode.TARGET_CLASS;
 
 import com.quemistry.quiz_ms.client.QuestionClient;
 import com.quemistry.quiz_ms.client.model.MCQDto;
@@ -21,18 +22,24 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.javatuples.Quartet;
 import org.javatuples.Triplet;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Scope;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
+@CacheConfig(cacheNames = "test")
+@Scope(proxyMode = TARGET_CLASS)
 public class TestService {
   private final TestRepository testRepository;
   private final TestMcqRepository testMcqRepository;
   private final TestStudentRepository testStudentRepository;
   private final TestAttemptRepository testAttemptRepository;
   private final QuestionClient questionClient;
+  private final TestService self;
   private final MCQMapper mcqMapper = INSTANCE;
 
   public TestService(
@@ -40,12 +47,14 @@ public class TestService {
       TestMcqRepository testMcqRepository,
       TestStudentRepository testStudentRepository,
       TestAttemptRepository testAttemptRepository,
-      QuestionClient questionClient) {
+      QuestionClient questionClient,
+      TestService testService) {
     this.testRepository = testRepository;
     this.testMcqRepository = testMcqRepository;
     this.testStudentRepository = testStudentRepository;
     this.testAttemptRepository = testAttemptRepository;
     this.questionClient = questionClient;
+    this.self = testService;
   }
 
   public Long createTest(String tutorId, TestRequest testRequest) {
@@ -204,6 +213,7 @@ public class TestService {
     testRepository.save(test);
 
     // TODO: Update student points
+
   }
 
   public void updateTestStudentAttempts(
@@ -238,6 +248,16 @@ public class TestService {
     updateTestStudentPoints(testId, userContext);
   }
 
+  @Cacheable(value = "mcqs", key = "#testId")
+  public RetrieveMCQResponse retrieveMCQResponse(
+      Long testId, UserContext userContext, List<Long> mcqIds) {
+    return questionClient.retrieveMCQsByIds(
+        RetrieveMCQByIdsRequest.builder().ids(mcqIds).pageNumber(0).pageSize(60).build(),
+        userContext.getUserId(),
+        userContext.getUserEmail(),
+        userContext.getUserRoles());
+  }
+
   private Quartet<TestEntity, List<TestMcqs>, List<MCQResponse>, List<TestAttempt>> getTestData(
       Long testId, UserContext userContext) {
     Triplet<TestEntity, List<TestMcqs>, List<MCQResponse>> testMcqDetail =
@@ -254,15 +274,8 @@ public class TestService {
 
     List<TestMcqs> testMcqs = testMcqRepository.findByTestId(testId);
     RetrieveMCQResponse retrieveMCQResponse =
-        questionClient.retrieveMCQsByIds(
-            RetrieveMCQByIdsRequest.builder()
-                .ids(testMcqs.stream().map(TestMcqs::getMcqId).toList())
-                .pageNumber(0)
-                .pageSize(180)
-                .build(),
-            userContext.getUserId(),
-            userContext.getUserEmail(),
-            userContext.getUserRoles());
+        self.retrieveMCQResponse(
+            testId, userContext, testMcqs.stream().map(TestMcqs::getMcqId).toList());
     List<MCQResponse> mcqs =
         retrieveMCQResponse.getMcqs().stream().map(mcqMapper::toMCQResponse).toList();
 
@@ -278,19 +291,11 @@ public class TestService {
   }
 
   private void updateTestStudentPoints(Long testId, UserContext userContext) {
-
     List<TestAttempt> allAttempts =
         testAttemptRepository.findByTestIdAndStudentId(testId, userContext.getUserId());
     RetrieveMCQResponse retrieveMCQResponse =
-        questionClient.retrieveMCQsByIds(
-            RetrieveMCQByIdsRequest.builder()
-                .ids(allAttempts.stream().map(TestAttempt::getMcqId).toList())
-                .pageNumber(0)
-                .pageSize(180)
-                .build(),
-            userContext.getUserId(),
-            userContext.getUserEmail(),
-            userContext.getUserRoles());
+        self.retrieveMCQResponse(
+            testId, userContext, allAttempts.stream().map(TestAttempt::getMcqId).toList());
 
     int points =
         (int)
