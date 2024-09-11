@@ -9,10 +9,7 @@ import com.quemistry.quiz_ms.client.model.MCQDto;
 import com.quemistry.quiz_ms.client.model.RetrieveMCQByIdsRequest;
 import com.quemistry.quiz_ms.client.model.RetrieveMCQResponse;
 import com.quemistry.quiz_ms.controller.model.*;
-import com.quemistry.quiz_ms.exception.InProgressTestAlreadyExistsException;
-import com.quemistry.quiz_ms.exception.NotFoundException;
-import com.quemistry.quiz_ms.exception.TestCannotCompleteException;
-import com.quemistry.quiz_ms.exception.TestCannotStartException;
+import com.quemistry.quiz_ms.exception.*;
 import com.quemistry.quiz_ms.mapper.MCQMapper;
 import com.quemistry.quiz_ms.model.*;
 import com.quemistry.quiz_ms.repository.TestAttemptRepository;
@@ -205,16 +202,40 @@ public class TestService {
     }
     test.complete(userContext.getUserId());
     testRepository.save(test);
+
+    // TODO: Update student points
   }
 
   public void updateTestStudentAttempts(
       Long testId, Long mcqId, int attemptOption, UserContext userContext) {
+    TestEntity test = getTest(testId);
+    if (!test.getStatus().equals(IN_PROGRESS)) {
+      throw new TestCannotUpdateAttemptException();
+    }
+
+    TestStudent testStudent =
+        testStudentRepository
+            .findOneByTestIdAndStudentId(testId, userContext.getUserId())
+            .orElseThrow(() -> new NotFoundException("Student not found in this test"));
+    if (testStudent.getPoints() != null) {
+      throw new TestCannotUpdateAttemptException();
+    }
+
     TestAttempt attempt =
         testAttemptRepository
             .findOneByTestIdAndMcqIdAndStudentId(testId, mcqId, userContext.getUserId())
             .orElseThrow(() -> new NotFoundException("Attempt not found"));
     attempt.updateAttempt(attemptOption);
     testAttemptRepository.save(attempt);
+  }
+
+  public void summitStudentTest(Long testId, UserContext userContext) {
+    TestEntity test = getTest(testId);
+    if (!test.getStatus().equals(IN_PROGRESS)) {
+      throw new TestCannotSummitException();
+    }
+
+    updateTestStudentPoints(testId, userContext);
   }
 
   private Quartet<TestEntity, List<TestMcqs>, List<MCQResponse>, List<TestAttempt>> getTestData(
@@ -257,47 +278,44 @@ public class TestService {
   }
 
   private void updateTestStudentPoints(Long testId, UserContext userContext) {
-    if (!testAttemptRepository.existsByTestIdAndStudentIdAndOptionNoIsNull(
-        testId, userContext.getUserId())) {
-      List<TestAttempt> allAttempts =
-          testAttemptRepository.findByTestIdAndStudentId(testId, userContext.getUserId());
-      RetrieveMCQResponse retrieveMCQResponse =
-          questionClient.retrieveMCQsByIds(
-              RetrieveMCQByIdsRequest.builder()
-                  .ids(allAttempts.stream().map(TestAttempt::getMcqId).toList())
-                  .pageNumber(0)
-                  .pageSize(180)
-                  .build(),
-              userContext.getUserId(),
-              userContext.getUserEmail(),
-              userContext.getUserRoles());
 
-      int points =
-          (int)
-              allAttempts.stream()
-                  .filter(
-                      attemptItem ->
-                          retrieveMCQResponse.getMcqs().stream()
-                              .filter(mcq -> mcq.getId().equals(attemptItem.getMcqId()))
-                              .findFirst()
-                              .map(
-                                  mcqDto ->
-                                      mcqDto.getOptions().stream()
-                                          .filter(MCQDto.OptionDto::getIsAnswer)
-                                          .findFirst()
-                                          .filter(
-                                              optionDto ->
-                                                  (int) optionDto.getNo()
-                                                      == attemptItem.getOptionNo())
-                                          .isPresent())
-                              .orElse(false))
-                  .count();
-      TestStudent testStudent =
-          testStudentRepository
-              .findOneByTestIdAndStudentId(testId, userContext.getUserId())
-              .orElseThrow(() -> new NotFoundException("Student not found in this test"));
-      testStudent.updatePoints(points);
-      testStudentRepository.save(testStudent);
-    }
+    List<TestAttempt> allAttempts =
+        testAttemptRepository.findByTestIdAndStudentId(testId, userContext.getUserId());
+    RetrieveMCQResponse retrieveMCQResponse =
+        questionClient.retrieveMCQsByIds(
+            RetrieveMCQByIdsRequest.builder()
+                .ids(allAttempts.stream().map(TestAttempt::getMcqId).toList())
+                .pageNumber(0)
+                .pageSize(180)
+                .build(),
+            userContext.getUserId(),
+            userContext.getUserEmail(),
+            userContext.getUserRoles());
+
+    int points =
+        (int)
+            allAttempts.stream()
+                .filter(
+                    attemptItem ->
+                        retrieveMCQResponse.getMcqs().stream()
+                            .filter(mcq -> mcq.getId().equals(attemptItem.getMcqId()))
+                            .findFirst()
+                            .map(
+                                mcqDto ->
+                                    mcqDto.getOptions().stream()
+                                        .filter(MCQDto.OptionDto::getIsAnswer)
+                                        .findFirst()
+                                        .filter(
+                                            optionDto ->
+                                                optionDto.getNo().equals(attemptItem.getOptionNo()))
+                                        .isPresent())
+                            .orElse(false))
+                .count();
+    TestStudent testStudent =
+        testStudentRepository
+            .findOneByTestIdAndStudentId(testId, userContext.getUserId())
+            .orElseThrow(() -> new NotFoundException("Student not found in this test"));
+    testStudent.updatePoints(points);
+    testStudentRepository.save(testStudent);
   }
 }

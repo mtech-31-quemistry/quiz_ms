@@ -168,4 +168,16 @@ public class TestController {
         attemptRequest.getAttemptOption(),
         new UserContext(studentId, studentEmail, roles));
   }
+
+  @PutMapping("{testId}/students/me/summit")
+  @ResponseStatus(NO_CONTENT)
+  public void summitMyTest(
+      @PathVariable Long testId,
+      @RequestHeader("x-user-id") @NotBlank String studentId,
+      @RequestHeader("x-user-email") @Email String studentEmail,
+      @RequestHeader("x-user-roles") @NotBlank String roles) {
+    log.info("PUT /v1/tests/{}/students/me/summit", testId);
+
+    testService.summitStudentTest(testId, new UserContext(studentId, studentEmail, roles));
+  }
 }

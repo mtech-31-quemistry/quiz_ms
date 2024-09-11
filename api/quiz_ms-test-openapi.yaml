@@ -402,6 +402,35 @@ paths:
       responses:
         "204":
           description: "No Content"
+  /v1/tests/{testId}/students/me/summit:
+    put:
+      summary: "PUT v1/tests/{testId}/students/me/summit"
+      operationId: "summitMyTest"
+      parameters:
+        - name: "testId"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+        - name: "x-user-id"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+        - name: "x-user-email"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+        - name: "x-user-roles"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "204":
+          description: "No Content"
 components:
   schemas:
     McqIndex:

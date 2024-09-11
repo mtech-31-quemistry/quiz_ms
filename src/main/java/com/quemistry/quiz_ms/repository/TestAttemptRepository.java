@@ -14,6 +14,4 @@ public interface TestAttemptRepository
   List<TestAttempt> findByTestIdAndMcqId(Long testId, Long mcqId);
 
   Optional<TestAttempt> findOneByTestIdAndMcqIdAndStudentId(Long testId, Long mcqId, String userId);
-
-  boolean existsByTestIdAndStudentIdAndOptionNoIsNull(Long testId, String userId);
 }

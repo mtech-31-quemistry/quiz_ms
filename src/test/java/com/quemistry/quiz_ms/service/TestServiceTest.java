@@ -9,10 +9,7 @@ import static org.mockito.Mockito.*;
 import com.quemistry.quiz_ms.client.QuestionClient;
 import com.quemistry.quiz_ms.client.model.RetrieveMCQResponse;
 import com.quemistry.quiz_ms.controller.model.*;
-import com.quemistry.quiz_ms.exception.InProgressTestAlreadyExistsException;
-import com.quemistry.quiz_ms.exception.NotFoundException;
-import com.quemistry.quiz_ms.exception.TestCannotCompleteException;
-import com.quemistry.quiz_ms.exception.TestCannotStartException;
+import com.quemistry.quiz_ms.exception.*;
 import com.quemistry.quiz_ms.model.*;
 import com.quemistry.quiz_ms.repository.TestAttemptRepository;
 import com.quemistry.quiz_ms.repository.TestMcqRepository;
@@ -449,6 +446,12 @@ class TestServiceTest {
   void updateTestStudentAttemptsTest() {
     when(testAttemptRepository.findOneByTestIdAndMcqIdAndStudentId(TEST_ID, MCQ_ID, STUDENT_ID))
         .thenReturn(Optional.of(testAttempt));
+    TestEntity test = TestEntity.builder().id(TEST_ID).status(IN_PROGRESS).build();
+    when(testRepository.findById(TEST_ID)).thenReturn(Optional.of(test));
+    TestStudent testStudentData =
+        TestStudent.builder().studentId(STUDENT_ID).testId(TEST_ID).points(null).build();
+    when(testStudentRepository.findOneByTestIdAndStudentId(TEST_ID, STUDENT_ID))
+        .thenReturn(Optional.of(testStudentData));
 
     testService.updateTestStudentAttempts(TEST_ID, MCQ_ID, CURRENT_OPTION_NO, studentContext);
 
@@ -460,5 +463,165 @@ class TestServiceTest {
                         && testAttempt.getMcqId().equals(MCQ_ID)
                         && testAttempt.getStudentId().equals(STUDENT_ID)
                         && testAttempt.getOptionNo().equals(CURRENT_OPTION_NO)));
+  }
+
+  @Test
+  void updateTestStudentAttemptsTestFailedWhenTestIsDraft() {
+    when(testAttemptRepository.findOneByTestIdAndMcqIdAndStudentId(TEST_ID, MCQ_ID, STUDENT_ID))
+        .thenReturn(Optional.of(testAttempt));
+    TestEntity test = TestEntity.builder().id(TEST_ID).status(IN_PROGRESS).build();
+    when(testRepository.findById(TEST_ID)).thenReturn(Optional.of(test));
+
+    when(testStudentRepository.findOneByTestIdAndStudentId(TEST_ID, STUDENT_ID))
+        .thenReturn(Optional.of(testStudent));
+
+    assertThrows(
+        TestCannotUpdateAttemptException.class,
+        () ->
+            testService.updateTestStudentAttempts(
+                TEST_ID, MCQ_ID, CURRENT_OPTION_NO, studentContext));
+  }
+
+  @Test
+  void updateTestStudentAttemptsTestFailedWhenTestAlreadyGotPoints() {
+    when(testAttemptRepository.findOneByTestIdAndMcqIdAndStudentId(TEST_ID, MCQ_ID, STUDENT_ID))
+        .thenReturn(Optional.of(testAttempt));
+    when(testRepository.findById(TEST_ID)).thenReturn(Optional.of(testEntity));
+    TestStudent testStudentData =
+        TestStudent.builder().studentId(STUDENT_ID).testId(TEST_ID).points(null).build();
+    when(testStudentRepository.findOneByTestIdAndStudentId(TEST_ID, STUDENT_ID))
+        .thenReturn(Optional.of(testStudentData));
+
+    assertThrows(
+        TestCannotUpdateAttemptException.class,
+        () ->
+            testService.updateTestStudentAttempts(
+                TEST_ID, MCQ_ID, CURRENT_OPTION_NO, studentContext));
+  }
+
+  @Test
+  void summitStudentTestTest() {
+    TestEntity test = TestEntity.builder().id(TEST_ID).status(IN_PROGRESS).build();
+    when(testRepository.findById(TEST_ID)).thenReturn(Optional.of(test));
+    when(testAttemptRepository.findByTestIdAndStudentId(TEST_ID, STUDENT_ID))
+        .thenReturn(List.of(testAttempt));
+    when(questionClient.retrieveMCQsByIds(
+            argThat(request -> request.getIds().contains(MCQ_ID)), any(), any(), any()))
+        .thenReturn(getRetrieveMCQResponse());
+    TestStudent testStudentData =
+        TestStudent.builder().studentId(STUDENT_ID).testId(TEST_ID).points(null).build();
+    when(testStudentRepository.findOneByTestIdAndStudentId(TEST_ID, STUDENT_ID))
+        .thenReturn(Optional.of(testStudentData));
+
+    testService.summitStudentTest(TEST_ID, studentContext);
+
+    verify(testStudentRepository, times(1))
+        .save(
+            argThat(
+                data ->
+                    data.getTestId().equals(TEST_ID)
+                        && data.getStudentId().equals(STUDENT_ID)
+                        && data.getPoints().equals(1)));
+  }
+
+  @Test
+  void summitStudentTestTestFailedWhenTestIsDraft() {
+    when(testRepository.findById(TEST_ID)).thenReturn(Optional.of(testEntity));
+
+    when(testAttemptRepository.findByTestIdAndStudentId(TEST_ID, STUDENT_ID))
+        .thenReturn(List.of(testAttempt));
+    when(questionClient.retrieveMCQsByIds(
+            argThat(request -> request.getIds().contains(MCQ_ID)), any(), any(), any()))
+        .thenReturn(getRetrieveMCQResponse());
+
+    when(testStudentRepository.findOneByTestIdAndStudentId(TEST_ID, STUDENT_ID))
+        .thenReturn(Optional.of(testStudent));
+
+    assertThrows(
+        TestCannotSummitException.class,
+        () -> testService.summitStudentTest(TEST_ID, studentContext));
+  }
+
+  @Test
+  void summitStudentTestTestFailedWhenStudentNotFoundInTest() {
+    TestEntity test = TestEntity.builder().id(TEST_ID).status(IN_PROGRESS).build();
+    when(testRepository.findById(TEST_ID)).thenReturn(Optional.of(test));
+
+    when(testAttemptRepository.findByTestIdAndStudentId(TEST_ID, STUDENT_ID))
+        .thenReturn(List.of(testAttempt));
+    when(questionClient.retrieveMCQsByIds(
+            argThat(request -> request.getIds().contains(MCQ_ID)), any(), any(), any()))
+        .thenReturn(getRetrieveMCQResponse());
+    when(testStudentRepository.findOneByTestIdAndStudentId(TEST_ID, STUDENT_ID))
+        .thenReturn(Optional.empty());
+
+    assertThrows(
+        NotFoundException.class,
+        () -> testService.summitStudentTest(TEST_ID, studentContext),
+        "Student not found in test");
+  }
+
+  @Test
+  void summitStudentTestTestGet0PointWhenNoCorrectAnswer() {
+    TestEntity test = TestEntity.builder().id(TEST_ID).status(IN_PROGRESS).build();
+    when(testRepository.findById(TEST_ID)).thenReturn(Optional.of(test));
+    TestAttempt inCorrectTestAttempt =
+        TestAttempt.builder()
+            .studentId(STUDENT_ID)
+            .testId(TEST_ID)
+            .mcqId(MCQ_ID)
+            .optionNo(2)
+            .build();
+    when(testAttemptRepository.findByTestIdAndStudentId(TEST_ID, STUDENT_ID))
+        .thenReturn(List.of(inCorrectTestAttempt));
+    when(questionClient.retrieveMCQsByIds(
+            argThat(request -> request.getIds().contains(MCQ_ID)), any(), any(), any()))
+        .thenReturn(getRetrieveMCQResponse());
+    TestStudent testStudentData =
+        TestStudent.builder().studentId(STUDENT_ID).testId(TEST_ID).points(null).build();
+    when(testStudentRepository.findOneByTestIdAndStudentId(TEST_ID, STUDENT_ID))
+        .thenReturn(Optional.of(testStudentData));
+
+    testService.summitStudentTest(TEST_ID, studentContext);
+
+    verify(testStudentRepository, times(1))
+        .save(
+            argThat(
+                data ->
+                    data.getTestId().equals(TEST_ID)
+                        && data.getStudentId().equals(STUDENT_ID)
+                        && data.getPoints().equals(0)));
+  }
+
+  @Test
+  void summitStudentTestTestGet0PointWhenNoAnswer() {
+    TestEntity test = TestEntity.builder().id(TEST_ID).status(IN_PROGRESS).build();
+    when(testRepository.findById(TEST_ID)).thenReturn(Optional.of(test));
+    TestAttempt noAnswerTestAttempt =
+        TestAttempt.builder()
+            .studentId(STUDENT_ID)
+            .testId(TEST_ID)
+            .mcqId(MCQ_ID)
+            .optionNo(null)
+            .build();
+    when(testAttemptRepository.findByTestIdAndStudentId(TEST_ID, STUDENT_ID))
+        .thenReturn(List.of(noAnswerTestAttempt));
+    when(questionClient.retrieveMCQsByIds(
+            argThat(request -> request.getIds().contains(MCQ_ID)), any(), any(), any()))
+        .thenReturn(getRetrieveMCQResponse());
+    TestStudent testStudentData =
+        TestStudent.builder().studentId(STUDENT_ID).testId(TEST_ID).points(null).build();
+    when(testStudentRepository.findOneByTestIdAndStudentId(TEST_ID, STUDENT_ID))
+        .thenReturn(Optional.of(testStudentData));
+
+    testService.summitStudentTest(TEST_ID, studentContext);
+
+    verify(testStudentRepository, times(1))
+        .save(
+            argThat(
+                data ->
+                    data.getTestId().equals(TEST_ID)
+                        && data.getStudentId().equals(STUDENT_ID)
+                        && data.getPoints().equals(0)));
   }
 }
