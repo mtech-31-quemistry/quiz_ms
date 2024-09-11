@@ -212,8 +212,11 @@ public class TestService {
     test.complete(userContext.getUserId());
     testRepository.save(test);
 
-    // TODO: Update student points
-
+    testStudentRepository.findByTestId(testId).parallelStream()
+        .filter(testStudent -> testStudent.getPoints() == null)
+        .forEach(
+            testStudent ->
+                updateTestStudentPoints(testId, testStudent.getStudentId(), userContext));
   }
 
   public void updateTestStudentAttempts(
@@ -249,8 +252,7 @@ public class TestService {
   }
 
   @Cacheable(value = "mcqs", key = "#testId")
-  public RetrieveMCQResponse retrieveMCQResponse(
-      Long testId, UserContext userContext, List<Long> mcqIds) {
+  public RetrieveMCQResponse getTestMcqs(Long testId, UserContext userContext, List<Long> mcqIds) {
     return questionClient.retrieveMCQsByIds(
         RetrieveMCQByIdsRequest.builder().ids(mcqIds).pageNumber(0).pageSize(60).build(),
         userContext.getUserId(),
@@ -274,8 +276,7 @@ public class TestService {
 
     List<TestMcqs> testMcqs = testMcqRepository.findByTestId(testId);
     RetrieveMCQResponse retrieveMCQResponse =
-        self.retrieveMCQResponse(
-            testId, userContext, testMcqs.stream().map(TestMcqs::getMcqId).toList());
+        self.getTestMcqs(testId, userContext, testMcqs.stream().map(TestMcqs::getMcqId).toList());
     List<MCQResponse> mcqs =
         retrieveMCQResponse.getMcqs().stream().map(mcqMapper::toMCQResponse).toList();
 
@@ -291,10 +292,14 @@ public class TestService {
   }
 
   private void updateTestStudentPoints(Long testId, UserContext userContext) {
+    updateTestStudentPoints(testId, userContext.getUserId(), userContext);
+  }
+
+  private void updateTestStudentPoints(Long testId, String studentId, UserContext userContext) {
     List<TestAttempt> allAttempts =
-        testAttemptRepository.findByTestIdAndStudentId(testId, userContext.getUserId());
+        testAttemptRepository.findByTestIdAndStudentId(testId, studentId);
     RetrieveMCQResponse retrieveMCQResponse =
-        self.retrieveMCQResponse(
+        self.getTestMcqs(
             testId, userContext, allAttempts.stream().map(TestAttempt::getMcqId).toList());
 
     int points =
@@ -318,7 +323,7 @@ public class TestService {
                 .count();
     TestStudent testStudent =
         testStudentRepository
-            .findOneByTestIdAndStudentId(testId, userContext.getUserId())
+            .findOneByTestIdAndStudentId(testId, studentId)
             .orElseThrow(() -> new NotFoundException("Student not found in this test"));
     testStudent.updatePoints(points);
     testStudentRepository.save(testStudent);
