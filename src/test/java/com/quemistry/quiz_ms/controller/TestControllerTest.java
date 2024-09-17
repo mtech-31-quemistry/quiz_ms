@@ -162,6 +162,22 @@ class TestControllerTest {
   }
 
   @Test
+  void getMyTestMcqDetail() throws Exception {
+    TestMcqDetailResponse response = new TestMcqDetailResponse();
+    when(testService.getMyTestMcqDetail(TEST_ID, tutorContext)).thenReturn(response);
+
+    mockMvc
+        .perform(
+            get("/v1/tests/" + TEST_ID + "/mcqs/me")
+                .header("x-user-id", tutorContext.getUserId())
+                .header("x-user-email", tutorContext.getUserEmail())
+                .header("x-user-roles", tutorContext.getUserRoles()))
+        .andExpect(status().isOk());
+
+    verify(testService).getMyTestMcqDetail(TEST_ID, tutorContext);
+  }
+
+  @Test
   void getTestStudentDetail() throws Exception {
     TestStudentDetailResponse response = new TestStudentDetailResponse();
     when(testService.getTestStudentDetail(TEST_ID, tutorContext)).thenReturn(response);
@@ -208,7 +224,7 @@ class TestControllerTest {
                 .header("x-user-roles", studentContext.getUserRoles()))
         .andExpect(status().isOk());
 
-    verify(testService).getTestStudentAttempts(TEST_ID, STUDENT_ID, studentContext);
+    verify(testService).getMyTestStudentAttempts(TEST_ID, studentContext);
   }
 
   @Test

@@ -66,7 +66,9 @@ class TestServiceTest {
             argThat(
                 testEntity ->
                     testEntity.getTutorId().equals(TUTOR_ID)
-                        && testEntity.getStatus().equals(DRAFT)));
+                        && testEntity.getStatus().equals(DRAFT)
+                        && testEntity.getTitle().equals(TEST_TITLE)
+                        && testEntity.getCreatedBy().equals(TUTOR_ID)));
     verify(testMcqRepository, times(1))
         .save(
             argThat(
@@ -241,6 +243,60 @@ class TestServiceTest {
   }
 
   @Test
+  void getMyTestMcqDetailReturnsFullOptionWhenTestIsCompleted() {
+    TestEntity test = TestEntity.builder().id(TEST_ID).status(COMPLETED).build();
+    when(testRepository.findById(TEST_ID)).thenReturn(Optional.of(test));
+    when(testMcqRepository.findByTestId(TEST_ID)).thenReturn(List.of(testMcqs));
+    when(questionClient.retrieveMCQsByIds(
+            argThat(request -> request.getIds().contains(MCQ_ID)), any(), any(), any()))
+        .thenReturn(getRetrieveMCQResponse());
+    when(testAttemptRepository.findByTestId(TEST_ID)).thenReturn(List.of(testAttempt));
+    when(self.getTestMcqs(TEST_ID, studentContext, List.of(MCQ_ID)))
+        .thenReturn(getRetrieveMCQResponse());
+
+    TestMcqDetailResponse testMcqDetailResponse =
+        testService.getMyTestMcqDetail(TEST_ID, studentContext);
+
+    TestMcqDetailResponse.TestMcqResponse testMcqResponse =
+        testMcqDetailResponse.getMcqs().getFirst();
+    assertEquals(4, testMcqResponse.getOptions().size());
+    testMcqResponse
+        .getOptions()
+        .forEach(
+            option -> {
+              assertNotNull(option.getExplanation());
+              assertNotNull(option.getIsAnswer());
+            });
+  }
+
+  @Test
+  void getMyTestMcqDetailReturnsPartialOptionWhenTestIsInProgress() {
+    TestEntity test = TestEntity.builder().id(TEST_ID).status(IN_PROGRESS).build();
+    when(testRepository.findById(TEST_ID)).thenReturn(Optional.of(test));
+    when(testMcqRepository.findByTestId(TEST_ID)).thenReturn(List.of(testMcqs));
+    when(questionClient.retrieveMCQsByIds(
+            argThat(request -> request.getIds().contains(MCQ_ID)), any(), any(), any()))
+        .thenReturn(getRetrieveMCQResponse());
+    when(testAttemptRepository.findByTestId(TEST_ID)).thenReturn(List.of(testAttempt));
+    when(self.getTestMcqs(TEST_ID, studentContext, List.of(MCQ_ID)))
+        .thenReturn(getRetrieveMCQResponse());
+
+    TestMcqDetailResponse testMcqDetailResponse =
+        testService.getMyTestMcqDetail(TEST_ID, studentContext);
+
+    TestMcqDetailResponse.TestMcqResponse testMcqResponse =
+        testMcqDetailResponse.getMcqs().getFirst();
+    assertEquals(4, testMcqResponse.getOptions().size());
+    testMcqResponse
+        .getOptions()
+        .forEach(
+            option -> {
+              assertNull(option.getExplanation());
+              assertNull(option.getIsAnswer());
+            });
+  }
+
+  @Test
   void getTestMcqDetailTestTestNotFound() {
     when(testRepository.findById(TEST_ID)).thenReturn(Optional.empty());
 
@@ -314,6 +370,66 @@ class TestServiceTest {
     assertEquals(MCQ_ID, studentMcqResponse.getId());
     assertEquals(MCQ_INDEX, studentMcqResponse.getIndex());
     assertEquals(CURRENT_OPTION_NO, studentMcqResponse.getAttemptOption());
+  }
+
+  @Test
+  void getMyTestStudentAttemptsReturnsFullOptionWhenTestIsCompleted() {
+    TestEntity test = TestEntity.builder().id(TEST_ID).status(COMPLETED).build();
+    when(testRepository.findById(TEST_ID)).thenReturn(Optional.of(test));
+    when(testMcqRepository.findByTestId(TEST_ID)).thenReturn(List.of(testMcqs));
+    when(questionClient.retrieveMCQsByIds(
+            argThat(request -> request.getIds().contains(MCQ_ID)), any(), any(), any()))
+        .thenReturn(getRetrieveMCQResponse());
+    when(testAttemptRepository.findByTestIdAndStudentId(TEST_ID, STUDENT_ID))
+        .thenReturn(List.of(testAttempt));
+    when(testStudentRepository.findOneByTestIdAndStudentId(TEST_ID, STUDENT_ID))
+        .thenReturn(Optional.of(testStudent));
+    when(self.getTestMcqs(TEST_ID, studentContext, List.of(MCQ_ID)))
+        .thenReturn(getRetrieveMCQResponse());
+
+    TestStudentAttemptResponse testStudentAttemptResponse =
+        testService.getMyTestStudentAttempts(TEST_ID, studentContext);
+
+    TestStudentAttemptResponse.StudentMcqResponse studentMcqResponse =
+        testStudentAttemptResponse.getMcqs().getFirst();
+    assertEquals(4, studentMcqResponse.getOptions().size());
+    studentMcqResponse
+        .getOptions()
+        .forEach(
+            option -> {
+              assertNotNull(option.getExplanation());
+              assertNotNull(option.getIsAnswer());
+            });
+  }
+
+  @Test
+  void getMyTestStudentAttemptsReturnsPartialOptionWhenTestIsInProgress() {
+    TestEntity test = TestEntity.builder().id(TEST_ID).status(IN_PROGRESS).build();
+    when(testRepository.findById(TEST_ID)).thenReturn(Optional.of(test));
+    when(testMcqRepository.findByTestId(TEST_ID)).thenReturn(List.of(testMcqs));
+    when(questionClient.retrieveMCQsByIds(
+            argThat(request -> request.getIds().contains(MCQ_ID)), any(), any(), any()))
+        .thenReturn(getRetrieveMCQResponse());
+    when(testAttemptRepository.findByTestIdAndStudentId(TEST_ID, STUDENT_ID))
+        .thenReturn(List.of(testAttempt));
+    when(testStudentRepository.findOneByTestIdAndStudentId(TEST_ID, STUDENT_ID))
+        .thenReturn(Optional.of(testStudent));
+    when(self.getTestMcqs(TEST_ID, studentContext, List.of(MCQ_ID)))
+        .thenReturn(getRetrieveMCQResponse());
+
+    TestStudentAttemptResponse testStudentAttemptResponse =
+        testService.getMyTestStudentAttempts(TEST_ID, studentContext);
+
+    TestStudentAttemptResponse.StudentMcqResponse studentMcqResponse =
+        testStudentAttemptResponse.getMcqs().getFirst();
+    assertEquals(4, studentMcqResponse.getOptions().size());
+    studentMcqResponse
+        .getOptions()
+        .forEach(
+            option -> {
+              assertNull(option.getExplanation());
+              assertNull(option.getIsAnswer());
+            });
   }
 
   @Test

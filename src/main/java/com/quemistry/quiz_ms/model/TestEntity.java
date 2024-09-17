@@ -49,6 +49,7 @@ public class TestEntity {
         .tutorId(tutorId)
         .title(title)
         .createdOn(now)
+        .createdBy(tutorId)
         .updatedOn(now)
         .build();
   }

@@ -1,8 +1,7 @@
 package com.quemistry.quiz_ms.service;
 
 import static com.quemistry.quiz_ms.mapper.MCQMapper.INSTANCE;
-import static com.quemistry.quiz_ms.model.TestStatus.DRAFT;
-import static com.quemistry.quiz_ms.model.TestStatus.IN_PROGRESS;
+import static com.quemistry.quiz_ms.model.TestStatus.*;
 import static org.springframework.context.annotation.ScopedProxyMode.TARGET_CLASS;
 
 import com.quemistry.quiz_ms.client.QuestionClient;
@@ -124,16 +123,24 @@ public class TestService {
   }
 
   public TestMcqDetailResponse getTestMcqDetail(Long testId, UserContext userContext) {
-    Quartet<TestEntity, List<TestMcqs>, List<MCQResponse>, List<TestAttempt>> testData =
-        getTestData(testId, userContext);
+    var testData = getTestData(testId, userContext);
     return TestMcqDetailResponse.from(
         testData.getValue0(), testData.getValue1(), testData.getValue2(), testData.getValue3());
   }
 
-  public TestStudentDetailResponse getTestStudentDetail(Long testId, UserContext userContext) {
-    Quartet<TestEntity, List<TestMcqs>, List<MCQResponse>, List<TestAttempt>> testData =
-        getTestData(testId, userContext);
+  public TestMcqDetailResponse getMyTestMcqDetail(Long testId, UserContext userContext) {
+    TestMcqDetailResponse testMcqDetail = getTestMcqDetail(testId, userContext);
+    if (!testMcqDetail.getStatus().equals(COMPLETED)) {
+      testMcqDetail
+          .getMcqs()
+          .forEach(mcq -> mcq.getOptions().forEach(MCQDto.OptionDto::maskAnswer));
+    }
 
+    return testMcqDetail;
+  }
+
+  public TestStudentDetailResponse getTestStudentDetail(Long testId, UserContext userContext) {
+    var testData = getTestData(testId, userContext);
     List<TestStudent> testStudents = testStudentRepository.findByTestId(testId);
 
     return TestStudentDetailResponse.from(
@@ -146,12 +153,10 @@ public class TestService {
 
   public TestStudentAttemptResponse getTestStudentAttempts(
       Long testId, String studentId, UserContext userContext) {
-    Triplet<TestEntity, List<TestMcqs>, List<MCQResponse>> testMcqDetail =
-        getMcqDetail(testId, userContext);
+    var testMcqDetail = getMcqDetail(testId, userContext);
+    var attempts = testAttemptRepository.findByTestIdAndStudentId(testId, studentId);
+    var student = testStudentRepository.findOneByTestIdAndStudentId(testId, studentId);
 
-    List<TestAttempt> attempts = testAttemptRepository.findByTestIdAndStudentId(testId, studentId);
-    Optional<TestStudent> student =
-        testStudentRepository.findOneByTestIdAndStudentId(testId, studentId);
     if (student.isEmpty()) {
       throw new NotFoundException("Student not found");
     }
@@ -163,10 +168,22 @@ public class TestService {
         student.get());
   }
 
+  public TestStudentAttemptResponse getMyTestStudentAttempts(Long testId, UserContext userContext) {
+    TestStudentAttemptResponse testStudentAttemptResponse =
+        getTestStudentAttempts(testId, userContext.getUserId(), userContext);
+    if (!testStudentAttemptResponse.getStatus().equals(COMPLETED)) {
+      testStudentAttemptResponse
+          .getMcqs()
+          .forEach(mcq -> mcq.getOptions().forEach(MCQDto.OptionDto::maskAnswer));
+    }
+
+    return testStudentAttemptResponse;
+  }
+
   public TestMcqAttemptResponse getTestMcqAttempts(
       Long testId, Long mcqId, UserContext userContext) {
     TestEntity test = getTest(testId);
-    Optional<TestMcqs> testMcq = testMcqRepository.findOneByTestIdAndMcqId(testId, mcqId);
+    var testMcq = testMcqRepository.findOneByTestIdAndMcqId(testId, mcqId);
     if (testMcq.isEmpty()) {
       throw new NotFoundException("MCQ not found");
     }
@@ -262,8 +279,7 @@ public class TestService {
 
   private Quartet<TestEntity, List<TestMcqs>, List<MCQResponse>, List<TestAttempt>> getTestData(
       Long testId, UserContext userContext) {
-    Triplet<TestEntity, List<TestMcqs>, List<MCQResponse>> testMcqDetail =
-        getMcqDetail(testId, userContext);
+    var testMcqDetail = getMcqDetail(testId, userContext);
 
     List<TestAttempt> attempts = testAttemptRepository.findByTestId(testId);
     return Quartet.with(
@@ -296,8 +312,7 @@ public class TestService {
   }
 
   private void updateTestStudentPoints(Long testId, String studentId, UserContext userContext) {
-    List<TestAttempt> allAttempts =
-        testAttemptRepository.findByTestIdAndStudentId(testId, studentId);
+    var allAttempts = testAttemptRepository.findByTestIdAndStudentId(testId, studentId);
     RetrieveMCQResponse retrieveMCQResponse =
         self.getTestMcqs(
             testId, userContext, allAttempts.stream().map(TestAttempt::getMcqId).toList());

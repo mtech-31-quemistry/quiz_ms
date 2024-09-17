@@ -78,6 +78,17 @@ public class TestController {
     return testService.getTestMcqDetail(testId, new UserContext(tutorId, tutorEmail, roles));
   }
 
+  @GetMapping("{testId}/mcqs/me")
+  public TestMcqDetailResponse getMyTestMcqDetail(
+      @RequestHeader("x-user-id") @NotBlank String tutorId,
+      @RequestHeader("x-user-email") @Email String tutorEmail,
+      @RequestHeader("x-user-roles") @NotBlank String roles,
+      @PathVariable Long testId) {
+    log.info("GET /v1/tests/{}/mcq/me", testId);
+
+    return testService.getMyTestMcqDetail(testId, new UserContext(tutorId, tutorEmail, roles));
+  }
+
   @GetMapping("{testId}/students")
   public TestStudentDetailResponse getTestStudentDetail(
       @RequestHeader("x-user-id") @NotBlank String tutorId,
@@ -110,8 +121,8 @@ public class TestController {
       @PathVariable Long testId) {
     log.info("GET /v1/tests/{}/students/me/attempts", testId);
 
-    return testService.getTestStudentAttempts(
-        testId, studentId, new UserContext(studentId, studentEmail, roles));
+    return testService.getMyTestStudentAttempts(
+        testId, new UserContext(studentId, studentEmail, roles));
   }
 
   @GetMapping("{testId}/mcq/{mcqId}/attempts")

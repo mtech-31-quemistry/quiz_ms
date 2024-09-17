@@ -35,5 +35,10 @@ public class MCQDto {
     private String text;
     private String explanation;
     private Boolean isAnswer;
+
+    public void maskAnswer() {
+      this.setExplanation(null);
+      this.setIsAnswer(null);
+    }
   }
 }

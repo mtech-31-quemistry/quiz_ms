@@ -49,10 +49,10 @@ services:
     image: swaggerapi/swagger-ui
     container_name: swagger-ui
     environment:
-      SWAGGER_JSON: /swagger/quiz_ms-quiz-openapi.yaml
-      URLS: '[{"url":"./quiz_ms-quiz-openapi.yaml","name":"Quiz API"},
-        {"url":"./quiz_ms-test-openapi.yaml","name":"Test API"},
-        {"url":"./quiz_ms-health-openapi.yaml","name":"Health API"}]'
+      SWAGGER_JSON: /swagger/quiz_ms-health-openapi.yaml
+      URLS: '[{"url":"./quiz_ms-health-openapi.yaml","name":"Health API"},
+        {"url":"./quiz_ms-quiz-openapi.yaml","name":"Quiz API"},
+        {"url":"./quiz_ms-test-openapi.yaml","name":"Test API"}]'
       QUIZ_MS_HOST: localhost
     volumes:
       - ./api:/swagger
