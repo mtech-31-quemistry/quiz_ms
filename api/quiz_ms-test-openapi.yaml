@@ -160,6 +160,39 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/TestMcqDetailResponse"
+  /v1/tests/{testId}/mcqs/me:
+    get:
+      summary: "GET v1/tests/{testId}/mcqs/me"
+      operationId: "getMyTestMcqDetail"
+      parameters:
+        - name: "testId"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+        - name: "x-user-id"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+        - name: "x-user-email"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+        - name: "x-user-roles"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TestMcqDetailResponse"
   /v1/tests/{testId}/students:
     get:
       summary: "GET v1/tests/{testId}/students"
