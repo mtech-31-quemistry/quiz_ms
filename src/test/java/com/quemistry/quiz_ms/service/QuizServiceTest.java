@@ -4,6 +4,7 @@ import static com.quemistry.quiz_ms.model.QuizStatus.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
 
 import com.quemistry.quiz_ms.client.QuestionClient;
 import com.quemistry.quiz_ms.client.model.*;
@@ -381,6 +382,26 @@ class QuizServiceTest {
     assertEquals(1L, response.getTotalRecords());
     assertEquals(COMPLETED, response.getQuizzes().getFirst().getStatus());
     assertEquals(1, response.getQuizzes().getFirst().getPoints());
+  }
+
+  @Test
+  void getCompletedQuizWithoutData() {
+    Page<Quiz> quizzes = new PageImpl<>(List.of());
+    RetrieveMCQResponse retrieveMCQResponse =
+        RetrieveMCQResponse.builder().mcqs(List.of()).totalPages(1).totalRecords(1L).build();
+
+    when(quizRepository.findPageByStudentIdAndStatus("student1", COMPLETED, PageRequest.of(0, 1)))
+        .thenReturn(quizzes);
+
+    QuizListResponse response = quizService.getCompletedQuiz(testUserContext, 0, 1);
+
+    assertEquals(0, response.getQuizzes().size());
+    assertEquals(0, response.getPageNumber());
+    assertEquals(1, response.getPageSize());
+    assertEquals(1, response.getTotalPages());
+    assertEquals(0L, response.getTotalRecords());
+
+    verify(questionClient, never()).retrieveMCQsByIds(any(), any(), any(), any());
   }
 
   @Test

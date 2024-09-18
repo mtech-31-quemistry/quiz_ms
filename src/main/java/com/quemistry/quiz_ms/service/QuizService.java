@@ -115,34 +115,9 @@ public class QuizService {
         quizRepository.findPageByStudentIdAndStatus(
             userContext.getUserId(), COMPLETED, PageRequest.of(pageNumber, pageSize));
 
-    List<MCQDto> mcqs =
-        questionClient
-            .retrieveMCQsByIds(
-                RetrieveMCQByIdsRequest.builder()
-                    .ids(
-                        quizzes.stream()
-                            .flatMap(quiz -> quiz.getAttempts().stream().map(QuizAttempt::getMcqId))
-                            .toList())
-                    .pageNumber(0)
-                    .pageSize(quizzes.getNumberOfElements() * 60)
-                    .build(),
-                userContext.getUserId(),
-                userContext.getUserEmail(),
-                userContext.getUserRoles())
-            .getMcqs();
+    int quizNumber = quizzes.getNumberOfElements();
     List<SimpleQuizResponse> quizResponses =
-        quizzes.stream()
-            .map(
-                quiz -> {
-                  List<MCQResponse> quizMcqs = getMcqResponses(mcqs, quiz.getAttempts());
-                  return SimpleQuizResponse.builder()
-                      .id(quiz.getId())
-                      .status(quiz.getStatus())
-                      .mcqs(quizMcqs)
-                      .points(calculatePoints(quizMcqs))
-                      .build();
-                })
-            .collect(Collectors.toList());
+        quizNumber > 0 ? getQuizDetail(userContext, quizzes) : List.of();
 
     return QuizListResponse.builder()
         .pageNumber(pageNumber)
@@ -190,6 +165,36 @@ public class QuizService {
 
     quizEntity.abandon();
     quizRepository.save(quizEntity);
+  }
+
+  private List<SimpleQuizResponse> getQuizDetail(UserContext userContext, Page<Quiz> quizzes) {
+    List<MCQDto> mcqs =
+        questionClient
+            .retrieveMCQsByIds(
+                RetrieveMCQByIdsRequest.builder()
+                    .ids(
+                        quizzes.stream()
+                            .flatMap(quiz -> quiz.getAttempts().stream().map(QuizAttempt::getMcqId))
+                            .toList())
+                    .pageNumber(0)
+                    .pageSize(quizzes.getNumberOfElements() * 60)
+                    .build(),
+                userContext.getUserId(),
+                userContext.getUserEmail(),
+                userContext.getUserRoles())
+            .getMcqs();
+    return quizzes.stream()
+        .map(
+            quiz -> {
+              List<MCQResponse> quizMcqs = getMcqResponses(mcqs, quiz.getAttempts());
+              return SimpleQuizResponse.builder()
+                  .id(quiz.getId())
+                  .status(quiz.getStatus())
+                  .mcqs(quizMcqs)
+                  .points(calculatePoints(quizMcqs))
+                  .build();
+            })
+        .collect(Collectors.toList());
   }
 
   private QuizResponse convertQuiz(
