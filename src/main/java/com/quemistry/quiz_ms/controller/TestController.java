@@ -40,10 +40,23 @@ public class TestController {
     response.setHeader("Location", "/v1/tests/" + testId);
   }
 
+  @PutMapping("{testId}")
+  @ResponseStatus(NO_CONTENT)
+  public void updateTest(
+      @PathVariable Long testId,
+      @RequestHeader("x-user-id") @NotBlank String tutorId,
+      @RequestHeader("x-user-email") @Email String tutorEmail,
+      @RequestHeader("x-user-roles") @NotBlank String roles,
+      @RequestBody @Validated TestRequest testRequest) {
+    log.info("PUT /v1/tests/{}", testId);
+
+    testService.updateTest(testId, testRequest, new UserContext(tutorId, tutorEmail, roles));
+  }
+
   @GetMapping("tutor")
   public Page<TestEntity> getTestsForTutor(
       @RequestHeader("x-user-id") @NotBlank String tutorId,
-      @RequestHeader("x-user-email") @Email String studentEmail,
+      @RequestHeader("x-user-email") @Email String tutorEmail,
       @RequestHeader("x-user-roles") @NotBlank String roles,
       @RequestParam(required = false) String search,
       @RequestParam @PositiveOrZero Integer pageNumber,
@@ -51,7 +64,22 @@ public class TestController {
     log.info("GET /v1/tests/tutor");
 
     return testService.getTestsForTutor(
-        tutorId, search, pageNumber, pageSize, new UserContext(tutorId, studentEmail, roles));
+        tutorId, search, pageNumber, pageSize, new UserContext(tutorId, tutorEmail, roles));
+  }
+
+  @GetMapping("student/{studentId}")
+  public Page<TestEntity> getTestsByStudent(
+      @RequestHeader("x-user-id") @NotBlank String tutorId,
+      @RequestHeader("x-user-email") @Email String tutorEmail,
+      @RequestHeader("x-user-roles") @NotBlank String roles,
+      @PathVariable String studentId,
+      @RequestParam(required = false) String search,
+      @RequestParam @PositiveOrZero Integer pageNumber,
+      @RequestParam @PositiveOrZero Integer pageSize) {
+    log.info("GET /v1/tests/student/{}", studentId);
+
+    return testService.getTestsForStudent(
+        studentId, search, pageNumber, pageSize, new UserContext(tutorId, tutorEmail, roles));
   }
 
   @GetMapping("student")

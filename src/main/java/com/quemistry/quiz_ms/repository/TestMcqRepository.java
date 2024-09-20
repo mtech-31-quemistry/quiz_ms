@@ -9,4 +9,6 @@ public interface TestMcqRepository extends JpaRepository<TestMcqs, TestMcqs.Test
   List<TestMcqs> findByTestId(Long testId);
 
   Optional<TestMcqs> findOneByTestIdAndMcqId(Long testId, Long mcqId);
+
+  void deleteByTestId(Long testId);
 }

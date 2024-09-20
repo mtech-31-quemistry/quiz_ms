@@ -94,8 +94,51 @@ class TestServiceTest {
   }
 
   @Test
-  void testCreateTestInProgressTestExists() {
-    when(testRepository.existsByTutorIdAndStatus(TUTOR_ID, DRAFT)).thenReturn(true);
+  void updateTestTest() {
+    TestEntity test = TestEntity.builder().id(TEST_ID).status(DRAFT).build();
+    when(testRepository.findById(TEST_ID)).thenReturn(Optional.of(test));
+
+    TestRequest testRequest = new TestRequest();
+    testRequest.setMcqs(List.of(new McqIndex(MCQ_ID, MCQ_INDEX)));
+    testRequest.setStudentIds(List.of(STUDENT_ID));
+    testRequest.setTitle(TEST_TITLE);
+
+    testService.updateTest(TEST_ID, testRequest, tutorContext);
+
+    verify(testRepository, times(1))
+        .save(
+            argThat(
+                testEntity ->
+                    testEntity.getId().equals(TEST_ID)
+                        && testEntity.getStatus().equals(DRAFT)
+                        && testEntity.getTitle().equals(TEST_TITLE)));
+    verify(testMcqRepository, times(1))
+        .save(
+            argThat(
+                testMcqs ->
+                    testMcqs.getTestId().equals(TEST_ID)
+                        && testMcqs.getMcqId().equals(MCQ_ID)
+                        && testMcqs.getIndex().equals(MCQ_INDEX)));
+    verify(testStudentRepository, times(1))
+        .save(
+            argThat(
+                testStudent ->
+                    testStudent.getTestId().equals(TEST_ID)
+                        && testStudent.getStudentId().equals(STUDENT_ID)
+                        && testStudent.getPoints() == null));
+    verify(testAttemptRepository, times(1))
+        .save(
+            argThat(
+                testAttempt ->
+                    testAttempt.getTestId().equals(TEST_ID)
+                        && testAttempt.getMcqId().equals(MCQ_ID)
+                        && testAttempt.getStudentId().equals(STUDENT_ID)
+                        && testAttempt.getOptionNo() == null));
+  }
+
+  @Test
+  void updateTestTestTestNotFound() {
+    when(testRepository.findById(TEST_ID)).thenReturn(Optional.empty());
 
     TestRequest testRequest = new TestRequest();
     testRequest.setMcqs(List.of(new McqIndex(MCQ_ID, MCQ_INDEX)));
@@ -103,13 +146,9 @@ class TestServiceTest {
     testRequest.setTitle(TEST_TITLE);
 
     assertThrows(
-        InProgressTestAlreadyExistsException.class,
-        () -> testService.createTest(TUTOR_ID, testRequest));
-
-    verify(testRepository, times(0)).save(any());
-    verify(testMcqRepository, times(0)).save(any());
-    verify(testStudentRepository, times(0)).save(any());
-    verify(testAttemptRepository, times(0)).save(any());
+        NotFoundException.class,
+        () -> testService.updateTest(TEST_ID, testRequest, tutorContext),
+        "Test not found");
   }
 
   @Test

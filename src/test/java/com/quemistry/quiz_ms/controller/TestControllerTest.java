@@ -68,6 +68,28 @@ class TestControllerTest {
   }
 
   @Test
+  void updateTest() throws Exception {
+    TestRequest testRequest =
+        TestRequest.builder()
+            .mcqs(List.of(new McqIndex(MCQ_ID, MCQ_INDEX)))
+            .studentIds(List.of(STUDENT_ID))
+            .title(TEST_TITLE)
+            .build();
+
+    mockMvc
+        .perform(
+            put("/v1/tests/" + TEST_ID)
+                .header("x-user-id", tutorContext.getUserId())
+                .header("x-user-email", tutorContext.getUserEmail())
+                .header("x-user-roles", tutorContext.getUserRoles())
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(testRequest)))
+        .andExpect(status().isNoContent());
+
+    verify(testService).updateTest(TEST_ID, testRequest, tutorContext);
+  }
+
+  @Test
   void getTestsForTutor() throws Exception {
     Page<TestEntity> testPage = new PageImpl<>(List.of(), PageRequest.of(0, 10), 0);
     when(testService.getTestsForTutor(STUDENT_ID, null, 0, 10, tutorContext)).thenReturn(testPage);
@@ -103,6 +125,25 @@ class TestControllerTest {
         .andExpect(status().isOk());
 
     verify(testService).getTestsForTutor(tutorContext.getUserId(), TEST_TITLE, 0, 10, tutorContext);
+  }
+
+  @Test
+  void getTestsByStudent() throws Exception {
+    Page<TestEntity> testPage = new PageImpl<>(List.of(), PageRequest.of(0, 10), 0);
+    when(testService.getTestsForStudent(STUDENT_ID, null, 0, 10, tutorContext))
+        .thenReturn(testPage);
+
+    mockMvc
+        .perform(
+            get("/v1/tests/student/" + STUDENT_ID)
+                .header("x-user-id", tutorContext.getUserId())
+                .header("x-user-email", tutorContext.getUserEmail())
+                .header("x-user-roles", tutorContext.getUserRoles())
+                .param("pageNumber", "0")
+                .param("pageSize", "10"))
+        .andExpect(status().isOk());
+
+    verify(testService).getTestsForStudent(STUDENT_ID, null, 0, 10, tutorContext);
   }
 
   @Test

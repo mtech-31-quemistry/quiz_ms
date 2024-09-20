@@ -12,4 +12,6 @@ public interface TestStudentRepository
   Optional<TestStudent> findOneByTestIdAndStudentId(Long testId, String studentId);
 
   List<TestStudent> findByStudentId(String studentId);
+
+  void deleteByTestId(Long testId);
 }

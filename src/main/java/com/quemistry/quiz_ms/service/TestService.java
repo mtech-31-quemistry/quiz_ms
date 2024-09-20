@@ -57,39 +57,28 @@ public class TestService {
   }
 
   public Long createTest(String tutorId, TestRequest testRequest) {
-    if (testRepository.existsByTutorIdAndStatus(tutorId, DRAFT)) {
-      throw new InProgressTestAlreadyExistsException();
-    }
-
     TestEntity test = TestEntity.create(tutorId, testRequest.getTitle());
     Long testId = testRepository.save(test).getId();
 
-    testRequest
-        .getMcqs()
-        .forEach(
-            mcqIndex -> {
-              TestMcqs testMcqs = TestMcqs.create(testId, mcqIndex.getMcqId(), mcqIndex.getIndex());
-              testMcqRepository.save(testMcqs);
-            });
-
-    testRequest
-        .getStudentIds()
-        .forEach(
-            studentId -> {
-              TestStudent testStudent = TestStudent.create(testId, studentId);
-              testStudentRepository.save(testStudent);
-
-              testRequest
-                  .getMcqs()
-                  .forEach(
-                      mcqIndex -> {
-                        TestAttempt testAttempt =
-                            TestAttempt.create(testId, mcqIndex.getMcqId(), studentId);
-                        testAttemptRepository.save(testAttempt);
-                      });
-            });
+    saveTestMcqAndStudentAndAttempt(testRequest, testId);
 
     return testId;
+  }
+
+  public void updateTest(Long testId, TestRequest testRequest, UserContext userContext) {
+    TestEntity test = getTest(testId);
+    if (!test.getStatus().equals(DRAFT)) {
+      throw new TestCannotUpdateException();
+    }
+
+    test.update(testRequest);
+    testRepository.save(test);
+
+    testMcqRepository.deleteByTestId(testId);
+    testStudentRepository.deleteByTestId(testId);
+    testAttemptRepository.deleteByTestId(testId);
+
+    saveTestMcqAndStudentAndAttempt(testRequest, testId);
   }
 
   public Page<TestEntity> getTestsForTutor(
@@ -281,6 +270,33 @@ public class TestService {
         userContext.getUserId(),
         userContext.getUserEmail(),
         userContext.getUserRoles());
+  }
+
+  private void saveTestMcqAndStudentAndAttempt(TestRequest testRequest, Long testId) {
+    testRequest
+        .getMcqs()
+        .forEach(
+            mcq -> {
+              TestMcqs testMcqs = TestMcqs.create(testId, mcq.getMcqId(), mcq.getIndex());
+              testMcqRepository.save(testMcqs);
+            });
+
+    testRequest
+        .getStudentIds()
+        .forEach(
+            studentId -> {
+              TestStudent testStudent = TestStudent.create(testId, studentId);
+              testStudentRepository.save(testStudent);
+
+              testRequest
+                  .getMcqs()
+                  .forEach(
+                      mcqIndex -> {
+                        TestAttempt testAttempt =
+                            TestAttempt.create(testId, mcqIndex.getMcqId(), studentId);
+                        testAttemptRepository.save(testAttempt);
+                      });
+            });
   }
 
   private Quartet<TestEntity, List<TestMcqs>, List<MCQResponse>, List<TestAttempt>> getTestData(

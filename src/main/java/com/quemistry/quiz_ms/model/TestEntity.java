@@ -3,6 +3,7 @@ package com.quemistry.quiz_ms.model;
 import static com.quemistry.quiz_ms.model.TestStatus.*;
 import static jakarta.persistence.GenerationType.IDENTITY;
 
+import com.quemistry.quiz_ms.controller.model.TestRequest;
 import jakarta.persistence.*;
 import java.util.Date;
 import lombok.AllArgsConstructor;
@@ -65,6 +66,11 @@ public class TestEntity {
     this.status = COMPLETED;
     this.completedBy = tutorId;
     this.completedOn = new Date();
+    this.updatedOn = new Date();
+  }
+
+  public void update(TestRequest testRequest) {
+    this.title = testRequest.getTitle();
     this.updatedOn = new Date();
   }
 }
