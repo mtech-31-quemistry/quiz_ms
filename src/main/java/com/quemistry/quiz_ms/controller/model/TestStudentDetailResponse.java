@@ -72,7 +72,8 @@ public class TestStudentDetailResponse {
           // TODO: studentName should be set to the student's name
           .studentName("Student " + student.getStudentId())
           .points(student.getPoints())
-          .attemptMcqCount(attempts.size())
+          .attemptMcqCount(
+              attempts.stream().filter(attempt -> attempt.getOptionNo() != null).toList().size())
           .correctMcqCount(
               (int)
                   mcqs.stream()

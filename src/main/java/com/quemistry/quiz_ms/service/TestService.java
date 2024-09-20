@@ -133,7 +133,13 @@ public class TestService {
     if (!testMcqDetail.getStatus().equals(COMPLETED)) {
       testMcqDetail
           .getMcqs()
-          .forEach(mcq -> mcq.getOptions().forEach(MCQDto.OptionDto::maskAnswer));
+          .forEach(
+              mcq -> {
+                mcq.setAttemptStudentsCount(null);
+                mcq.setCorrectStudentsCount(null);
+                mcq.getOptions().forEach(MCQDto.OptionDto::maskAnswer);
+              });
+      testMcqDetail.setTotalStudentsCount(null);
     }
 
     return testMcqDetail;

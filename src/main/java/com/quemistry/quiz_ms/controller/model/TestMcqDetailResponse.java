@@ -24,7 +24,7 @@ public class TestMcqDetailResponse {
   private Date updatedOn;
   private List<TestMcqResponse> mcqs;
 
-  private int totalStudentsCount;
+  private Integer totalStudentsCount;
 
   public static TestMcqDetailResponse from(
       TestEntity test,
@@ -38,7 +38,8 @@ public class TestMcqDetailResponse {
         .tutorId(test.getTutorId())
         .createdOn(test.getCreatedOn())
         .updatedOn(test.getUpdatedOn())
-        .totalStudentsCount(attempts.size())
+        .totalStudentsCount(
+            attempts.stream().map(TestAttempt::getStudentId).collect(Collectors.toSet()).size())
         .mcqs(
             testMcqs.stream()
                 .map(
@@ -65,10 +66,10 @@ public class TestMcqDetailResponse {
   @AllArgsConstructor
   @EqualsAndHashCode(callSuper = true)
   @SuperBuilder(toBuilder = true)
-  public static class TestMcqResponse extends MCQResponse {
+  public static class TestMcqResponse extends MCQDto {
     private int index;
-    private int attemptStudentsCount;
-    private int correctStudentsCount;
+    private Integer attemptStudentsCount;
+    private Integer correctStudentsCount;
 
     public static TestMcqResponse from(int index, MCQResponse mcq, List<TestAttempt> attempts) {
       TestMcqResponseBuilder<?, ?> builder = TestMcqResponse.builder().index(index);
@@ -86,6 +87,7 @@ public class TestMcqDetailResponse {
                       .filter(attempt -> correctOption.getNo().equals(attempt.getOptionNo()))
                       .count();
         }
+
         builder
             .id(mcq.getId())
             .stem(mcq.getStem())
@@ -99,9 +101,8 @@ public class TestMcqDetailResponse {
             .closedBy(mcq.getClosedBy())
             .createdOn(mcq.getCreatedOn())
             .createdBy(mcq.getCreatedBy())
-            .attemptOption(mcq.getAttemptOption())
-            .attemptOn(mcq.getAttemptOn())
-            .attemptStudentsCount(attempts.size())
+            .attemptStudentsCount(
+                attempts.stream().filter(attempt -> attempt.getOptionNo() != null).toList().size())
             .correctStudentsCount(correctStudentsCount);
       }
       return builder.build();
