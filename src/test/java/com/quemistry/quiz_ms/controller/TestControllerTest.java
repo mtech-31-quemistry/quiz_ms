@@ -135,10 +135,11 @@ class TestControllerTest {
 
     mockMvc
         .perform(
-            get("/v1/tests/student/" + STUDENT_ID)
+            get("/v1/tests/")
                 .header("x-user-id", tutorContext.getUserId())
                 .header("x-user-email", tutorContext.getUserEmail())
                 .header("x-user-roles", tutorContext.getUserRoles())
+                .param("studentId", STUDENT_ID)
                 .param("pageNumber", "0")
                 .param("pageSize", "10"))
         .andExpect(status().isOk());

@@ -39,6 +39,89 @@ paths:
       responses:
         "201":
           description: "Created"
+    get:
+      summary: "GET v1/tests"
+      operationId: "getTestsByStudent"
+      parameters:
+        - name: "studentId"
+          in: "query"
+          required: true
+          schema:
+            type: "string"
+        - name: "search"
+          in: "query"
+          required: false
+          schema:
+            type: "string"
+        - name: "pageNumber"
+          in: "query"
+          required: true
+          schema:
+            type: "integer"
+            format: "int32"
+        - name: "pageSize"
+          in: "query"
+          required: true
+          schema:
+            type: "integer"
+            format: "int32"
+        - name: "x-user-id"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+        - name: "x-user-email"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+        - name: "x-user-roles"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TestEntity"
+  /v1/tests/{testId}:
+    put:
+      summary: "PUT v1/tests/{testId}"
+      operationId: "updateTest"
+      parameters:
+        - name: "testId"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+            format: "int64"
+        - name: "x-user-id"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+        - name: "x-user-email"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+        - name: "x-user-roles"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TestRequest"
+        required: true
+      responses:
+        "204":
+          description: "No Content"
   /v1/tests/tutor:
     get:
       summary: "GET v1/tests/tutor"
@@ -565,12 +648,6 @@ components:
         correctStudentsCount:
           type: "integer"
           format: "int32"
-        attemptOption:
-          type: "integer"
-          format: "int32"
-        attemptOn:
-          type: "string"
-          format: "date-time"
         id:
           type: "integer"
           format: "int64"

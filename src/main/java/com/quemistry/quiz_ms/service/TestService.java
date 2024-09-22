@@ -5,6 +5,7 @@ import static com.quemistry.quiz_ms.model.TestStatus.*;
 import static org.springframework.context.annotation.ScopedProxyMode.TARGET_CLASS;
 
 import com.quemistry.quiz_ms.client.QuestionClient;
+import com.quemistry.quiz_ms.client.UserClient;
 import com.quemistry.quiz_ms.client.model.MCQDto;
 import com.quemistry.quiz_ms.client.model.RetrieveMCQByIdsRequest;
 import com.quemistry.quiz_ms.client.model.RetrieveMCQResponse;
@@ -38,6 +39,7 @@ public class TestService {
   private final TestStudentRepository testStudentRepository;
   private final TestAttemptRepository testAttemptRepository;
   private final QuestionClient questionClient;
+  private final UserClient userClient;
   private final TestService self;
   private final MCQMapper mcqMapper = INSTANCE;
 
@@ -47,12 +49,14 @@ public class TestService {
       TestStudentRepository testStudentRepository,
       TestAttemptRepository testAttemptRepository,
       QuestionClient questionClient,
+      UserClient userClient,
       TestService testService) {
     this.testRepository = testRepository;
     this.testMcqRepository = testMcqRepository;
     this.testStudentRepository = testStudentRepository;
     this.testAttemptRepository = testAttemptRepository;
     this.questionClient = questionClient;
+    this.userClient = userClient;
     this.self = testService;
   }
 

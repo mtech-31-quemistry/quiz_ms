@@ -28,6 +28,25 @@ services:
     # ports:
     #   - "81:80"
 
+  user:
+    build:
+      context: ../user_ms
+      dockerfile: Dockerfile
+    container_name: user-ms
+    depends_on:
+      - db
+    environment:
+      - DATABASE_NAME=quemistry
+      - DATABASE_URL=jdbc:postgresql://db:5432/quemistry
+      - DATABASE_LOGIN=root
+      - DATABASE_SECRET=123456
+      - DATABASE_CIPHER_KEY=VT9lVmT791GeD3OXyxZv3vsbZ3fBUtrS
+      - DATABASE_CIPHER_KEY_SIZE=1024
+      - DATABASE_CIPHER_IV=3b2e1a1e9c1b4b3a
+      - HOST_NAME=http://localhost:3000
+    # ports:
+    #   - "82:80"
+
   quiz:
     build:
       context: .
@@ -41,7 +60,8 @@ services:
       - DB_URL=jdbc:postgresql://db:5432/quemistry
       - DB_USER=root
       - DB_PASSWORD=123456
-      - QUESTION_SERVICE_URL=http://question:80
+      - QUESTION_SERVICE_URL=http://question
+      - USER_SERVICE_URL=http://user
     ports:
       - "80:80"
 

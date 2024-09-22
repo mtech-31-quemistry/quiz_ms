@@ -31,6 +31,8 @@ server:
 service:
   question:
     url: ${QUESTION_SERVICE_URL}
+  user:
+    url: ${USER_SERVICE_URL}
 
 logging:
   level:

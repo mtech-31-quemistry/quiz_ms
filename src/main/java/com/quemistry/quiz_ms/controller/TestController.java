@@ -67,16 +67,16 @@ public class TestController {
         tutorId, search, pageNumber, pageSize, new UserContext(tutorId, tutorEmail, roles));
   }
 
-  @GetMapping("student/{studentId}")
+  @GetMapping
   public Page<TestEntity> getTestsByStudent(
       @RequestHeader("x-user-id") @NotBlank String tutorId,
       @RequestHeader("x-user-email") @Email String tutorEmail,
       @RequestHeader("x-user-roles") @NotBlank String roles,
-      @PathVariable String studentId,
+      @RequestParam String studentId,
       @RequestParam(required = false) String search,
       @RequestParam @PositiveOrZero Integer pageNumber,
       @RequestParam @PositiveOrZero Integer pageSize) {
-    log.info("GET /v1/tests/student/{}", studentId);
+    log.info("GET /v1/tests/{}", studentId);
 
     return testService.getTestsForStudent(
         studentId, search, pageNumber, pageSize, new UserContext(tutorId, tutorEmail, roles));
