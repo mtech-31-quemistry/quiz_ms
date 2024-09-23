@@ -50,3 +50,9 @@ management:
 logging:
   level:
     javax.net.ssl: DEBUG
+
+service:
+  question:
+    url: http://mock-service-url
+  user:
+    url: http://mock-service-url

@@ -17,6 +17,7 @@ import com.quemistry.quiz_ms.repository.TestAttemptRepository;
 import com.quemistry.quiz_ms.repository.TestMcqRepository;
 import com.quemistry.quiz_ms.repository.TestRepository;
 import com.quemistry.quiz_ms.repository.TestStudentRepository;
+import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -69,6 +70,7 @@ public class TestService {
     return testId;
   }
 
+  @Transactional
   public void updateTest(Long testId, TestRequest testRequest, UserContext userContext) {
     TestEntity test = getTest(testId);
     if (!test.getStatus().equals(DRAFT)) {
@@ -349,18 +351,16 @@ public class TestService {
                 .filter(
                     attemptItem ->
                         retrieveMCQResponse.getMcqs().stream()
-                            .filter(mcq -> mcq.getId().equals(attemptItem.getMcqId()))
-                            .findFirst()
-                            .map(
-                                mcqDto ->
-                                    mcqDto.getOptions().stream()
-                                        .filter(MCQDto.OptionDto::getIsAnswer)
-                                        .findFirst()
-                                        .filter(
-                                            optionDto ->
-                                                optionDto.getNo().equals(attemptItem.getOptionNo()))
-                                        .isPresent())
-                            .orElse(false))
+                            .anyMatch(
+                                mcqItem ->
+                                    mcqItem.getId().equals(attemptItem.getMcqId())
+                                        && mcqItem.getOptions().stream()
+                                            .anyMatch(
+                                                optionItem ->
+                                                    optionItem
+                                                            .getNo()
+                                                            .equals(attemptItem.getOptionNo())
+                                                        && optionItem.getIsAnswer())))
                 .count();
     TestStudent testStudent =
         testStudentRepository
