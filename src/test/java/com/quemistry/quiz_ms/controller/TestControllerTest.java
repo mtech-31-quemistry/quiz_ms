@@ -129,7 +129,7 @@ class TestControllerTest {
 
   @Test
   void getTestsByStudent() throws Exception {
-    Page<TestEntity> testPage = new PageImpl<>(List.of(), PageRequest.of(0, 10), 0);
+    Page<TestResponseForStudent> testPage = new PageImpl<>(List.of(), PageRequest.of(0, 10), 0);
     when(testService.getTestsForStudent(STUDENT_ID, null, 0, 10, tutorContext))
         .thenReturn(testPage);
 
@@ -149,7 +149,7 @@ class TestControllerTest {
 
   @Test
   void getTestsForStudent() throws Exception {
-    Page<TestEntity> testPage = new PageImpl<>(List.of(), PageRequest.of(0, 10), 0);
+    Page<TestResponseForStudent> testPage = new PageImpl<>(List.of(), PageRequest.of(0, 10), 0);
     when(testService.getTestsForStudent(STUDENT_ID, null, 0, 10, studentContext))
         .thenReturn(testPage);
 
@@ -168,7 +168,7 @@ class TestControllerTest {
 
   @Test
   void getTestsForStudentWithSearchConditions() throws Exception {
-    Page<TestEntity> testPage = new PageImpl<>(List.of(), PageRequest.of(0, 10), 0);
+    Page<TestResponseForStudent> testPage = new PageImpl<>(List.of(), PageRequest.of(0, 10), 0);
     when(testService.getTestsForStudent(STUDENT_ID, TEST_TITLE, 0, 10, studentContext))
         .thenReturn(testPage);
 

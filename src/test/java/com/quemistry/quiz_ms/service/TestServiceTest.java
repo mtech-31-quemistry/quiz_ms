@@ -209,7 +209,7 @@ class TestServiceTest {
             new PageImpl<>(
                 List.of(testEntity), PageRequest.of(PAGE_NUMBER, PAGE_SIZE), TOTAL_RECORDS));
 
-    Page<TestEntity> testEntities =
+    Page<TestResponseForStudent> testEntities =
         testService.getTestsForStudent(STUDENT_ID, null, PAGE_NUMBER, PAGE_SIZE, studentContext);
 
     assertNotNull(testEntities);
@@ -217,11 +217,12 @@ class TestServiceTest {
     assertEquals(PAGE_NUMBER, testEntities.getPageable().getPageNumber());
     assertEquals(PAGE_SIZE, testEntities.getPageable().getPageSize());
 
-    TestEntity test = testEntities.getContent().getFirst();
+    TestResponseForStudent test = testEntities.getContent().getFirst();
     assertEquals(TEST_ID, test.getId());
     assertEquals(TUTOR_ID, test.getTutorId());
     assertEquals(DRAFT, test.getStatus());
     assertEquals(TEST_TITLE, test.getTitle());
+    assertEquals(10, test.getPoints());
   }
 
   @Test
@@ -229,14 +230,14 @@ class TestServiceTest {
     when(testStudentRepository.findByStudentId(STUDENT_ID))
         .thenReturn(
             List.of(
-                TestStudent.builder().testId(TEST_ID).studentId(STUDENT_ID).points(10).build()));
+                TestStudent.builder().testId(TEST_ID).studentId(STUDENT_ID).points(null).build()));
     when(testRepository.findPageByIdInAndStatusIsNotAndTitleContaining(
             List.of(TEST_ID), DRAFT, TEST_TITLE, PageRequest.of(PAGE_NUMBER, PAGE_SIZE)))
         .thenReturn(
             new PageImpl<>(
                 List.of(testEntity), PageRequest.of(PAGE_NUMBER, PAGE_SIZE), TOTAL_RECORDS));
 
-    Page<TestEntity> testEntities =
+    Page<TestResponseForStudent> testEntities =
         testService.getTestsForStudent(
             STUDENT_ID, TEST_TITLE, PAGE_NUMBER, PAGE_SIZE, studentContext);
 
@@ -245,11 +246,12 @@ class TestServiceTest {
     assertEquals(PAGE_NUMBER, testEntities.getPageable().getPageNumber());
     assertEquals(PAGE_SIZE, testEntities.getPageable().getPageSize());
 
-    TestEntity test = testEntities.getContent().getFirst();
+    TestResponseForStudent test = testEntities.getContent().getFirst();
     assertEquals(TEST_ID, test.getId());
     assertEquals(TUTOR_ID, test.getTutorId());
     assertEquals(DRAFT, test.getStatus());
     assertEquals(TEST_TITLE, test.getTitle());
+    assertNull(test.getPoints());
   }
 
   @Test

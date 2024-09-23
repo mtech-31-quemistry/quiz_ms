@@ -68,7 +68,7 @@ public class TestController {
   }
 
   @GetMapping
-  public Page<TestEntity> getTestsByStudent(
+  public Page<TestResponseForStudent> getTestsByStudent(
       @RequestHeader("x-user-id") @NotBlank String tutorId,
       @RequestHeader("x-user-email") @Email String tutorEmail,
       @RequestHeader("x-user-roles") @NotBlank String roles,
@@ -83,7 +83,7 @@ public class TestController {
   }
 
   @GetMapping("student")
-  public Page<TestEntity> getTestsForStudent(
+  public Page<TestResponseForStudent> getTestsForStudent(
       @RequestHeader("x-user-id") @NotBlank String studentId,
       @RequestHeader("x-user-email") @Email String studentEmail,
       @RequestHeader("x-user-roles") @NotBlank String roles,

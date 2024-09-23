@@ -19,6 +19,7 @@ import com.quemistry.quiz_ms.repository.TestRepository;
 import com.quemistry.quiz_ms.repository.TestStudentRepository;
 import jakarta.transaction.Transactional;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.javatuples.Quartet;
@@ -101,7 +102,7 @@ public class TestService {
         tutorId, PageRequest.of(pageNumber, pageSize));
   }
 
-  public Page<TestEntity> getTestsForStudent(
+  public Page<TestResponseForStudent> getTestsForStudent(
       String studentId,
       String search,
       Integer pageNumber,
@@ -109,12 +110,24 @@ public class TestService {
       UserContext userContext) {
     List<TestStudent> testStudents = testStudentRepository.findByStudentId(studentId);
     List<Long> testIds = testStudents.stream().map(TestStudent::getTestId).toList();
-    if (search != null) {
-      return testRepository.findPageByIdInAndStatusIsNotAndTitleContaining(
-          testIds, DRAFT, search, PageRequest.of(pageNumber, pageSize));
-    }
-    return testRepository.findPageByIdInAndStatusIsNot(
-        testIds, DRAFT, PageRequest.of(pageNumber, pageSize));
+    Page<TestEntity> pagedTests =
+        search != null
+            ? testRepository.findPageByIdInAndStatusIsNotAndTitleContaining(
+                testIds, DRAFT, search, PageRequest.of(pageNumber, pageSize))
+            : testRepository.findPageByIdInAndStatusIsNot(
+                testIds, DRAFT, PageRequest.of(pageNumber, pageSize));
+    List<TestStudent> testStudentList = testStudentRepository.findByStudentId(studentId);
+
+    return pagedTests.map(
+        test ->
+            TestResponseForStudent.from(
+                test,
+                Objects.requireNonNull(
+                        testStudentList.stream()
+                            .filter(testStudent -> testStudent.getTestId().equals(test.getId()))
+                            .findFirst()
+                            .orElse(null))
+                    .getPoints()));
   }
 
   public TestMcqDetailResponse getTestMcqDetail(Long testId, UserContext userContext) {
