@@ -86,7 +86,7 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/TestEntity"
+                $ref: "#/components/schemas/TestResponseForStudent"
   /v1/tests/{testId}:
     put:
       summary: "PUT v1/tests/{testId}"
@@ -209,7 +209,7 @@ paths:
           content:
             '*/*':
               schema:
-                $ref: "#/components/schemas/TestEntity"
+                $ref: "#/components/schemas/TestResponseForStudent"
   /v1/tests/{testId}/mcqs:
     get:
       summary: "GET v1/tests/{testId}/mcqs"
@@ -605,6 +605,43 @@ components:
         updatedOn:
           type: "string"
           format: "date-time"
+    TestResponseForStudent:
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+          format: "int64"
+        status:
+          type: "string"
+          enum:
+            - "DRAFT"
+            - "IN_PROGRESS"
+            - "COMPLETED"
+        tutorId:
+          type: "string"
+        title:
+          type: "string"
+        createdOn:
+          type: "string"
+          format: "date-time"
+        createdBy:
+          type: "string"
+        startedOn:
+          type: "string"
+          format: "date-time"
+        startedBy:
+          type: "string"
+        completedOn:
+          type: "string"
+          format: "date-time"
+        completedBy:
+          type: "string"
+        updatedOn:
+          type: "string"
+          format: "date-time"
+        points:
+          type: "integer"
+          format: "int32"
     OptionDto:
       type: "object"
       properties:
