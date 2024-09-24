@@ -208,8 +208,8 @@ public class QuizService {
         questionClient.retrieveMCQsByIds(
             RetrieveMCQByIdsRequest.builder()
                 .ids(quiz.getAttempts().stream().map(QuizAttempt::getMcqId).toList())
-                .pageNumber(pageNumber)
-                .pageSize(pageSize)
+                .pageNumber(0)
+                .pageSize(60)
                 .build(),
             userContext.getUserId(),
             userContext.getUserEmail(),
