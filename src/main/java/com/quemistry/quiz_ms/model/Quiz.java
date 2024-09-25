@@ -1,13 +1,10 @@
 package com.quemistry.quiz_ms.model;
 
 import static com.quemistry.quiz_ms.model.QuizStatus.*;
-import static jakarta.persistence.CascadeType.ALL;
 import static jakarta.persistence.GenerationType.IDENTITY;
 
 import jakarta.persistence.*;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -33,22 +30,14 @@ public class Quiz {
 
   private Date updatedOn;
 
-  @OneToMany(mappedBy = "quiz", cascade = ALL, orphanRemoval = true)
-  private List<QuizAttempt> attempts;
-
   public static Quiz create(String studentId) {
     Date now = new Date();
     return Quiz.builder()
         .status(IN_PROGRESS)
         .studentId(studentId)
-        .attempts(new ArrayList<>())
         .createdOn(now)
         .updatedOn(now)
         .build();
-  }
-
-  public void addAttempts(List<Long> mcqIds) {
-    mcqIds.forEach(mcqId -> this.attempts.add(QuizAttempt.create(this, mcqId)));
   }
 
   public void complete() {

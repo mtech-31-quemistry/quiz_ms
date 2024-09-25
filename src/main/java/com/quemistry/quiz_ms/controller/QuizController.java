@@ -2,10 +2,7 @@ package com.quemistry.quiz_ms.controller;
 
 import static org.springframework.http.HttpStatus.NO_CONTENT;
 
-import com.quemistry.quiz_ms.controller.model.QuizAttemptRequest;
-import com.quemistry.quiz_ms.controller.model.QuizListResponse;
-import com.quemistry.quiz_ms.controller.model.QuizRequest;
-import com.quemistry.quiz_ms.controller.model.QuizResponse;
+import com.quemistry.quiz_ms.controller.model.*;
 import com.quemistry.quiz_ms.model.UserContext;
 import com.quemistry.quiz_ms.service.QuizService;
 import jakarta.validation.constraints.Email;
@@ -13,6 +10,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -62,7 +60,7 @@ public class QuizController {
   }
 
   @GetMapping("me/completed")
-  public QuizListResponse getCompletedQuiz(
+  public Page<SimpleQuizResponse> getCompletedQuiz(
       @RequestHeader("x-user-id") @NotBlank String studentId,
       @RequestHeader("x-user-email") @Email String studentEmail,
       @RequestHeader("x-user-roles") @NotBlank String roles,

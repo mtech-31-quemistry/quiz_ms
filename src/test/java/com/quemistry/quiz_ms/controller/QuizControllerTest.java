@@ -1,5 +1,6 @@
 package com.quemistry.quiz_ms.controller;
 
+import static com.quemistry.quiz_ms.fixture.TestFixture.studentContext;
 import static com.quemistry.quiz_ms.fixture.TestFixture.tutorContext;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.doThrow;
@@ -16,7 +17,6 @@ import com.quemistry.quiz_ms.exception.ExceptionAdvisor;
 import com.quemistry.quiz_ms.exception.NotFoundException;
 import com.quemistry.quiz_ms.model.QuizStatus;
 import com.quemistry.quiz_ms.service.QuizService;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,6 +24,9 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -46,18 +49,13 @@ class QuizControllerTest {
 
   @Test
   void createQuiz() throws Exception {
-    List<MCQResponse> mcqResponses = new ArrayList<>();
-    mcqResponses.add(MCQResponse.builder().id(1L).attemptOption(1).attemptOn(new Date()).build());
+    Page<MCQResponse> mcqResponses =
+        new PageImpl<>(
+            List.of(MCQResponse.builder().id(1L).attemptOption(1).attemptOn(new Date()).build()),
+            PageRequest.of(0, 1),
+            1);
 
-    QuizResponse quizResponse =
-        QuizResponse.builder()
-            .id(1L)
-            .mcqs(mcqResponses)
-            .pageNumber(0)
-            .pageSize(1)
-            .totalPages(1)
-            .totalRecords(1L)
-            .build();
+    QuizResponse quizResponse = QuizResponse.builder().id(1L).mcqs(mcqResponses).build();
 
     QuizRequest quizRequest = QuizRequest.builder().pageSize(1).totalSize(1L).build();
 
@@ -80,18 +78,13 @@ class QuizControllerTest {
 
   @Test
   void getQuiz() throws Exception {
-    List<MCQResponse> mcqResponses = new ArrayList<>();
-    mcqResponses.add(MCQResponse.builder().id(1L).attemptOption(1).attemptOn(new Date()).build());
+    Page<MCQResponse> mcqResponses =
+        new PageImpl<>(
+            List.of(MCQResponse.builder().id(1L).attemptOption(1).attemptOn(new Date()).build()),
+            PageRequest.of(0, 1),
+            1);
 
-    QuizResponse quizResponse =
-        QuizResponse.builder()
-            .id(1L)
-            .mcqs(mcqResponses)
-            .pageNumber(0)
-            .pageSize(1)
-            .totalPages(1)
-            .totalRecords(1L)
-            .build();
+    QuizResponse quizResponse = QuizResponse.builder().id(1L).mcqs(mcqResponses).build();
 
     when(quizService.getQuiz(1L, tutorContext, 0, 1)).thenReturn(quizResponse);
 
@@ -132,18 +125,13 @@ class QuizControllerTest {
 
   @Test
   void getInProgressQuiz() throws Exception {
-    List<MCQResponse> mcqResponses = new ArrayList<>();
-    mcqResponses.add(MCQResponse.builder().id(1L).attemptOption(1).attemptOn(new Date()).build());
+    Page<MCQResponse> mcqResponses =
+        new PageImpl<>(
+            List.of(MCQResponse.builder().id(1L).attemptOption(1).attemptOn(new Date()).build()),
+            PageRequest.of(0, 1),
+            1);
 
-    QuizResponse quizResponse =
-        QuizResponse.builder()
-            .id(1L)
-            .mcqs(mcqResponses)
-            .pageNumber(0)
-            .pageSize(1)
-            .totalPages(1)
-            .totalRecords(1L)
-            .build();
+    QuizResponse quizResponse = QuizResponse.builder().id(1L).mcqs(mcqResponses).build();
 
     when(quizService.getInProgressQuiz(tutorContext, 0, 1)).thenReturn(quizResponse);
 
@@ -166,31 +154,23 @@ class QuizControllerTest {
   void getCompletedQuiz() throws Exception {
     SimpleQuizResponse simpleQuizResponse =
         SimpleQuizResponse.builder().id(1L).status(QuizStatus.COMPLETED).points(1).build();
-
-    QuizListResponse quizResponse =
-        QuizListResponse.builder()
-            .pageNumber(0)
-            .pageSize(1)
-            .totalPages(1)
-            .totalRecords(1L)
-            .quizzes(List.of(simpleQuizResponse))
-            .build();
-
-    when(quizService.getCompletedQuiz(tutorContext, 0, 1)).thenReturn(quizResponse);
+    PageImpl<SimpleQuizResponse> quizResponses =
+        new PageImpl<>(List.of(simpleQuizResponse), PageRequest.of(0, 1), 1);
+    when(quizService.getCompletedQuiz(studentContext, 0, 1)).thenReturn(quizResponses);
 
     mockMvc
         .perform(
             get("/v1/quizzes/me/completed")
-                .header("x-user-id", tutorContext.getUserId())
-                .header("x-user-email", tutorContext.getUserEmail())
-                .header("x-user-roles", tutorContext.getUserRoles())
+                .header("x-user-id", studentContext.getUserId())
+                .header("x-user-email", studentContext.getUserEmail())
+                .header("x-user-roles", studentContext.getUserRoles())
                 .param("pageNumber", "0")
                 .param("pageSize", "1")
                 .contentType(APPLICATION_JSON))
         .andExpect(status().isOk())
-        .andExpect(content().json(objectMapper.writeValueAsString(quizResponse)));
+        .andExpect(content().json(objectMapper.writeValueAsString(quizResponses)));
 
-    verify(quizService).getCompletedQuiz(tutorContext, 0, 1);
+    verify(quizService).getCompletedQuiz(studentContext, 0, 1);
   }
 
   @Test

@@ -10,11 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class QuizListResponse {
-  private Integer pageNumber;
-  private Integer pageSize;
-  private Integer totalPages;
-  private Long totalRecords;
+class QuizListResponse {
 
   private List<SimpleQuizResponse> quizzes;
 }

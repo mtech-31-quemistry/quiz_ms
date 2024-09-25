@@ -21,10 +21,12 @@ import com.quemistry.quiz_ms.repository.QuizAttemptRepository;
 import com.quemistry.quiz_ms.repository.QuizRepository;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -56,6 +58,7 @@ public class QuizService {
 
     Quiz quiz = Quiz.create(userContext.getUserId());
     quiz = quizRepository.save(quiz);
+    long quizId = quiz.getId();
 
     RetrieveMCQResponse retrieveMCQRequests =
         questionClient.retrieveMCQs(
@@ -71,28 +74,20 @@ public class QuizService {
 
     List<Long> mcqIds = retrieveMCQRequests.getMcqs().stream().map(MCQDto::getId).toList();
 
-    quiz.addAttempts(mcqIds);
-    quiz = quizRepository.save(quiz);
+    mcqIds.parallelStream()
+        .forEach(mcqId -> attemptRepository.save(QuizAttempt.create(quizId, mcqId)));
 
-    List<MCQResponse> mcqResponses =
-        retrieveMCQRequests.getMcqs().stream()
-            .map(mcqMapper::toMCQResponse)
-            .limit(quizRequest.getPageSize())
-            .collect(Collectors.toList());
+    long totalRecords = Math.min(retrieveMCQRequests.getTotalRecords(), quizRequest.getTotalSize());
+    Page<MCQResponse> mcqs =
+        new PageImpl<>(
+            retrieveMCQRequests.getMcqs().stream()
+                .map(mcqMapper::toMCQResponse)
+                .limit(quizRequest.getPageSize())
+                .collect(Collectors.toList()),
+            PageRequest.of(0, quizRequest.getPageSize()),
+            totalRecords);
 
-    Long totalRecords =
-        Math.min(retrieveMCQRequests.getTotalRecords(), quizRequest.getTotalSize().intValue());
-    Integer totalPages = (int) Math.ceil((double) totalRecords / quizRequest.getPageSize());
-
-    return QuizResponse.builder()
-        .id(quiz.getId())
-        .mcqs(mcqResponses)
-        .status(quiz.getStatus())
-        .pageNumber(0)
-        .pageSize(quizRequest.getPageSize())
-        .totalPages(totalPages)
-        .totalRecords(totalRecords)
-        .build();
+    return QuizResponse.builder().id(quizId).mcqs(mcqs).status(quiz.getStatus()).build();
   }
 
   public QuizResponse getQuiz(
@@ -109,23 +104,12 @@ public class QuizService {
     return convertQuiz(pageNumber, pageSize, quiz, userContext);
   }
 
-  public QuizListResponse getCompletedQuiz(
+  public Page<SimpleQuizResponse> getCompletedQuiz(
       UserContext userContext, Integer pageNumber, Integer pageSize) {
-    Page<Quiz> quizzes =
+    return getQuizDetail(
+        userContext,
         quizRepository.findPageByStudentIdAndStatus(
-            userContext.getUserId(), COMPLETED, PageRequest.of(pageNumber, pageSize));
-
-    int quizNumber = quizzes.getNumberOfElements();
-    List<SimpleQuizResponse> quizResponses =
-        quizNumber > 0 ? getQuizDetail(userContext, quizzes) : List.of();
-
-    return QuizListResponse.builder()
-        .pageNumber(pageNumber)
-        .pageSize(pageSize)
-        .totalPages(quizzes.getTotalPages())
-        .totalRecords(quizzes.getTotalElements())
-        .quizzes(quizResponses)
-        .build();
+            userContext.getUserId(), COMPLETED, PageRequest.of(pageNumber, pageSize)));
   }
 
   public void updateAttempt(Long quizId, Long mcqId, String studentId, Integer attemptOption) {
@@ -146,7 +130,10 @@ public class QuizService {
     attemptRepository.save(attempt);
 
     if (!attemptRepository.existsByQuizIdAndOptionNoIsNull(quizId)) {
-      Quiz quiz = attempt.getQuiz();
+      Quiz quiz =
+          quizRepository
+              .findOneByIdAndStudentId(quizId, studentId)
+              .orElseThrow(() -> new NotFoundException("Quiz not found"));
       quiz.complete();
       quizRepository.save(quiz);
     }
@@ -167,34 +154,41 @@ public class QuizService {
     quizRepository.save(quizEntity);
   }
 
-  private List<SimpleQuizResponse> getQuizDetail(UserContext userContext, Page<Quiz> quizzes) {
+  private Page<SimpleQuizResponse> getQuizDetail(UserContext userContext, Page<Quiz> quizzes) {
+    List<QuizAttempt> attempts =
+        attemptRepository.findAllByQuizIdIn(quizzes.stream().map(Quiz::getId).toList());
     List<MCQDto> mcqs =
-        questionClient
-            .retrieveMCQsByIds(
-                RetrieveMCQByIdsRequest.builder()
-                    .ids(
-                        quizzes.stream()
-                            .flatMap(quiz -> quiz.getAttempts().stream().map(QuizAttempt::getMcqId))
-                            .toList())
-                    .pageNumber(0)
-                    .pageSize(quizzes.getNumberOfElements() * 60)
-                    .build(),
-                userContext.getUserId(),
-                userContext.getUserEmail(),
-                userContext.getUserRoles())
-            .getMcqs();
-    return quizzes.stream()
-        .map(
-            quiz -> {
-              List<MCQResponse> quizMcqs = getMcqResponses(mcqs, quiz.getAttempts());
-              return SimpleQuizResponse.builder()
-                  .id(quiz.getId())
-                  .status(quiz.getStatus())
-                  .mcqs(quizMcqs)
-                  .points(calculatePoints(quizMcqs))
-                  .build();
-            })
-        .collect(Collectors.toList());
+        quizzes.isEmpty()
+            ? List.of()
+            : questionClient
+                .retrieveMCQsByIds(
+                    RetrieveMCQByIdsRequest.builder()
+                        .ids(
+                            attempts.stream()
+                                .map(QuizAttempt::getMcqId)
+                                .collect(Collectors.toList()))
+                        .pageNumber(0)
+                        .pageSize(quizzes.getNumberOfElements() * 60)
+                        .build(),
+                    userContext.getUserId(),
+                    userContext.getUserEmail(),
+                    userContext.getUserRoles())
+                .getMcqs();
+    return quizzes.map(
+        quiz -> {
+          List<MCQResponse> quizMcqs =
+              getMcqResponses(
+                  mcqs,
+                  attempts.stream()
+                      .filter(attempt -> attempt.getQuizId().equals(quiz.getId()))
+                      .collect(Collectors.toList()));
+          return SimpleQuizResponse.builder()
+              .id(quiz.getId())
+              .status(quiz.getStatus())
+              .mcqs(quizMcqs)
+              .points(calculatePoints(quizMcqs))
+              .build();
+        });
   }
 
   private QuizResponse convertQuiz(
@@ -203,11 +197,13 @@ public class QuizService {
       throw new NotFoundException("Quiz not found");
     }
     Quiz quiz = quizResponse.get();
+    Page<QuizAttempt> attempts =
+        attemptRepository.findPageByQuizId(quiz.getId(), PageRequest.of(pageNumber, pageSize));
 
     RetrieveMCQResponse mcqs =
         questionClient.retrieveMCQsByIds(
             RetrieveMCQByIdsRequest.builder()
-                .ids(quiz.getAttempts().stream().map(QuizAttempt::getMcqId).toList())
+                .ids(attempts.stream().map(QuizAttempt::getMcqId).toList())
                 .pageNumber(0)
                 .pageSize(60)
                 .build(),
@@ -215,36 +211,35 @@ public class QuizService {
             userContext.getUserEmail(),
             userContext.getUserRoles());
 
-    List<MCQResponse> mcqResponses = getMcqResponses(mcqs.getMcqs(), quiz.getAttempts());
-    Integer points = (quiz.getStatus() == COMPLETED) ? calculatePoints(mcqResponses) : null;
+    Integer points =
+        (quiz.getStatus() == COMPLETED)
+            ? calculatePoints(getPageMcqResponses(mcqs.getMcqs(), attempts).toList())
+            : null;
 
     return QuizResponse.builder()
         .id(quiz.getId())
-        .mcqs(mcqResponses)
+        .mcqs(getPageMcqResponses(mcqs.getMcqs(), attempts))
         .status(quiz.getStatus())
-        .pageNumber(pageNumber)
-        .pageSize(pageSize)
-        .totalPages(mcqs.getTotalPages())
-        .totalRecords(mcqs.getTotalRecords())
         .points(points)
         .build();
   }
 
+  private Page<MCQResponse> getPageMcqResponses(List<MCQDto> mcqs, Page<QuizAttempt> attempts) {
+    return attempts.map(getQuizAttemptMCQResponse(mcqs));
+  }
+
   private List<MCQResponse> getMcqResponses(List<MCQDto> mcqs, List<QuizAttempt> attempts) {
-    return attempts.stream()
-        .map(
-            attempt -> {
-              MCQDto mcqDto =
-                  mcqs.stream()
-                      .filter(mcq -> mcq.getId().equals(attempt.getMcqId()))
-                      .findFirst()
-                      .orElse(null);
-              MCQResponse response = mcqMapper.toMCQResponse(mcqDto);
-              response.setAttemptOption(attempt.getOptionNo());
-              response.setAttemptOn(attempt.getAttemptTime());
-              return response;
-            })
-        .toList();
+    return attempts.stream().map(getQuizAttemptMCQResponse(mcqs)).collect(Collectors.toList());
+  }
+
+  private static Function<QuizAttempt, MCQResponse> getQuizAttemptMCQResponse(List<MCQDto> mcqs) {
+    return attempt ->
+        MCQResponse.from(
+            attempt,
+            mcqs.stream()
+                .filter(mcq -> mcq.getId().equals(attempt.getMcqId()))
+                .findFirst()
+                .orElse(null));
   }
 
   private int calculatePoints(List<MCQResponse> mcqs) {

@@ -1,7 +1,5 @@
 package com.quemistry.quiz_ms.model;
 
-import static jakarta.persistence.FetchType.LAZY;
-
 import jakarta.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
@@ -24,18 +22,13 @@ public class QuizAttempt {
 
   @Id private Long mcqId;
 
-  @ManyToOne(fetch = LAZY)
-  @JoinColumn(name = "quiz_id", insertable = false, updatable = false)
-  private Quiz quiz;
-
   private Integer optionNo;
 
   private Date attemptTime;
 
-  public static QuizAttempt create(Quiz quiz, Long mcqId) {
+  public static QuizAttempt create(Long quizId, Long mcqId) {
     return QuizAttempt.builder()
-        .quiz(quiz)
-        .quizId(quiz.getId())
+        .quizId(quizId)
         .mcqId(mcqId)
         .optionNo(null)
         .attemptTime(null)
