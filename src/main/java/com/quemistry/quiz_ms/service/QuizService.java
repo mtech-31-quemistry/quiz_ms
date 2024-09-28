@@ -66,7 +66,7 @@ public class QuizService {
                 .topics(quizRequest.getTopics())
                 .skills(quizRequest.getSkills())
                 .pageNumber(0)
-                .pageSize(60)
+                .pageSize(Math.toIntExact(quizRequest.getTotalSize()))
                 .build(),
             userContext.getUserId(),
             userContext.getUserEmail(),
@@ -77,7 +77,6 @@ public class QuizService {
     mcqIds.parallelStream()
         .forEach(mcqId -> attemptRepository.save(QuizAttempt.create(quizId, mcqId)));
 
-    long totalRecords = Math.min(retrieveMCQRequests.getTotalRecords(), quizRequest.getTotalSize());
     Page<MCQResponse> mcqs =
         new PageImpl<>(
             retrieveMCQRequests.getMcqs().stream()
@@ -85,7 +84,7 @@ public class QuizService {
                 .limit(quizRequest.getPageSize())
                 .collect(Collectors.toList()),
             PageRequest.of(0, quizRequest.getPageSize()),
-            totalRecords);
+            retrieveMCQRequests.getTotalRecords());
 
     return QuizResponse.builder().id(quizId).mcqs(mcqs).status(quiz.getStatus()).build();
   }
