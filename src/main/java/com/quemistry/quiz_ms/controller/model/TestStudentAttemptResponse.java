@@ -1,5 +1,6 @@
 package com.quemistry.quiz_ms.controller.model;
 
+import com.quemistry.quiz_ms.client.model.SearchStudentResponse;
 import com.quemistry.quiz_ms.model.*;
 import java.util.Date;
 import java.util.List;
@@ -29,7 +30,8 @@ public class TestStudentAttemptResponse {
       List<TestMcqs> testMcqs,
       List<MCQResponse> mcqs,
       List<TestAttempt> attempts,
-      TestStudent student) {
+      TestStudent student,
+      SearchStudentResponse.StudentResponse studentResponse) {
     return TestStudentAttemptResponse.builder()
         .id(test.getId())
         .status(test.getStatus())
@@ -38,8 +40,7 @@ public class TestStudentAttemptResponse {
         .createdOn(test.getCreatedOn())
         .updatedOn(test.getUpdatedOn())
         .studentId(student.getStudentId())
-        // TODO: studentName should be set to the student's name
-        .studentName("Student " + student.getStudentId())
+        .studentName(studentResponse.getFullName())
         .points(student.getPoints())
         .mcqs(
             testMcqs.stream()

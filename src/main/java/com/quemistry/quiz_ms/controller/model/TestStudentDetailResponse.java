@@ -1,6 +1,7 @@
 package com.quemistry.quiz_ms.controller.model;
 
 import com.quemistry.quiz_ms.client.model.MCQDto;
+import com.quemistry.quiz_ms.client.model.SearchStudentResponse.StudentResponse;
 import com.quemistry.quiz_ms.model.*;
 import java.util.Date;
 import java.util.List;
@@ -28,7 +29,8 @@ public class TestStudentDetailResponse {
       List<TestMcqs> testMcqs,
       List<MCQResponse> mcqs,
       List<TestAttempt> attempts,
-      List<TestStudent> students) {
+      List<TestStudent> students,
+      List<StudentResponse> studentResponses) {
     return TestStudentDetailResponse.builder()
         .id(test.getId())
         .status(test.getStatus())
@@ -43,6 +45,14 @@ public class TestStudentDetailResponse {
                     student ->
                         TestStudentResponse.from(
                             student,
+                            studentResponses.stream()
+                                .filter(
+                                    studentResponse ->
+                                        studentResponse
+                                            .getAccountId()
+                                            .equals(student.getStudentId()))
+                                .findFirst()
+                                .orElse(StudentResponse.defaultStudent(student.getStudentId())),
                             attempts.stream()
                                 .filter(
                                     attempt ->
@@ -66,11 +76,13 @@ public class TestStudentDetailResponse {
     private int correctMcqCount;
 
     public static TestStudentResponse from(
-        TestStudent student, List<TestAttempt> attempts, List<MCQResponse> mcqs) {
+        TestStudent student,
+        StudentResponse studentResponse,
+        List<TestAttempt> attempts,
+        List<MCQResponse> mcqs) {
       return TestStudentResponse.builder()
           .studentId(student.getStudentId())
-          // TODO: studentName should be set to the student's name
-          .studentName("Student " + student.getStudentId())
+          .studentName(studentResponse.getFullName())
           .points(student.getPoints())
           .attemptMcqCount(
               attempts.stream().filter(attempt -> attempt.getOptionNo() != null).toList().size())

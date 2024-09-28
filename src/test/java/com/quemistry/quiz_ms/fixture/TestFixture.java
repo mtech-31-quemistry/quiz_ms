@@ -8,6 +8,8 @@ import com.github.jsonzou.jmockdata.JMockData;
 import com.github.jsonzou.jmockdata.MockConfig;
 import com.quemistry.quiz_ms.client.model.MCQDto;
 import com.quemistry.quiz_ms.client.model.RetrieveMCQResponse;
+import com.quemistry.quiz_ms.client.model.SearchStudentResponse;
+import com.quemistry.quiz_ms.client.model.SearchStudentResponse.StudentResponse;
 import com.quemistry.quiz_ms.model.*;
 import java.util.List;
 
@@ -18,6 +20,9 @@ public class TestFixture {
   public static final Integer CURRENT_OPTION_NO = 1;
 
   public static final String STUDENT_ID = "student Id";
+  public static final String STUDENT_FIRST_NAME = "Ce";
+  public static final String STUDENT_LAST_NAME = "Shi Ren";
+  public static final String STUDENT_NAME = "Ce Shi Ren";
   public static final String TUTOR_ID = "tutor Id";
   public static final String TEST_TITLE = "test title";
 
@@ -29,8 +34,26 @@ public class TestFixture {
 
   public static final UserContext studentContext =
       new UserContext(STUDENT_ID, "student@test.com", "student");
-  public static final UserContext tutorContext =
-      new UserContext(TUTOR_ID, "tutor@test.com", "tutor");
+  public static final StudentResponse STUDENT_RESPONSE =
+      StudentResponse.builder()
+          .id(1L)
+          .firstName(STUDENT_FIRST_NAME)
+          .lastName(STUDENT_LAST_NAME)
+          .email("student@test.com")
+          .accountId(STUDENT_ID)
+          .build();
+
+  public static final SearchStudentResponse SEARCH_STUDENT_RESPONSE =
+      SearchStudentResponse.builder()
+          .statusCode("200")
+          .statusMessage("Success")
+          .serviceName("quiz-service")
+          .payload(List.of(STUDENT_RESPONSE))
+          .build();
+
+  public static final String TUTOR_EMAIL = "tutor@test.com";
+  public static final String TUTOR_ROLE = "tutor";
+  public static final UserContext tutorContext = new UserContext(TUTOR_ID, TUTOR_EMAIL, TUTOR_ROLE);
 
   public static final TestEntity testEntity =
       TestEntity.builder().id(TEST_ID).tutorId(TUTOR_ID).status(DRAFT).title(TEST_TITLE).build();

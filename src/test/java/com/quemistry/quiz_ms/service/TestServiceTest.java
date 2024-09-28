@@ -7,7 +7,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import com.quemistry.quiz_ms.client.QuestionClient;
+import com.quemistry.quiz_ms.client.UserClient;
 import com.quemistry.quiz_ms.client.model.RetrieveMCQResponse;
+import com.quemistry.quiz_ms.client.model.SearchStudentResponse.StudentResponse;
 import com.quemistry.quiz_ms.controller.model.*;
 import com.quemistry.quiz_ms.exception.*;
 import com.quemistry.quiz_ms.model.*;
@@ -36,6 +38,8 @@ class TestServiceTest {
   @Mock private TestAttemptRepository testAttemptRepository;
 
   @Mock private QuestionClient questionClient;
+
+  @Mock private UserClient userClient;
 
   @Mock private TestService self;
 
@@ -360,6 +364,8 @@ class TestServiceTest {
         .thenReturn(getRetrieveMCQResponse());
     when(self.getTestMcqs(TEST_ID, tutorContext, List.of(MCQ_ID)))
         .thenReturn(getRetrieveMCQResponse());
+    when(self.searchStudent(TEST_ID, List.of(STUDENT_ID), tutorContext))
+        .thenReturn(List.of(STUDENT_RESPONSE));
 
     TestStudentDetailResponse testStudentDetailResponse =
         testService.getTestStudentDetail(TEST_ID, tutorContext);
@@ -375,6 +381,8 @@ class TestServiceTest {
     TestStudentDetailResponse.TestStudentResponse testStudentResponse =
         testStudentDetailResponse.getStudents().getFirst();
     assertEquals(STUDENT_ID, testStudentResponse.getStudentId());
+    assertEquals(STUDENT_NAME, testStudentResponse.getStudentName());
+
     assertEquals(STUDENT_POINTS, testStudentResponse.getPoints());
     assertEquals(1, testStudentResponse.getAttemptMcqCount());
     assertEquals(1, testStudentResponse.getCorrectMcqCount());
@@ -393,6 +401,8 @@ class TestServiceTest {
         .thenReturn(Optional.of(testStudent));
     when(self.getTestMcqs(TEST_ID, tutorContext, List.of(MCQ_ID)))
         .thenReturn(getRetrieveMCQResponse());
+    when(self.searchStudent(TEST_ID, List.of(STUDENT_ID), tutorContext))
+        .thenReturn(List.of(STUDENT_RESPONSE));
 
     TestStudentAttemptResponse testStudentAttemptResponse =
         testService.getTestStudentAttempts(TEST_ID, STUDENT_ID, tutorContext);
@@ -403,6 +413,7 @@ class TestServiceTest {
     assertEquals(TEST_TITLE, testStudentAttemptResponse.getTitle());
     assertEquals(TUTOR_ID, testStudentAttemptResponse.getTutorId());
     assertEquals(STUDENT_ID, testStudentAttemptResponse.getStudentId());
+    assertEquals(STUDENT_NAME, testStudentAttemptResponse.getStudentName());
 
     assertEquals(STUDENT_POINTS, testStudentAttemptResponse.getPoints());
 
@@ -427,6 +438,8 @@ class TestServiceTest {
         .thenReturn(Optional.of(testStudent));
     when(self.getTestMcqs(TEST_ID, studentContext, List.of(MCQ_ID)))
         .thenReturn(getRetrieveMCQResponse());
+    when(self.searchStudent(TEST_ID, List.of(STUDENT_ID), studentContext))
+        .thenReturn(List.of(STUDENT_RESPONSE));
 
     TestStudentAttemptResponse testStudentAttemptResponse =
         testService.getMyTestStudentAttempts(TEST_ID, studentContext);
@@ -457,6 +470,8 @@ class TestServiceTest {
         .thenReturn(Optional.of(testStudent));
     when(self.getTestMcqs(TEST_ID, studentContext, List.of(MCQ_ID)))
         .thenReturn(getRetrieveMCQResponse());
+    when(self.searchStudent(TEST_ID, List.of(STUDENT_ID), studentContext))
+        .thenReturn(List.of(STUDENT_RESPONSE));
 
     TestStudentAttemptResponse testStudentAttemptResponse =
         testService.getMyTestStudentAttempts(TEST_ID, studentContext);
@@ -486,6 +501,8 @@ class TestServiceTest {
         .thenReturn(List.of(testAttempt));
     when(self.getTestMcqs(TEST_ID, tutorContext, List.of(MCQ_ID)))
         .thenReturn(getRetrieveMCQResponse());
+    when(self.searchStudent(TEST_ID, List.of(STUDENT_ID), tutorContext))
+        .thenReturn(List.of(STUDENT_RESPONSE));
 
     assertThrows(
         NotFoundException.class,
@@ -505,6 +522,8 @@ class TestServiceTest {
         .thenReturn(List.of(testAttempt));
     when(testStudentRepository.findOneByTestIdAndStudentId(TEST_ID, STUDENT_ID))
         .thenReturn(Optional.of(testStudent));
+    when(self.searchStudent(TEST_ID, List.of(STUDENT_ID), tutorContext))
+        .thenReturn(List.of(STUDENT_RESPONSE));
 
     TestMcqAttemptResponse testMcqAttemptResponse =
         testService.getTestMcqAttempts(TEST_ID, MCQ_ID, tutorContext);
@@ -516,8 +535,11 @@ class TestServiceTest {
     assertEquals(TUTOR_ID, testMcqAttemptResponse.getTutorId());
     assertEquals(MCQ_INDEX, testMcqAttemptResponse.getIndex());
 
-    assertEquals(STUDENT_ID, testMcqAttemptResponse.getAttempts().getFirst().getStudentId());
-    assertEquals(CURRENT_OPTION_NO, testMcqAttemptResponse.getAttempts().getFirst().getOptionNo());
+    TestMcqAttemptResponse.McqStudentAttemptResponse attempt =
+        testMcqAttemptResponse.getAttempts().getFirst();
+    assertEquals(STUDENT_ID, attempt.getStudentId());
+    assertEquals(STUDENT_NAME, attempt.getStudentName());
+    assertEquals(CURRENT_OPTION_NO, attempt.getOptionNo());
   }
 
   @Test
@@ -531,6 +553,8 @@ class TestServiceTest {
         .thenReturn(List.of(testAttempt));
     when(testStudentRepository.findOneByTestIdAndStudentId(TEST_ID, STUDENT_ID))
         .thenReturn(Optional.of(testStudent));
+    when(self.searchStudent(TEST_ID, List.of(STUDENT_ID), tutorContext))
+        .thenReturn(List.of(STUDENT_RESPONSE));
 
     assertThrows(
         NotFoundException.class,
@@ -550,6 +574,8 @@ class TestServiceTest {
         .thenReturn(List.of(testAttempt));
     when(testStudentRepository.findOneByTestIdAndStudentId(TEST_ID, STUDENT_ID))
         .thenReturn(Optional.of(testStudent));
+    when(self.searchStudent(TEST_ID, List.of(STUDENT_ID), tutorContext))
+        .thenReturn(List.of(STUDENT_RESPONSE));
 
     assertThrows(
         NotFoundException.class,
@@ -845,7 +871,10 @@ class TestServiceTest {
   @Test
   void getTestMcqsTest() {
     when(questionClient.retrieveMCQsByIds(
-            argThat(request -> request.getIds().contains(MCQ_ID)), any(), any(), any()))
+            argThat(request -> request.getIds().contains(MCQ_ID)),
+            eq(TUTOR_ID),
+            eq(TUTOR_EMAIL),
+            eq(TUTOR_ROLE)))
         .thenReturn(getRetrieveMCQResponse());
 
     RetrieveMCQResponse retrieveMCQResponse =
@@ -858,5 +887,32 @@ class TestServiceTest {
     assertEquals(1, retrieveMCQResponse.getTotalPages());
 
     assertEquals(MCQ_ID, retrieveMCQResponse.getMcqs().getFirst().getId());
+  }
+
+  @Test
+  void searchStudentTest() {
+    when(userClient.searchStudents(
+            argThat(request -> request.getAccountIds().contains(STUDENT_ID)),
+            eq(TUTOR_ID),
+            eq(TUTOR_EMAIL),
+            eq(TUTOR_ROLE)))
+        .thenReturn(SEARCH_STUDENT_RESPONSE);
+
+    List<StudentResponse> studentResponses =
+        testService.searchStudent(TEST_ID, List.of(STUDENT_ID), tutorContext);
+
+    assertNotNull(studentResponses);
+    assertEquals(1, studentResponses.size());
+
+    StudentResponse studentResponse = studentResponses.getFirst();
+    assertEquals(STUDENT_ID, studentResponse.getAccountId());
+    assertEquals(STUDENT_NAME, studentResponse.getFullName());
+
+    verify(userClient, times(1))
+        .searchStudents(
+            argThat(request -> request.getAccountIds().contains(STUDENT_ID)),
+            eq(TUTOR_ID),
+            eq(TUTOR_EMAIL),
+            eq(TUTOR_ROLE));
   }
 }

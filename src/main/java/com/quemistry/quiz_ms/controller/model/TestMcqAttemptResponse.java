@@ -1,6 +1,7 @@
 package com.quemistry.quiz_ms.controller.model;
 
 import com.quemistry.quiz_ms.client.model.MCQDto;
+import com.quemistry.quiz_ms.client.model.SearchStudentResponse.StudentResponse;
 import com.quemistry.quiz_ms.model.TestAttempt;
 import com.quemistry.quiz_ms.model.TestEntity;
 import com.quemistry.quiz_ms.model.TestStatus;
@@ -27,7 +28,11 @@ public class TestMcqAttemptResponse extends MCQDto {
   private List<McqStudentAttemptResponse> attempts;
 
   public static TestMcqAttemptResponse from(
-      TestEntity test, int index, MCQDto mcq, List<TestAttempt> attempts) {
+      TestEntity test,
+      int index,
+      MCQDto mcq,
+      List<TestAttempt> attempts,
+      List<StudentResponse> studentResponses) {
     return TestMcqAttemptResponse.builder()
         .id(test.getId())
         .testStatus(test.getStatus())
@@ -46,7 +51,21 @@ public class TestMcqAttemptResponse extends MCQDto {
         .publishedBy(mcq.getPublishedBy())
         .closedOn(mcq.getClosedOn())
         .closedBy(mcq.getClosedBy())
-        .attempts(attempts.stream().map(McqStudentAttemptResponse::from).toList())
+        .attempts(
+            attempts.stream()
+                .map(
+                    (TestAttempt attempt) ->
+                        McqStudentAttemptResponse.from(
+                            attempt,
+                            studentResponses.stream()
+                                .filter(
+                                    studentResponse ->
+                                        studentResponse
+                                            .getAccountId()
+                                            .equals(attempt.getStudentId()))
+                                .findFirst()
+                                .orElse(StudentResponse.defaultStudent(attempt.getStudentId()))))
+                .toList())
         .build();
   }
 
@@ -60,11 +79,11 @@ public class TestMcqAttemptResponse extends MCQDto {
     private Integer optionNo;
     private Date attemptTime;
 
-    public static McqStudentAttemptResponse from(TestAttempt attempt) {
+    public static McqStudentAttemptResponse from(
+        TestAttempt attempt, StudentResponse studentResponse) {
       return McqStudentAttemptResponse.builder()
           .studentId(attempt.getStudentId())
-          // TODO: studentName should be set to the student's name
-          .studentName("Student " + attempt.getStudentId())
+          .studentName(studentResponse.getFullName())
           .optionNo(attempt.getOptionNo())
           .attemptTime(attempt.getAttemptTime())
           .build();

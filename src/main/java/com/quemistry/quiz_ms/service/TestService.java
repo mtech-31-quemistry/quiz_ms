@@ -7,6 +7,7 @@ import static org.springframework.context.annotation.ScopedProxyMode.TARGET_CLAS
 import com.quemistry.quiz_ms.client.QuestionClient;
 import com.quemistry.quiz_ms.client.UserClient;
 import com.quemistry.quiz_ms.client.model.*;
+import com.quemistry.quiz_ms.client.model.SearchStudentResponse.StudentResponse;
 import com.quemistry.quiz_ms.controller.model.*;
 import com.quemistry.quiz_ms.exception.*;
 import com.quemistry.quiz_ms.mapper.MCQMapper;
@@ -155,12 +156,17 @@ public class TestService {
     var testData = getTestData(testId, userContext);
     List<TestStudent> testStudents = testStudentRepository.findByTestId(testId);
 
+    List<StudentResponse> studentResponses =
+        self.searchStudent(
+            testId, testStudents.stream().map(TestStudent::getStudentId).toList(), userContext);
+
     return TestStudentDetailResponse.from(
         testData.getValue0(),
         testData.getValue1(),
         testData.getValue2(),
         testData.getValue3(),
-        testStudents);
+        testStudents,
+        studentResponses);
   }
 
   public TestStudentAttemptResponse getTestStudentAttempts(
@@ -172,12 +178,17 @@ public class TestService {
     if (student.isEmpty()) {
       throw new NotFoundException("Student not found");
     }
+
+    StudentResponse studentResponses =
+        self.searchStudent(testId, List.of(studentId), userContext).getFirst();
+
     return TestStudentAttemptResponse.from(
         testMcqDetail.getValue0(),
         testMcqDetail.getValue1(),
         testMcqDetail.getValue2(),
         attempts,
-        student.get());
+        student.get(),
+        studentResponses);
   }
 
   public TestStudentAttemptResponse getMyTestStudentAttempts(Long testId, UserContext userContext) {
@@ -220,8 +231,12 @@ public class TestService {
     }
 
     List<TestAttempt> attempts = testAttemptRepository.findByTestIdAndMcqId(testId, mcqId);
+    List<StudentResponse> studentResponses =
+        self.searchStudent(
+            testId, attempts.stream().map(TestAttempt::getStudentId).toList(), userContext);
 
-    return TestMcqAttemptResponse.from(test, testMcq.get().getIndex(), mcq.get(), attempts);
+    return TestMcqAttemptResponse.from(
+        test, testMcq.get().getIndex(), mcq.get(), attempts, studentResponses);
   }
 
   public void startTest(Long testId, UserContext userContext) {
@@ -290,13 +305,15 @@ public class TestService {
   }
 
   @Cacheable(value = "students", key = "#testId")
-  public List<SearchStudentResponse> searchStudent(
+  public List<StudentResponse> searchStudent(
       Long testId, List<String> studentIds, UserContext userContext) {
-    return userClient.searchStudents(
-        SearchStudentRequest.from(studentIds),
-        userContext.getUserId(),
-        userContext.getUserEmail(),
-        userContext.getUserRoles());
+    return userClient
+        .searchStudents(
+            SearchStudentRequest.from(studentIds),
+            userContext.getUserId(),
+            userContext.getUserEmail(),
+            userContext.getUserRoles())
+        .getPayload();
   }
 
   private void saveTestMcqAndStudentAndAttempt(TestRequest testRequest, Long testId) {
