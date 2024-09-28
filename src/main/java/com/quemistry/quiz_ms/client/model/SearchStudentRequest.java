@@ -1,5 +1,6 @@
 package com.quemistry.quiz_ms.client.model;
 
+import java.util.List;
 import lombok.*;
 
 @Builder
@@ -7,5 +8,10 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 public class SearchStudentRequest {
-  private String email;
+  private List<String> accountIds;
+  private List<String> emails;
+
+  public static SearchStudentRequest from(List<String> accountIds) {
+    return SearchStudentRequest.builder().accountIds(accountIds).emails(List.of()).build();
+  }
 }

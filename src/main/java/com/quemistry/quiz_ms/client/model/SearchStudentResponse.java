@@ -1,6 +1,5 @@
 package com.quemistry.quiz_ms.client.model;
 
-import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,9 +10,15 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class SearchStudentResponse {
-  private String statusCode;
-  private String statusMessage;
-  private String serviceName;
-  private List<ErrorDto> errors;
-  private Object payload;
+  private Long id;
+
+  private String firstName;
+
+  private String lastName;
+
+  private String email;
+
+  private String accountId;
+
+  private String educationLevel;
 }

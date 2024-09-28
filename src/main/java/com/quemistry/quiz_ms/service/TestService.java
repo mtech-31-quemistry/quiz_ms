@@ -6,9 +6,7 @@ import static org.springframework.context.annotation.ScopedProxyMode.TARGET_CLAS
 
 import com.quemistry.quiz_ms.client.QuestionClient;
 import com.quemistry.quiz_ms.client.UserClient;
-import com.quemistry.quiz_ms.client.model.MCQDto;
-import com.quemistry.quiz_ms.client.model.RetrieveMCQByIdsRequest;
-import com.quemistry.quiz_ms.client.model.RetrieveMCQResponse;
+import com.quemistry.quiz_ms.client.model.*;
 import com.quemistry.quiz_ms.controller.model.*;
 import com.quemistry.quiz_ms.exception.*;
 import com.quemistry.quiz_ms.mapper.MCQMapper;
@@ -286,6 +284,16 @@ public class TestService {
   public RetrieveMCQResponse getTestMcqs(Long testId, UserContext userContext, List<Long> mcqIds) {
     return questionClient.retrieveMCQsByIds(
         RetrieveMCQByIdsRequest.builder().ids(mcqIds).pageNumber(0).pageSize(60).build(),
+        userContext.getUserId(),
+        userContext.getUserEmail(),
+        userContext.getUserRoles());
+  }
+
+  @Cacheable(value = "students", key = "#testId")
+  public List<SearchStudentResponse> searchStudent(
+      Long testId, List<String> studentIds, UserContext userContext) {
+    return userClient.searchStudents(
+        SearchStudentRequest.from(studentIds),
         userContext.getUserId(),
         userContext.getUserEmail(),
         userContext.getUserRoles());
