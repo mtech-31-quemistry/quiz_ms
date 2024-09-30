@@ -101,7 +101,7 @@ class QuizServiceTest {
             .topics(List.of(1L, 2L))
             .skills(List.of(1L, 2L))
             .pageSize(1)
-            .totalSize(1L)
+            .totalSize(2L)
             .build();
 
     RetrieveMCQResponse retrieveMCQResponse =
@@ -113,15 +113,26 @@ class QuizServiceTest {
 
     when(quizRepository.findOneByStudentIdAndStatus("student1", IN_PROGRESS))
         .thenReturn(Optional.empty());
-    when(questionClient.retrieveMCQs(any(RetrieveMCQRequest.class), any(), any(), any()))
+    when(questionClient.retrieveMCQs(
+            argThat(
+                request ->
+                    request.getPageSize() == 2
+                        && request.getPageNumber() == 0
+                        && request.getTopics().containsAll(List.of(1L, 2L))
+                        && request.getSkills().containsAll(List.of(1L, 2L))),
+            eq("student1"),
+            eq("email1"),
+            eq("roles1")))
         .thenReturn(retrieveMCQResponse);
-    when(quizRepository.save(any(Quiz.class)))
+    when(quizRepository.save(
+            argThat(
+                quiz ->
+                    quiz.getStudentId().equals("student1")
+                        && quiz.getStatus().equals(IN_PROGRESS))))
         .thenAnswer(
             invocation -> {
               Quiz quiz = invocation.getArgument(0);
-              if (quiz.getId() == null) {
-                quiz.setId(1L); // Simulate the generation of an ID
-              }
+              quiz.setId(1L);
               return quiz;
             });
 
@@ -130,10 +141,11 @@ class QuizServiceTest {
     assertEquals(1, response.getMcqs().getSize());
     assertEquals(1, response.getMcqs().getContent().size());
     assertEquals(0, response.getMcqs().getNumber());
-    assertEquals(1, response.getMcqs().getTotalPages());
-    assertEquals(1L, response.getMcqs().getTotalElements());
+    assertEquals(2, response.getMcqs().getTotalPages());
+    assertEquals(2L, response.getMcqs().getTotalElements());
 
     assertEquals(IN_PROGRESS, response.getStatus());
+    verify(attemptRepository, times(2)).save(argThat(attempt -> attempt.getQuizId().equals(1L)));
   }
 
   @Test
