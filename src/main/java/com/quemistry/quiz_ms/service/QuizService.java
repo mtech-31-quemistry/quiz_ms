@@ -3,6 +3,7 @@ package com.quemistry.quiz_ms.service;
 import static com.quemistry.quiz_ms.mapper.MCQMapper.INSTANCE;
 import static com.quemistry.quiz_ms.model.QuizStatus.COMPLETED;
 import static com.quemistry.quiz_ms.model.QuizStatus.IN_PROGRESS;
+import static org.springframework.context.annotation.ScopedProxyMode.TARGET_CLASS;
 
 import com.quemistry.quiz_ms.client.QuestionClient;
 import com.quemistry.quiz_ms.client.model.MCQDto;
@@ -25,6 +26,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Scope;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -32,21 +36,25 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
+@CacheConfig(cacheNames = "quiz")
+@Scope(proxyMode = TARGET_CLASS)
 public class QuizService {
   private final QuizRepository quizRepository;
   private final QuizAttemptRepository attemptRepository;
   private final QuestionClient questionClient;
   private final MCQMapper mcqMapper = INSTANCE;
-  private RetrieveMCQResponse mcq;
+  private final QuizService self;
 
   @Autowired
   public QuizService(
       QuizRepository quizRepository,
       QuizAttemptRepository attemptRepository,
-      QuestionClient questionClient) {
+      QuestionClient questionClient,
+      QuizService self) {
     this.quizRepository = quizRepository;
     this.attemptRepository = attemptRepository;
     this.questionClient = questionClient;
+    this.self = self;
   }
 
   public QuizResponse createQuiz(UserContext userContext, QuizRequest quizRequest) {
@@ -57,20 +65,12 @@ public class QuizService {
     }
 
     Quiz quiz = Quiz.create(userContext.getUserId());
-    quiz = quizRepository.save(quiz);
-    long quizId = quiz.getId();
+    long quizId = quizRepository.save(quiz).getId();
+
+    //    attemptRepository.findAllByQuizIdIn();
 
     RetrieveMCQResponse retrieveMCQRequests =
-        questionClient.retrieveMCQs(
-            RetrieveMCQRequest.builder()
-                .topics(quizRequest.getTopics())
-                .skills(quizRequest.getSkills())
-                .pageNumber(0)
-                .pageSize(Math.toIntExact(quizRequest.getTotalSize()))
-                .build(),
-            userContext.getUserId(),
-            userContext.getUserEmail(),
-            userContext.getUserRoles());
+        self.getMCQByQuestionClient(quizId, quizRequest, userContext);
 
     List<Long> mcqIds = retrieveMCQRequests.getMcqs().stream().map(MCQDto::getId).toList();
 
@@ -111,7 +111,8 @@ public class QuizService {
             userContext.getUserId(), COMPLETED, PageRequest.of(pageNumber, pageSize)));
   }
 
-  public void updateAttempt(Long quizId, Long mcqId, String studentId, Integer attemptOption) {
+  public void updateAttempt(
+      Long quizId, Long mcqId, String studentId, Integer attemptOption, UserContext userContext) {
     if (!quizRepository.existsByIdAndStudentId(quizId, studentId)) {
       throw new NotFoundException("Quiz not found");
     }
@@ -125,7 +126,9 @@ public class QuizService {
       throw new AttemptAlreadyExistsException();
     }
 
-    attempt.updateAttempt(attemptOption);
+    int correctOptionNo = getCorrectOptionNo(quizId, mcqId, userContext);
+
+    attempt.updateAttempt(attemptOption, correctOptionNo);
     attemptRepository.save(attempt);
 
     if (!attemptRepository.existsByQuizIdAndOptionNoIsNull(quizId)) {
@@ -136,6 +139,16 @@ public class QuizService {
       quiz.complete();
       quizRepository.save(quiz);
     }
+  }
+
+  private int getCorrectOptionNo(Long quizId, Long mcqId, UserContext userContext) {
+    return self.getMCQByQuestionClient(quizId, userContext).getMcqs().stream()
+        .filter(mcq -> mcq.getId().equals(mcqId))
+        .flatMap(mcq -> mcq.getOptions().stream())
+        .filter(MCQDto.OptionDto::getIsAnswer)
+        .map(MCQDto.OptionDto::getNo)
+        .findFirst()
+        .orElse(-1);
   }
 
   public void abandonQuiz(Long id, String studentId) {
@@ -153,19 +166,40 @@ public class QuizService {
     quizRepository.save(quizEntity);
   }
 
+  @Cacheable(value = "quiz_mcqs", key = "#quizId")
+  public RetrieveMCQResponse getMCQByQuestionClient(
+      Long quizId, QuizRequest quizRequest, UserContext userContext) {
+    return questionClient.retrieveMCQs(
+        RetrieveMCQRequest.builder()
+            .topics(quizRequest.getTopics())
+            .skills(quizRequest.getSkills())
+            .pageNumber(0)
+            .pageSize(Math.toIntExact(quizRequest.getTotalSize()))
+            .build(),
+        userContext.getUserId(),
+        userContext.getUserEmail(),
+        userContext.getUserRoles());
+  }
+
+  @Cacheable(value = "quiz_mcqs", key = "#quizId")
+  public RetrieveMCQResponse getMCQByQuestionClient(Long quizId, UserContext userContext) {
+    List<Long> attemptIds =
+        attemptRepository.findAllByQuizId(quizId).stream().map(QuizAttempt::getMcqId).toList();
+    return getRetrieveMCQResponse(userContext, attemptIds);
+  }
+
   private Page<SimpleQuizResponse> getQuizDetail(UserContext userContext, Page<Quiz> quizzes) {
     List<QuizAttempt> attempts =
         attemptRepository.findAllByQuizIdIn(quizzes.stream().map(Quiz::getId).toList());
+    List<Long> attemptIds =
+        attempts.stream().map(QuizAttempt::getMcqId).collect(Collectors.toList());
     List<MCQDto> mcqs =
         quizzes.isEmpty()
             ? List.of()
             : questionClient
                 .retrieveMCQsByIds(
                     RetrieveMCQByIdsRequest.builder()
-                        .ids(
-                            attempts.stream()
-                                .map(QuizAttempt::getMcqId)
-                                .collect(Collectors.toList()))
+                        .ids(attemptIds)
                         .pageNumber(0)
                         .pageSize(quizzes.getNumberOfElements() * 60)
                         .build(),
@@ -190,6 +224,15 @@ public class QuizService {
         });
   }
 
+  private RetrieveMCQResponse getRetrieveMCQResponse(
+      UserContext userContext, List<Long> attemptIds) {
+    return questionClient.retrieveMCQsByIds(
+        RetrieveMCQByIdsRequest.builder().ids(attemptIds).pageNumber(0).pageSize(60).build(),
+        userContext.getUserId(),
+        userContext.getUserEmail(),
+        userContext.getUserRoles());
+  }
+
   private QuizResponse convertQuiz(
       Integer pageNumber, Integer pageSize, Optional<Quiz> quizResponse, UserContext userContext) {
     if (quizResponse.isEmpty()) {
@@ -198,17 +241,9 @@ public class QuizService {
     Quiz quiz = quizResponse.get();
     Page<QuizAttempt> attempts =
         attemptRepository.findPageByQuizId(quiz.getId(), PageRequest.of(pageNumber, pageSize));
+    List<Long> attemptIds = attempts.stream().map(QuizAttempt::getMcqId).toList();
 
-    RetrieveMCQResponse mcqs =
-        questionClient.retrieveMCQsByIds(
-            RetrieveMCQByIdsRequest.builder()
-                .ids(attempts.stream().map(QuizAttempt::getMcqId).toList())
-                .pageNumber(0)
-                .pageSize(60)
-                .build(),
-            userContext.getUserId(),
-            userContext.getUserEmail(),
-            userContext.getUserRoles());
+    RetrieveMCQResponse mcqs = getRetrieveMCQResponse(userContext, attemptIds);
 
     Integer points =
         (quiz.getStatus() == COMPLETED)

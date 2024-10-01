@@ -60,20 +60,20 @@ class QuizControllerTest {
     QuizRequest quizRequest = QuizRequest.builder().pageSize(1).totalSize(1L).build();
 
     String quizRequestJson = objectMapper.writeValueAsString(quizRequest);
-    when(quizService.createQuiz(tutorContext, quizRequest)).thenReturn(quizResponse);
+    when(quizService.createQuiz(studentContext, quizRequest)).thenReturn(quizResponse);
 
     mockMvc
         .perform(
             post("/v1/quizzes")
-                .header("x-user-id", tutorContext.getUserId())
-                .header("x-user-email", tutorContext.getUserEmail())
-                .header("x-user-roles", tutorContext.getUserRoles())
+                .header("x-user-id", studentContext.getUserId())
+                .header("x-user-email", studentContext.getUserEmail())
+                .header("x-user-roles", studentContext.getUserRoles())
                 .contentType(APPLICATION_JSON)
                 .content(quizRequestJson))
         .andExpect(status().isOk())
         .andExpect(content().json(objectMapper.writeValueAsString(quizResponse)));
 
-    verify(quizService).createQuiz(tutorContext, quizRequest);
+    verify(quizService).createQuiz(studentContext, quizRequest);
   }
 
   @Test
@@ -177,35 +177,48 @@ class QuizControllerTest {
   void updateAttemptSuccess() throws Exception {
     Long quizId = 1L;
     Long mcqId = 1L;
-    String studentId = "test-user-id";
     QuizAttemptRequest attemptRequest = new QuizAttemptRequest(1);
 
     mockMvc
         .perform(
             put("/v1/quizzes/{quizId}/mcqs/{mcqId}/attempt", quizId, mcqId)
-                .header("x-user-id", studentId)
+                .header("x-user-id", studentContext.getUserId())
+                .header("x-user-email", studentContext.getUserEmail())
+                .header("x-user-roles", studentContext.getUserRoles())
                 .contentType(APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(attemptRequest)))
         .andExpect(status().isNoContent());
 
-    verify(quizService).updateAttempt(quizId, mcqId, studentId, attemptRequest.getAttemptOption());
+    verify(quizService)
+        .updateAttempt(
+            quizId,
+            mcqId,
+            studentContext.getUserId(),
+            attemptRequest.getAttemptOption(),
+            studentContext);
   }
 
   @Test
   void updateAttemptQuizNotFound() throws Exception {
     Long quizId = 1L;
     Long mcqId = 1L;
-    String studentId = "test-user-id";
     QuizAttemptRequest attemptRequest = new QuizAttemptRequest(1);
 
     doThrow(new NotFoundException("Quiz not found"))
         .when(quizService)
-        .updateAttempt(quizId, mcqId, studentId, attemptRequest.getAttemptOption());
+        .updateAttempt(
+            quizId,
+            mcqId,
+            studentContext.getUserId(),
+            attemptRequest.getAttemptOption(),
+            studentContext);
 
     mockMvc
         .perform(
             put("/v1/quizzes/{quizId}/mcqs/{mcqId}/attempt", quizId, mcqId)
-                .header("x-user-id", studentId)
+                .header("x-user-id", studentContext.getUserId())
+                .header("x-user-email", studentContext.getUserEmail())
+                .header("x-user-roles", studentContext.getUserRoles())
                 .contentType(APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(attemptRequest)))
         .andExpect(status().isNotFound());
@@ -215,17 +228,23 @@ class QuizControllerTest {
   void updateAttemptAttemptNotFound() throws Exception {
     Long quizId = 1L;
     Long mcqId = 1L;
-    String studentId = "test-user-id";
     QuizAttemptRequest attemptRequest = new QuizAttemptRequest(1);
 
     doThrow(new NotFoundException("Attempt not found"))
         .when(quizService)
-        .updateAttempt(quizId, mcqId, studentId, attemptRequest.getAttemptOption());
+        .updateAttempt(
+            quizId,
+            mcqId,
+            studentContext.getUserId(),
+            attemptRequest.getAttemptOption(),
+            studentContext);
 
     mockMvc
         .perform(
             put("/v1/quizzes/{quizId}/mcqs/{mcqId}/attempt", quizId, mcqId)
-                .header("x-user-id", studentId)
+                .header("x-user-id", studentContext.getUserId())
+                .header("x-user-email", studentContext.getUserEmail())
+                .header("x-user-roles", studentContext.getUserRoles())
                 .contentType(APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(attemptRequest)))
         .andExpect(status().isNotFound());
@@ -235,17 +254,23 @@ class QuizControllerTest {
   void updateAttemptAttemptAlreadyExists() throws Exception {
     Long quizId = 1L;
     Long mcqId = 1L;
-    String studentId = "test-user-id";
     QuizAttemptRequest attemptRequest = new QuizAttemptRequest(1);
 
     doThrow(new AttemptAlreadyExistsException())
         .when(quizService)
-        .updateAttempt(quizId, mcqId, studentId, attemptRequest.getAttemptOption());
+        .updateAttempt(
+            quizId,
+            mcqId,
+            studentContext.getUserId(),
+            attemptRequest.getAttemptOption(),
+            studentContext);
 
     mockMvc
         .perform(
             put("/v1/quizzes/{quizId}/mcqs/{mcqId}/attempt", quizId, mcqId)
-                .header("x-user-id", studentId)
+                .header("x-user-id", studentContext.getUserId())
+                .header("x-user-email", studentContext.getUserEmail())
+                .header("x-user-roles", studentContext.getUserRoles())
                 .contentType(APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(attemptRequest)))
         .andExpect(status().isConflict());

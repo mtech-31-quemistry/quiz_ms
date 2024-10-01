@@ -78,10 +78,17 @@ public class QuizController {
       @PathVariable Long id,
       @PathVariable Long mcqId,
       @RequestHeader("x-user-id") @NotBlank String studentId,
+      @RequestHeader("x-user-email") @Email String studentEmail,
+      @RequestHeader("x-user-roles") @NotBlank String roles,
       @RequestBody QuizAttemptRequest attemptRequest) {
     log.info("PUT /v1/quizzes/{}/mcqs/{}/attempt", id, mcqId);
 
-    quizService.updateAttempt(id, mcqId, studentId, attemptRequest.getAttemptOption());
+    quizService.updateAttempt(
+        id,
+        mcqId,
+        studentId,
+        attemptRequest.getAttemptOption(),
+        new UserContext(studentId, studentEmail, roles));
   }
 
   @PatchMapping("{id}/abandon")

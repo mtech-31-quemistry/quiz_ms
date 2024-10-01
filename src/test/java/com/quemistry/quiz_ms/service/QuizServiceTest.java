@@ -1,5 +1,6 @@
 package com.quemistry.quiz_ms.service;
 
+import static com.quemistry.quiz_ms.fixture.TestFixture.getRetrieveMCQResponse;
 import static com.quemistry.quiz_ms.model.QuizStatus.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -38,6 +39,7 @@ class QuizServiceTest {
   @Mock private QuizAttemptRepository attemptRepository;
 
   @Mock private QuestionClient questionClient;
+  @Mock private QuizService self;
 
   @InjectMocks private QuizService quizService;
 
@@ -78,6 +80,8 @@ class QuizServiceTest {
               }
               return quiz;
             });
+    when(self.getMCQByQuestionClient(1L, quizRequest, testUserContext))
+        .thenReturn(retrieveMCQResponse);
 
     QuizResponse response = quizService.createQuiz(testUserContext, quizRequest);
 
@@ -89,7 +93,6 @@ class QuizServiceTest {
     assertEquals(IN_PROGRESS, response.getStatus());
 
     verify(quizRepository).findOneByStudentIdAndStatus("student1", IN_PROGRESS);
-    verify(questionClient).retrieveMCQs(any(RetrieveMCQRequest.class), any(), any(), any());
     verify(quizRepository, times(1)).save(any(Quiz.class));
     verify(attemptRepository, times(2)).save(any(QuizAttempt.class));
   }
@@ -135,6 +138,8 @@ class QuizServiceTest {
               quiz.setId(1L);
               return quiz;
             });
+    when(self.getMCQByQuestionClient(1L, quizRequest, testUserContext))
+        .thenReturn(retrieveMCQResponse);
 
     QuizResponse response = quizService.createQuiz(testUserContext, quizRequest);
 
@@ -442,8 +447,9 @@ class QuizServiceTest {
     when(quizRepository.existsByIdAndStudentId(quizId, studentId)).thenReturn(true);
     when(quizRepository.findOneByIdAndStudentId(quizId, studentId)).thenReturn(Optional.of(quiz));
     when(attemptRepository.findByQuizIdAndMcqId(quizId, mcqId)).thenReturn(Optional.of(attempt));
+    when(self.getMCQByQuestionClient(quizId, testUserContext)).thenReturn(getRetrieveMCQResponse());
 
-    quizService.updateAttempt(quizId, mcqId, studentId, attemptOption);
+    quizService.updateAttempt(quizId, mcqId, studentId, attemptOption, testUserContext);
 
     assertEquals(attemptOption, attempt.getOptionNo());
     verify(attemptRepository).save(attempt);
@@ -462,8 +468,9 @@ class QuizServiceTest {
     when(quizRepository.findOneByIdAndStudentId(quizId, studentId)).thenReturn(Optional.of(quiz));
     when(attemptRepository.findByQuizIdAndMcqId(quizId, mcqId)).thenReturn(Optional.of(attempt));
     when(attemptRepository.existsByQuizIdAndOptionNoIsNull(quizId)).thenReturn(true);
+    when(self.getMCQByQuestionClient(quizId, testUserContext)).thenReturn(getRetrieveMCQResponse());
 
-    quizService.updateAttempt(quizId, mcqId, studentId, attemptOption);
+    quizService.updateAttempt(quizId, mcqId, studentId, attemptOption, testUserContext);
 
     assertEquals(attemptOption, attempt.getOptionNo());
     verify(attemptRepository).save(attempt);
@@ -481,7 +488,7 @@ class QuizServiceTest {
 
     assertThrows(
         NotFoundException.class,
-        () -> quizService.updateAttempt(quizId, mcqId, studentId, attemptOption));
+        () -> quizService.updateAttempt(quizId, mcqId, studentId, attemptOption, testUserContext));
   }
 
   @Test
@@ -496,7 +503,7 @@ class QuizServiceTest {
 
     assertThrows(
         NotFoundException.class,
-        () -> quizService.updateAttempt(quizId, mcqId, studentId, attemptOption));
+        () -> quizService.updateAttempt(quizId, mcqId, studentId, attemptOption, testUserContext));
   }
 
   @Test
@@ -513,7 +520,7 @@ class QuizServiceTest {
 
     assertThrows(
         AttemptAlreadyExistsException.class,
-        () -> quizService.updateAttempt(quizId, mcqId, studentId, attemptOption));
+        () -> quizService.updateAttempt(quizId, mcqId, studentId, attemptOption, testUserContext));
   }
 
   @Test
@@ -529,8 +536,9 @@ class QuizServiceTest {
     when(quizRepository.findOneByIdAndStudentId(quizId, studentId)).thenReturn(Optional.of(quiz));
     when(attemptRepository.findByQuizIdAndMcqId(quizId, mcqId)).thenReturn(Optional.of(attempt));
     when(attemptRepository.existsByQuizIdAndOptionNoIsNull(quizId)).thenReturn(false);
+    when(self.getMCQByQuestionClient(quizId, testUserContext)).thenReturn(getRetrieveMCQResponse());
 
-    quizService.updateAttempt(quizId, mcqId, studentId, attemptOption);
+    quizService.updateAttempt(quizId, mcqId, studentId, attemptOption, testUserContext);
 
     assertEquals(attemptOption, attempt.getOptionNo());
     verify(attemptRepository).save(attempt);

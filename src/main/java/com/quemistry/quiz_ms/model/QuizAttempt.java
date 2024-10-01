@@ -26,6 +26,8 @@ public class QuizAttempt {
 
   private Date attemptTime;
 
+  private Boolean isCorrect;
+
   public static QuizAttempt create(Long quizId, Long mcqId) {
     return QuizAttempt.builder()
         .quizId(quizId)
@@ -35,8 +37,9 @@ public class QuizAttempt {
         .build();
   }
 
-  public void updateAttempt(Integer optionNo) {
+  public void updateAttempt(Integer optionNo, int correctOption) {
     this.optionNo = optionNo;
+    this.isCorrect = optionNo == correctOption;
     this.attemptTime = new Date();
   }
 

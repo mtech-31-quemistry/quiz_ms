@@ -295,7 +295,7 @@ public class TestService {
     updateTestStudentPoints(testId, userContext);
   }
 
-  @Cacheable(value = "mcqs", key = "#testId")
+  @Cacheable(value = "test_mcqs", key = "#testId")
   public RetrieveMCQResponse getTestMcqs(Long testId, UserContext userContext, List<Long> mcqIds) {
     return questionClient.retrieveMCQsByIds(
         RetrieveMCQByIdsRequest.builder().ids(mcqIds).pageNumber(0).pageSize(60).build(),

@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class RetrieveMCQResponse {
-
   private List<MCQDto> mcqs;
 
   private Integer pageNumber;

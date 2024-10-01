@@ -16,4 +16,6 @@ public interface QuizAttemptRepository extends JpaRepository<QuizAttempt, QuizAt
   boolean existsByQuizIdAndOptionNoIsNull(Long quizId);
 
   Page<QuizAttempt> findPageByQuizId(Long id, Pageable page);
+
+  List<QuizAttempt> findAllByQuizId(Long quizId);
 }

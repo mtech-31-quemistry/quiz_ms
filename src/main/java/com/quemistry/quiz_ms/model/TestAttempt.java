@@ -29,6 +29,8 @@ public class TestAttempt {
 
   private Date attemptTime;
 
+  private Boolean isCorrect;
+
   public static TestAttempt create(Long testId, Long mcqId, String studentId) {
     return TestAttempt.builder()
         .testId(testId)
