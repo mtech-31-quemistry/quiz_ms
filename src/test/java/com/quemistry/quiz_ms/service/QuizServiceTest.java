@@ -54,8 +54,8 @@ class QuizServiceTest {
   void createQuizWithFirstPage() {
     QuizRequest quizRequest =
         QuizRequest.builder()
-            .topics(List.of(1L, 2L))
-            .skills(List.of(1L, 2L))
+            .topics(List.of(5L, 6L))
+            .skills(List.of(7L, 8L))
             .pageSize(1)
             .totalSize(10L)
             .build();
@@ -69,7 +69,15 @@ class QuizServiceTest {
 
     when(quizRepository.findOneByStudentIdAndStatus("student1", IN_PROGRESS))
         .thenReturn(Optional.empty());
-    when(questionClient.retrieveMCQs(any(RetrieveMCQRequest.class), any(), any(), any()))
+    when(questionClient.retrieveMCQs(
+            argThat(
+                request ->
+                    request.getExcludeIds().contains(3L)
+                        && request.getTopics().containsAll(List.of(5L, 6L))
+                        && request.getSkills().containsAll(List.of(7L, 8L))),
+            any(),
+            any(),
+            any()))
         .thenReturn(retrieveMCQResponse);
     when(quizRepository.save(any(Quiz.class)))
         .thenAnswer(
@@ -80,8 +88,13 @@ class QuizServiceTest {
               }
               return quiz;
             });
-    when(self.getMCQByQuestionClient(1L, quizRequest, testUserContext))
-        .thenReturn(retrieveMCQResponse);
+    when(quizRepository.findAllByStudentId("student1"))
+        .thenReturn(List.of(Quiz.builder().id(2L).build()));
+    when(attemptRepository.findAllByQuizIdIn(List.of(2L)))
+        .thenReturn(
+            List.of(
+                QuizAttempt.builder().quizId(2L).mcqId(3L).optionNo(1).isCorrect(true).build(),
+                QuizAttempt.builder().quizId(2L).mcqId(4L).optionNo(1).isCorrect(false).build()));
 
     QuizResponse response = quizService.createQuiz(testUserContext, quizRequest);
 
@@ -138,8 +151,7 @@ class QuizServiceTest {
               quiz.setId(1L);
               return quiz;
             });
-    when(self.getMCQByQuestionClient(1L, quizRequest, testUserContext))
-        .thenReturn(retrieveMCQResponse);
+    when(quizRepository.findAllByStudentId("student1")).thenReturn(List.of());
 
     QuizResponse response = quizService.createQuiz(testUserContext, quizRequest);
 

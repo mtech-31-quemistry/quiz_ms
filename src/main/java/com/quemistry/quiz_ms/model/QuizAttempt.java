@@ -26,12 +26,13 @@ public class QuizAttempt {
 
   private Date attemptTime;
 
-  private Boolean isCorrect;
+  private boolean isCorrect;
 
   public static QuizAttempt create(Long quizId, Long mcqId) {
     return QuizAttempt.builder()
         .quizId(quizId)
         .mcqId(mcqId)
+        .isCorrect(false)
         .optionNo(null)
         .attemptTime(null)
         .build();

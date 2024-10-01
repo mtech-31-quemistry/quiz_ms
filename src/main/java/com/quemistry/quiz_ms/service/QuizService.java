@@ -67,15 +67,28 @@ public class QuizService {
     Quiz quiz = Quiz.create(userContext.getUserId());
     long quizId = quizRepository.save(quiz).getId();
 
-    //    attemptRepository.findAllByQuizIdIn();
-
+    List<Long> previousQuizIds =
+        quizRepository.findAllByStudentId(userContext.getUserId()).stream()
+            .map(Quiz::getId)
+            .toList();
+    List<Long> excludeMcqIds =
+        previousQuizIds.isEmpty()
+            ? List.of()
+            : attemptRepository.findAllByQuizIdIn(previousQuizIds).stream()
+                .filter(QuizAttempt::isCorrect)
+                .map(QuizAttempt::getMcqId)
+                .toList();
     RetrieveMCQResponse retrieveMCQRequests =
-        self.getMCQByQuestionClient(quizId, quizRequest, userContext);
+        getMCQByQuestionClient(quizRequest, excludeMcqIds, userContext);
 
-    List<Long> mcqIds = retrieveMCQRequests.getMcqs().stream().map(MCQDto::getId).toList();
-
-    mcqIds.parallelStream()
-        .forEach(mcqId -> attemptRepository.save(QuizAttempt.create(quizId, mcqId)));
+    if (retrieveMCQRequests.getMcqs().isEmpty()) {
+      quiz.complete();
+      quizRepository.save(quiz);
+    } else {
+      List<Long> mcqIds = retrieveMCQRequests.getMcqs().stream().map(MCQDto::getId).toList();
+      mcqIds.parallelStream()
+          .forEach(mcqId -> attemptRepository.save(QuizAttempt.create(quizId, mcqId)));
+    }
 
     Page<MCQResponse> mcqs =
         new PageImpl<>(
@@ -141,16 +154,6 @@ public class QuizService {
     }
   }
 
-  private int getCorrectOptionNo(Long quizId, Long mcqId, UserContext userContext) {
-    return self.getMCQByQuestionClient(quizId, userContext).getMcqs().stream()
-        .filter(mcq -> mcq.getId().equals(mcqId))
-        .flatMap(mcq -> mcq.getOptions().stream())
-        .filter(MCQDto.OptionDto::getIsAnswer)
-        .map(MCQDto.OptionDto::getNo)
-        .findFirst()
-        .orElse(-1);
-  }
-
   public void abandonQuiz(Long id, String studentId) {
     Optional<Quiz> quiz = quizRepository.findOneByIdAndStudentId(id, studentId);
     if (quiz.isEmpty()) {
@@ -167,25 +170,20 @@ public class QuizService {
   }
 
   @Cacheable(value = "quiz_mcqs", key = "#quizId")
-  public RetrieveMCQResponse getMCQByQuestionClient(
-      Long quizId, QuizRequest quizRequest, UserContext userContext) {
-    return questionClient.retrieveMCQs(
-        RetrieveMCQRequest.builder()
-            .topics(quizRequest.getTopics())
-            .skills(quizRequest.getSkills())
-            .pageNumber(0)
-            .pageSize(Math.toIntExact(quizRequest.getTotalSize()))
-            .build(),
-        userContext.getUserId(),
-        userContext.getUserEmail(),
-        userContext.getUserRoles());
-  }
-
-  @Cacheable(value = "quiz_mcqs", key = "#quizId")
   public RetrieveMCQResponse getMCQByQuestionClient(Long quizId, UserContext userContext) {
     List<Long> attemptIds =
         attemptRepository.findAllByQuizId(quizId).stream().map(QuizAttempt::getMcqId).toList();
     return getRetrieveMCQResponse(userContext, attemptIds);
+  }
+
+  private int getCorrectOptionNo(Long quizId, Long mcqId, UserContext userContext) {
+    return self.getMCQByQuestionClient(quizId, userContext).getMcqs().stream()
+        .filter(mcq -> mcq.getId().equals(mcqId))
+        .flatMap(mcq -> mcq.getOptions().stream())
+        .filter(MCQDto.OptionDto::getIsAnswer)
+        .map(MCQDto.OptionDto::getNo)
+        .findFirst()
+        .orElse(-1);
   }
 
   private Page<SimpleQuizResponse> getQuizDetail(UserContext userContext, Page<Quiz> quizzes) {
@@ -222,6 +220,21 @@ public class QuizService {
               .points(calculatePoints(quizMcqs))
               .build();
         });
+  }
+
+  private RetrieveMCQResponse getMCQByQuestionClient(
+      QuizRequest quizRequest, List<Long> excludeMcqIds, UserContext userContext) {
+    return questionClient.retrieveMCQs(
+        RetrieveMCQRequest.builder()
+            .topics(quizRequest.getTopics())
+            .skills(quizRequest.getSkills())
+            .excludeIds(excludeMcqIds)
+            .pageNumber(0)
+            .pageSize(Math.toIntExact(quizRequest.getTotalSize()))
+            .build(),
+        userContext.getUserId(),
+        userContext.getUserEmail(),
+        userContext.getUserRoles());
   }
 
   private RetrieveMCQResponse getRetrieveMCQResponse(
