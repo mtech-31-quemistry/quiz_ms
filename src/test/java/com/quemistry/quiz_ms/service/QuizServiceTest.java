@@ -166,6 +166,59 @@ class QuizServiceTest {
   }
 
   @Test
+  void createQuizWithoutMcqs() {
+    QuizRequest quizRequest =
+        QuizRequest.builder()
+            .topics(List.of(5L, 6L))
+            .skills(List.of(7L, 8L))
+            .pageSize(1)
+            .totalSize(10L)
+            .build();
+
+    RetrieveMCQResponse retrieveMCQResponse =
+        RetrieveMCQResponse.builder().mcqs(List.of()).totalPages(1).totalRecords(0L).build();
+
+    when(quizRepository.findOneByStudentIdAndStatus("student1", IN_PROGRESS))
+        .thenReturn(Optional.empty());
+    when(questionClient.retrieveMCQs(
+            argThat(
+                request ->
+                    request.getExcludeIds().contains(3L)
+                        && request.getTopics().containsAll(List.of(5L, 6L))
+                        && request.getSkills().containsAll(List.of(7L, 8L))),
+            any(),
+            any(),
+            any()))
+        .thenReturn(retrieveMCQResponse);
+    when(quizRepository.save(any(Quiz.class)))
+        .thenAnswer(
+            invocation -> {
+              Quiz quiz = invocation.getArgument(0);
+              if (quiz.getId() == null) {
+                quiz.setId(1L); // Simulate the generation of an ID
+              }
+              return quiz;
+            });
+    when(quizRepository.findAllByStudentId("student1"))
+        .thenReturn(List.of(Quiz.builder().id(2L).build()));
+    when(attemptRepository.findAllByQuizIdIn(List.of(2L)))
+        .thenReturn(
+            List.of(
+                QuizAttempt.builder().quizId(2L).mcqId(3L).optionNo(1).isCorrect(true).build(),
+                QuizAttempt.builder().quizId(2L).mcqId(4L).optionNo(1).isCorrect(false).build()));
+
+    QuizResponse response = quizService.createQuiz(testUserContext, quizRequest);
+
+    assertEquals(1, response.getMcqs().getSize());
+    assertEquals(0, response.getMcqs().getContent().size());
+    assertEquals(0, response.getMcqs().getNumber());
+    assertEquals(0, response.getMcqs().getTotalPages());
+    assertEquals(0L, response.getMcqs().getTotalElements());
+
+    assertEquals(COMPLETED, response.getStatus());
+  }
+
+  @Test
   void createQuizFailedWithExistingInProgressQuiz() {
     QuizRequest quizRequest =
         QuizRequest.builder()
@@ -606,5 +659,13 @@ class QuizServiceTest {
         .skills(List.of(new SkillDto(1, "Skill 1", 1), new SkillDto(2, "Skill 2", 2)))
         .status("PUBLISHED")
         .build();
+  }
+
+  @Test
+  void getMCQByQuestionClient() {
+    when(questionClient.retrieveMCQsByIds(any(), any(), any(), any()))
+        .thenReturn(getRetrieveMCQResponse());
+    RetrieveMCQResponse response = quizService.getMCQByQuestionClient(1L, testUserContext);
+    assertEquals(1, response.getMcqs().size());
   }
 }
