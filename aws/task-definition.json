@@ -37,6 +37,10 @@
                 {
                     "name": "QUESTION_SERVICE_URL",
                     "valueFrom": "arn:aws:ssm:ap-southeast-1:730335183958:parameter/cicd/prod/api/question-ms/url"
+                },
+                {
+                    "name": "USER_SERVICE_URL",
+                    "valueFrom": "arn:aws:ssm:ap-southeast-1:730335183958:parameter/cicd/prod/api/user-ms/url"
                 }
             ],
             "ulimits": [],
