@@ -39,7 +39,7 @@ public class HealthControllerTest {
     String expectedResponseBody = objectMapper.writeValueAsString(expectedResponse);
 
     mockMvc
-        .perform(get("/v1/health"))
+        .perform(get("/v1/quizzes/health"))
         .andExpect(status().isOk())
         .andExpect(content().json(expectedResponseBody));
   }
