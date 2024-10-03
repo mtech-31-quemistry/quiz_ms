@@ -289,6 +289,7 @@ public class QuizService {
                 .orElse(null));
   }
 
+  // TODO: Refactor this method to use isCorrect field in QuizAttempt
   private int calculatePoints(List<MCQResponse> mcqs) {
     return (int)
         mcqs.stream()
