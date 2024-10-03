@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @RestController
-@RequestMapping("/v1/quizzes/health")
+@RequestMapping("/v1/health")
 public class HealthController {
   @GetMapping
   public Map<String, String> health() {
