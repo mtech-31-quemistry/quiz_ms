@@ -188,6 +188,16 @@ paths:
           required: true
           schema:
             type: "string"
+        - name: "x-user-email"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
+        - name: "x-user-roles"
+          in: "header"
+          required: true
+          schema:
+            type: "string"
       requestBody:
         content:
           application/json:
