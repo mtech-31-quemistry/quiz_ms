@@ -301,8 +301,10 @@ class QuizServiceTest {
     when(quizRepository.findOneByIdAndStudentId(quizId, "student1")).thenReturn(Optional.of(quiz));
     QuizAttempt attempt = QuizAttempt.create(quizId, mcqId1);
     attempt.setOptionNo(1);
+    attempt.setCorrect(true);
     when(attemptRepository.findPageByQuizId(quizId, PageRequest.of(0, 10)))
         .thenReturn(new PageImpl<>(List.of(attempt), PageRequest.of(0, 10), 1));
+    when(attemptRepository.findAllByQuizId(quizId)).thenReturn(List.of(attempt));
     when(questionClient.retrieveMCQsByIds(
             argThat(request -> request.getIds().contains(mcqId1)), any(), any(), any()))
         .thenReturn(retrieveMCQResponse);
@@ -467,6 +469,7 @@ class QuizServiceTest {
         .thenReturn(quizzes);
     QuizAttempt attempt = QuizAttempt.create(1L, 1L);
     attempt.setOptionNo(1);
+    attempt.setCorrect(true);
     when(attemptRepository.findAllByQuizIdIn(argThat(argument -> argument.contains(1L))))
         .thenReturn(List.of(attempt));
     when(questionClient.retrieveMCQsByIds(any(RetrieveMCQByIdsRequest.class), any(), any(), any()))

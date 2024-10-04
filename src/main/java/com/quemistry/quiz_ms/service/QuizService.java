@@ -207,17 +207,16 @@ public class QuizService {
                 .getMcqs();
     return quizzes.map(
         quiz -> {
-          List<MCQResponse> quizMcqs =
-              getMcqResponses(
-                  mcqs,
-                  attempts.stream()
-                      .filter(attempt -> attempt.getQuizId().equals(quiz.getId()))
-                      .collect(Collectors.toList()));
+          List<QuizAttempt> quizAttempts =
+              attempts.stream()
+                  .filter(attempt -> attempt.getQuizId().equals(quiz.getId()))
+                  .collect(Collectors.toList());
+          List<MCQResponse> quizMcqs = getMcqResponses(mcqs, quizAttempts);
           return SimpleQuizResponse.builder()
               .id(quiz.getId())
               .status(quiz.getStatus())
               .mcqs(quizMcqs)
-              .points(calculatePoints(quizMcqs))
+              .points(calculatePoints(quizAttempts))
               .build();
         });
   }
@@ -260,7 +259,7 @@ public class QuizService {
 
     Integer points =
         (quiz.getStatus() == COMPLETED)
-            ? calculatePoints(getPageMcqResponses(mcqs.getMcqs(), attempts).toList())
+            ? calculatePoints(attemptRepository.findAllByQuizId(quiz.getId()))
             : null;
 
     return QuizResponse.builder()
@@ -289,18 +288,7 @@ public class QuizService {
                 .orElse(null));
   }
 
-  // TODO: Refactor this method to use isCorrect field in QuizAttempt
-  private int calculatePoints(List<MCQResponse> mcqs) {
-    return (int)
-        mcqs.stream()
-            .filter(mcq -> mcq.getAttemptOption() != null)
-            .filter(
-                mcq ->
-                    mcq.getOptions().stream()
-                        .anyMatch(
-                            option ->
-                                option.getNo().equals(mcq.getAttemptOption())
-                                    && option.getIsAnswer()))
-            .count();
+  private int calculatePoints(List<QuizAttempt> attempts) {
+    return (int) attempts.stream().filter(QuizAttempt::isCorrect).count();
   }
 }
